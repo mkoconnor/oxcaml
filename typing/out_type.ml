@@ -599,6 +599,8 @@ let rec tree_of_path namespace = function
           tree_of_path None p
       | Punboxed_ty ->
           Oide_hash (tree_of_path namespace p)
+      | Punboxed_variant tag ->
+          Oide_ident (Out_name.create ("[ `" ^ tag ^ " ]#"))
     end
 
 let tree_of_path namespace = function
@@ -769,6 +771,8 @@ let rec lid_of_path = function
       Longident.Lapply
         (Location.mknoloc (lid_of_path p1), Location.mknoloc (lid_of_path p2))
   | Path.Pextra_ty (p, Pext_ty) -> lid_of_path p
+  | Path.Pextra_ty (_, Punboxed_variant tag) ->
+      Longident.Lident ("[ `" ^ tag ^ " ]#")
   | Path.Pextra_ty (p, Punboxed_ty) ->
     match p with
     | Pident id -> Longident.Lident (Ident.name id ^ "#")
@@ -825,7 +829,7 @@ let path_size path env =
         (l + fst (size p2), b)
     | Pextra_ty (p, Pext_ty) ->
         size p
-    | Pextra_ty (p, Punboxed_ty) ->
+    | Pextra_ty (p, (Punboxed_ty | Punboxed_variant _)) ->
         let (l, b) = size p in (1 + l, b)
   in
   let l, s = size path in

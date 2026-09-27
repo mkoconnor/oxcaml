@@ -142,6 +142,10 @@ and core_type_desc =
 
            Invariant: [n >= 2].
         *)
+  | Ptyp_unboxed_variant of label
+      (** Anonymous unboxed variant types of kind void:
+          [Ptyp_unboxed_variant "foo"] represents [[ `foo ]#], the void type
+          whose sole inhabitant is [#`foo]. *)
   | Ptyp_constr of Longident.t loc * core_type list
       (** [Ptyp_constr(lident, l)] represents:
             - [tconstr]               when [l=[]],
@@ -299,6 +303,9 @@ and pattern_desc =
            but rejected by the type-checker. *)
   | Ppat_unboxed_unit (** [#()] *)
   | Ppat_unboxed_bool of bool (** [#false] or [#true] *)
+  | Ppat_unboxed_variant of label
+      (** [Ppat_unboxed_variant "foo"] represents the pattern [#`foo], the sole
+          inhabitant of the void type [[ `foo ]#]. *)
   | Ppat_unboxed_tuple of (string option * pattern) list * Asttypes.closed_flag
       (** Unboxed tuple patterns: [#(l1:P1, ..., ln:Pn)] is [([(Some
           l1,P1);...;(Some l2,Pn)], Closed)], and the labels are optional.  An
@@ -443,6 +450,9 @@ and expression_desc =
       (** [try E0 with P1 -> E1 | ... | Pn -> En] *)
   | Pexp_unboxed_unit (** [#()] *)
   | Pexp_unboxed_bool of bool (** [#false] or [#true] *)
+  | Pexp_unboxed_variant of label
+      (** [Pexp_unboxed_variant "foo"] represents [#`foo], the sole inhabitant
+          of the void type [[ `foo ]#]. *)
   | Pexp_tuple of (string option * expression) list
       (** [Pexp_tuple(el)] represents
           - [(E1, ..., En)]

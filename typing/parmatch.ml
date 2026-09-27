@@ -194,6 +194,7 @@ let all_coherent column =
       end
     | Unboxed_unit, Unboxed_unit -> true
     | Unboxed_bool _, Unboxed_bool _ -> true
+    | Unboxed_variant _, Unboxed_variant _ -> true
     | Tuple l1, Tuple l2 ->
       List.equal (Option.equal String.equal) l1 l2
     | Unboxed_tuple l1, Unboxed_tuple l2 ->
@@ -211,7 +212,8 @@ let all_coherent column =
     | Record_unboxed_product ([], _), Record_unboxed_product ([], _)
     | Variant _, Variant _
     | Lazy, Lazy -> true
-    | ( Construct _ | Constant _ | Unboxed_unit | Unboxed_bool _ | Tuple _
+    | ( Construct _ | Constant _ | Unboxed_unit | Unboxed_bool _
+      | Unboxed_variant _ | Tuple _
       | Unboxed_tuple _ | Record _ | Record_unboxed_product _ | Array _
       | Variant _ | Lazy ), _ -> false
   in
@@ -378,6 +380,7 @@ module Compat
       const_compare c1 c2 = 0
   | Tpat_unboxed_unit, Tpat_unboxed_unit -> true
   | Tpat_unboxed_bool b1, Tpat_unboxed_bool b2 -> Bool.equal b1 b2
+  | Tpat_unboxed_variant t1, Tpat_unboxed_variant t2 -> String.equal t1 t2
   | Tpat_tuple labeled_ps, Tpat_tuple labeled_qs ->
       tuple_compat labeled_ps labeled_qs
   | Tpat_unboxed_tuple labeled_ps, Tpat_unboxed_tuple labeled_qs ->
@@ -466,6 +469,7 @@ let simple_match d h =
   | Record_unboxed_product _, Record_unboxed_product _ -> true
   | Unboxed_unit, Unboxed_unit -> true
   | Unboxed_bool b1, Unboxed_bool b2 -> Bool.equal b1 b2
+  | Unboxed_variant t1, Unboxed_variant t2 -> String.equal t1 t2
   | Tuple lbls1, Tuple lbls2 ->
     List.equal (Option.equal String.equal) lbls1 lbls2
   | Unboxed_tuple lbls1, Unboxed_tuple lbls2 ->
@@ -474,7 +478,8 @@ let simple_match d h =
   | Array (am1, _, len1), Array (am2, _, len2) -> am1 = am2 && len1 = len2
   | _, Any -> true
   | ( Construct _ | Variant _ | Constant _ | Lazy | Record _
-    | Record_unboxed_product _ | Unboxed_unit | Unboxed_bool _ | Tuple _
+    | Record_unboxed_product _ | Unboxed_unit | Unboxed_bool _
+    | Unboxed_variant _ | Tuple _
     | Unboxed_tuple _ | Array _ | Any), _ -> false
 
 
@@ -513,6 +518,7 @@ let simple_match_args discr head args =
   | Variant _
   | Unboxed_unit
   | Unboxed_bool _
+  | Unboxed_variant _
   | Tuple _
   | Unboxed_tuple _
   | Array _
@@ -535,7 +541,8 @@ let simple_match_args discr head args =
       | Any
       | Constant _
       | Unboxed_unit
-      | Unboxed_bool _ -> []
+      | Unboxed_bool _
+      | Unboxed_variant _ -> []
       end
 
 (* Consider a pattern matrix whose first column has been simplified to contain
@@ -597,7 +604,8 @@ let discr_pat q pss =
           { head with pat_desc = Record_unboxed_product (fields, repr) }
         in
         refine_pat d rows
-      | Construct _ | Constant _ | Unboxed_unit | Unboxed_bool _ | Variant _
+      | Construct _ | Constant _ | Unboxed_unit | Unboxed_bool _
+      | Unboxed_variant _ | Variant _
       | Array _ -> acc
   in
   let q, _ = deconstruct q in
@@ -673,7 +681,8 @@ let set_args q r = match q with
     let args,rest = read_args omegas r in
     make_pat
       (Tpat_array (am, arg_sort, args)) q.pat_type q.pat_env :: rest
-| {pat_desc=Tpat_constant _|Tpat_any|Tpat_unboxed_unit|Tpat_unboxed_bool _} ->
+| {pat_desc=Tpat_constant _|Tpat_any|Tpat_unboxed_unit|Tpat_unboxed_bool _
+           |Tpat_unboxed_variant _} ->
     q::r (* case any is used in matching.ml *)
 | {pat_desc =
      (Tpat_var _ | Tpat_fun_layout _ | Tpat_alias _ | Tpat_or _); _} ->
@@ -900,6 +909,7 @@ let full_match closing env =  match env with
   | Construct (c, _, _) -> List.length env = c.cstr_consts + c.cstr_nonconsts
   | Unboxed_unit -> List.length env = 1
   | Unboxed_bool _ -> List.length env = 2
+  | Unboxed_variant _ -> List.length env = 1
   | Variant { type_row; _ } ->
       let fields =
         List.map
@@ -952,7 +962,8 @@ let should_extend ext env = match ext with
           let path = get_constructor_type_path p.pat_type p.pat_env in
           Path.same path ext
       | Construct ({cstr_tag=Extension _}, _, _) -> false
-      | Constant _ | Unboxed_unit | Unboxed_bool _ | Tuple _ | Unboxed_tuple _
+      | Constant _ | Unboxed_unit | Unboxed_bool _ | Unboxed_variant _
+      | Tuple _ | Unboxed_tuple _
       | Variant _ | Record _ | Record_unboxed_product _
       | Array _ | Lazy -> false
       | Any -> assert false
@@ -1302,7 +1313,8 @@ let rec has_instance p = match p.pat_desc with
   | Tpat_variant (l,_,r) when is_absent l r -> false
   | Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_unboxed_unit
   | Tpat_fun_layout _
-  | Tpat_unboxed_bool _ | Tpat_variant (_,None,_) -> true
+  | Tpat_unboxed_bool _ | Tpat_unboxed_variant _
+  | Tpat_variant (_,None,_) -> true
   | Tpat_alias { pattern = p; _ } | Tpat_variant (_,Some p,_) -> has_instance p
   | Tpat_or (p1,p2,_) -> has_instance p1 || has_instance p2
   | Tpat_construct (_,_,_,ps, _) ->
@@ -2236,6 +2248,7 @@ let rec collect_paths_from_pat r p = match p.pat_desc with
       (if extendable_path path then add_path path r else r)
       ps
 | Tpat_any|Tpat_var _|Tpat_constant _|Tpat_unboxed_unit|Tpat_unboxed_bool _
+| Tpat_unboxed_variant _
 | Tpat_fun_layout _
 | Tpat_variant (_,None,_) -> r
 | Tpat_tuple ps ->
@@ -2379,6 +2392,7 @@ let inactive ~partial pat =
         | Tpat_lazy _ | Tpat_array (Mutable _, _, _) ->
           false
         | Tpat_any | Tpat_var _ | Tpat_unboxed_unit | Tpat_unboxed_bool _
+        | Tpat_unboxed_variant _
         | Tpat_variant (_, None, _) | Tpat_fun_layout _
         -> true
         | Tpat_constant c -> begin

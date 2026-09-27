@@ -56,6 +56,7 @@ module Simple = struct
     | `Constant of constant
     | `Unboxed_unit
     | `Unboxed_bool of bool
+    | `Unboxed_variant of string
     | `Tuple of (string option * pattern) list
     | `Unboxed_tuple of (string option * pattern * Jkind.sort) list
     | `Construct of
@@ -122,6 +123,8 @@ module General = struct
        `Unboxed_unit
     | Tpat_unboxed_bool b ->
        `Unboxed_bool b
+    | Tpat_unboxed_variant tag ->
+       `Unboxed_variant tag
     | Tpat_tuple ps ->
        `Tuple ps
     | Tpat_unboxed_tuple ps ->
@@ -154,6 +157,7 @@ module General = struct
     | `Constant cst -> Tpat_constant cst
     | `Unboxed_unit -> Tpat_unboxed_unit
     | `Unboxed_bool b -> Tpat_unboxed_bool b
+    | `Unboxed_variant tag -> Tpat_unboxed_variant tag
     | `Tuple ps -> Tpat_tuple ps
     | `Unboxed_tuple ps -> Tpat_unboxed_tuple ps
     | `Construct (cstr, cst_descr, cst_repr, args) ->
@@ -188,6 +192,7 @@ module Head : sig
     | Constant of constant
     | Unboxed_unit
     | Unboxed_bool of bool
+    | Unboxed_variant of string
     | Tuple of string option list
     | Unboxed_tuple of (string option * Jkind.sort) list
     | Record of
@@ -221,6 +226,7 @@ end = struct
     | Constant of constant
     | Unboxed_unit
     | Unboxed_bool of bool
+    | Unboxed_variant of string
     | Tuple of string option list
     | Unboxed_tuple of (string option * Jkind.sort) list
     | Record of
@@ -245,6 +251,7 @@ end = struct
       | `Constant c -> Constant c, []
       | `Unboxed_unit -> Unboxed_unit, []
       | `Unboxed_bool b -> Unboxed_bool b, []
+      | `Unboxed_variant tag -> Unboxed_variant tag, []
       | `Tuple args ->
           Tuple (List.map fst args), (List.map snd args)
       | `Unboxed_tuple args ->
@@ -288,6 +295,7 @@ end = struct
       | Construct (c, _, _) -> c.cstr_arity
       | Unboxed_unit -> 0
       | Unboxed_bool _ -> 0
+      | Unboxed_variant _ -> 0
       | Tuple l -> List.length l
       | Unboxed_tuple l -> List.length l
       | Array (_, _, n) -> n
@@ -305,6 +313,7 @@ end = struct
       | Constant c -> Tpat_constant c
       | Unboxed_unit -> Tpat_unboxed_unit
       | Unboxed_bool b -> Tpat_unboxed_bool b
+      | Unboxed_variant tag -> Tpat_unboxed_variant tag
       | Tuple lbls ->
           Tpat_tuple (List.map (fun lbl -> lbl, omega) lbls)
       | Unboxed_tuple lbls_and_sorts ->

@@ -79,6 +79,7 @@ module Typ :
                -> core_type
     val unboxed_tuple: ?loc:loc -> ?attrs:attrs
                        -> (string option * core_type) list -> core_type
+    val unboxed_variant: ?loc:loc -> ?attrs:attrs -> label -> core_type
     val constr: ?loc:loc -> ?attrs:attrs -> lid -> core_type list -> core_type
     val object_: ?loc:loc -> ?attrs:attrs -> object_field list
                    -> closed_flag -> core_type
@@ -130,6 +131,7 @@ module Pat:
     val interval: ?loc:loc -> ?attrs:attrs -> constant -> constant -> pattern
     val unboxed_unit: ?loc:loc -> ?attrs:attrs -> unit -> pattern
     val unboxed_bool: ?loc:loc -> ?attrs:attrs -> bool -> pattern
+    val unboxed_variant: ?loc:loc -> ?attrs:attrs -> label -> pattern
     val unboxed_tuple: ?loc:loc -> ?attrs:attrs
                        -> (string option * pattern) list -> closed_flag
                        -> pattern
@@ -176,6 +178,7 @@ module Exp:
     val try_: ?loc:loc -> ?attrs:attrs -> expression -> case list -> expression
     val unboxed_unit: ?loc:loc -> ?attrs:attrs -> unit -> expression
     val unboxed_bool: ?loc:loc -> ?attrs:attrs -> bool -> expression
+    val unboxed_variant: ?loc:loc -> ?attrs:attrs -> label -> expression
     val unboxed_tuple: ?loc:loc -> ?attrs:attrs
                        -> (string option * expression) list -> expression
     val tuple: ?loc:loc -> ?attrs:attrs -> (string option * expression) list

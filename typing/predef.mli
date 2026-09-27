@@ -122,6 +122,7 @@ val type_atomic_loc:type_expr -> type_expr
 val type_expr: type_expr -> type_expr
 val type_unboxed_unit: type_expr
 val type_unboxed_bool: type_expr
+val type_unboxed_variant: string -> type_expr
 val type_unboxed_float:type_expr
 val type_unboxed_char: type_expr
 val type_unboxed_int: type_expr
@@ -218,6 +219,7 @@ val path_box: Path.t
 
 val path_unboxed_unit : Path.t
 val path_unboxed_bool : Path.t
+val path_unboxed_variant : string -> Path.t
 val path_unboxed_float: Path.t
 val path_unboxed_char: Path.t
 val path_unboxed_int: Path.t

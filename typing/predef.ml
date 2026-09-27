@@ -226,6 +226,10 @@ and ident_lexing_position = ident_create "lexing_position"
 and ident_expr = ident_create "expr"
 and ident_eval = ident_create "eval"
 and ident_box = ident_create "box"
+(* A fixed base identifier used only to form the paths of anonymous unboxed
+   variant types [[ `tag ]#].  It is never registered in any environment; see
+   [path_unboxed_variant]. *)
+and ident_unboxed_variant = ident_create "unboxed_variant"
 
 and ident_nativeint_u = ident_create "nativeint_u"
 and ident_int32_u = ident_create "int32_u"
@@ -426,10 +430,18 @@ and path_unboxed_float32x16 = Path.unboxed_version path_float32x16
 and path_unboxed_float64x8 = Path.unboxed_version path_float64x8
 and path_unboxed_mask = Path.unboxed_version path_mask
 
+(* The path of the anonymous unboxed variant type [[ `tag ]#].  All occurrences
+   of the same [tag] produce equal paths (hence equal types), and distinct tags
+   produce distinct paths.  The base identifier is meaningless; [Env.find_type]
+   synthesises the (void, abstract) declaration directly from [tag]. *)
+let path_unboxed_variant tag =
+  Path.Pextra_ty (Pident ident_unboxed_variant, Path.Punboxed_variant tag)
+
 let path_of_type_constr typ =
   Pident (ident_of_type_constr typ)
 
 let tconstr p args = newgenty (Tconstr(p, args, ref Mnil))
+let type_unboxed_variant tag = tconstr (path_unboxed_variant tag) []
 let type_int = tconstr path_int []
 and type_int8 = tconstr path_int8 []
 and type_int16 = tconstr path_int16 []

@@ -609,6 +609,11 @@ and transl_exp0 ~in_new_scope ~scopes (layout : Lambda.layout) e =
   | Texp_unboxed_unit ->
       Lprim(Punbox_unit, [lambda_unit],
             of_location ~scopes e.exp_loc)
+  | Texp_unboxed_variant _ ->
+      (* Like [#()], the sole inhabitant of a void variant type has the empty
+         unboxed product as its runtime representation. *)
+      Lprim(Punbox_unit, [lambda_unit],
+            of_location ~scopes e.exp_loc)
   | Texp_unboxed_bool b ->
       Lconst(Const_base(Const_untagged_int8(Bool.to_int b)))
   | Texp_tuple (el, locality_mode) ->

@@ -60,6 +60,11 @@ and extra_ty =
 
       Example: [float#], or [t#] given [type t = { i : int ; s : string }].
   *)
+  | Punboxed_variant of string
+  (** [Pextra_ty (p, Punboxed_variant tag)] is the anonymous unboxed variant
+      type of kind void [[ `tag ]#], whose sole inhabitant is [#`tag].  The
+      base path [p] is a fixed predefined identifier that carries no meaning:
+      the type's identity is determined entirely by [tag]. *)
 
 val unboxed_version : t -> t
 val boxed_version : t -> t option

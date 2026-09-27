@@ -58,6 +58,7 @@ let rec fmt_path_aux f x =
   | Path.Papply (y, z) ->
       fprintf f "%a(%a)" fmt_path_aux y fmt_path_aux z
   | Path.Pextra_ty (y, Pext_ty) -> fmt_path_aux f y
+  | Path.Pextra_ty (_, Punboxed_variant tag) -> fprintf f "[ `%s ]#" tag
   | Path.Pextra_ty (y, Punboxed_ty) ->
       match y with
       | Path.Pident id ->
@@ -399,6 +400,8 @@ let rec core_type i ppf x =
   | Ttyp_unboxed_tuple l ->
       line i ppf "Ttyp_unboxed_tuple\n";
       list i labeled_core_type ppf l;
+  | Ttyp_unboxed_variant tag ->
+      line i ppf "Ttyp_unboxed_variant %s\n" tag;
   | Ttyp_constr (li, _, l) ->
       line i ppf "Ttyp_constr %a\n" fmt_path li;
       list i core_type ppf l;
@@ -516,6 +519,7 @@ and pattern : type k . _ -> _ -> k general_pattern -> unit = fun i ppf x ->
   | Tpat_constant (c) -> line i ppf "Tpat_constant %a\n" fmt_constant c;
   | Tpat_unboxed_unit -> line i ppf "Tpat_unboxed_unit\n";
   | Tpat_unboxed_bool b -> line i ppf "Tpat_unboxed_bool %a\n" fmt_bool b;
+  | Tpat_unboxed_variant tag -> line i ppf "Tpat_unboxed_variant %s\n" tag;
   | Tpat_tuple (l) ->
       line i ppf "Tpat_tuple\n";
       list i labeled_pattern ppf l;
@@ -742,6 +746,7 @@ and expression i ppf x =
       list i case ppf l2;
   | Texp_unboxed_unit -> line i ppf "Texp_unboxed_unit\n";
   | Texp_unboxed_bool b -> line i ppf "Texp_unboxed_bool %a\n" fmt_bool b;
+  | Texp_unboxed_variant tag -> line i ppf "Texp_unboxed_variant %s\n" tag;
   | Texp_tuple (l, am) ->
       line i ppf "Texp_tuple\n";
       locality_mode_r i ppf am;

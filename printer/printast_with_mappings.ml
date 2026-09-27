@@ -214,6 +214,8 @@ let rec core_type i ppf x =
   | Ptyp_unboxed_tuple l ->
       line i ppf "Ptyp_unboxed_tuple\n";
       list i (labeled_tuple_element core_type) ppf l;
+  | Ptyp_unboxed_variant l ->
+      line i ppf "Ptyp_unboxed_variant %s\n" l;
   | Ptyp_constr (li, l) ->
       line i ppf "Ptyp_constr %a\n" fmt_longident_loc li;
       list i core_type ppf l;
@@ -308,6 +310,7 @@ and pattern i ppf x =
       line i ppf "Ppat_interval %a..%a\n" fmt_constant d1 fmt_constant d2;
   | Ppat_unboxed_unit -> line i ppf "Ppat_unboxed_unit\n";
   | Ppat_unboxed_bool b -> line i ppf "Ppat_unboxed_bool %a\n" fmt_bool b;
+  | Ppat_unboxed_variant l -> line i ppf "Ppat_unboxed_variant %s\n" l;
   | Ppat_tuple (l, c) ->
       line i ppf "Ppat_tuple %a\n" fmt_closed_flag c;
       list i (labeled_tuple_element pattern) ppf l;
@@ -401,6 +404,7 @@ and expression i ppf x =
       list i case ppf l;
   | Pexp_unboxed_unit -> line i ppf "Pexp_unboxed_unit\n";
   | Pexp_unboxed_bool b -> line i ppf "Pexp_unboxed_bool %a\n" fmt_bool b;
+  | Pexp_unboxed_variant l -> line i ppf "Pexp_unboxed_variant %s\n" l;
   | Pexp_tuple (l) ->
       line i ppf "Pexp_tuple\n";
       list i (labeled_tuple_element expression) ppf l;

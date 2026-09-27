@@ -1045,6 +1045,7 @@ let maybe_pmod_constraint mode expr =
 %token HASHLBRACE             "#{"
 %token HASHFALSE              "#false"
 %token HASHTRUE               "#true"
+%token HASH_BACKQUOTE         "#`"
 %token IF                     "if"
 %token IN                     "in"
 %token INCLUDE                "include"
@@ -1228,7 +1229,7 @@ The precedences must be listed from low to high.
           HASH_CHAR HASH_FLOAT HASH_INT
           LBRACKETCOLON LESSLBRACKET DOLLAR
           HASHLBRACE HASHLPAREN UNDERSCORE
-          HASHFALSE HASHTRUE
+          HASHFALSE HASHTRUE HASH_BACKQUOTE
 
 /* Entry points */
 
@@ -3165,6 +3166,8 @@ block_access:
       { Pexp_unboxed_bool false }
   | HASHTRUE
       { Pexp_unboxed_bool true }
+  | HASH_BACKQUOTE ident
+      { Pexp_unboxed_variant $2 }
   | name_tag %prec prec_constant_constructor
       { Pexp_variant($1, None) }
   | op(PREFIXOP) simple_expr
@@ -3786,6 +3789,8 @@ simple_pattern_not_ident:
       { Ppat_unboxed_bool false }
   | HASHTRUE
       { Ppat_unboxed_bool true }
+  | HASH_BACKQUOTE ident
+      { Ppat_unboxed_variant $2 }
   | name_tag
       { Ppat_variant($1, None) }
   | hash mkrhs(type_longident)
@@ -4919,8 +4924,13 @@ delimited_type_supporting_local_open:
   | LPAREN MODULE ext_attrs = ext_attributes package_type = package_type_ RPAREN
       { mktyp_attrs ~loc:$sloc (Ptyp_package package_type) ext_attrs }
   | mktyp(
-      LBRACKET field = tag_field RBRACKET
+      LBRACKET field = tag_field RBRACKET %prec below_HASH
         { Ptyp_variant([ field ], Closed, None) }
+    | LBRACKET field = tag_field RBRACKET HASH_SUFFIX
+        { match field.prf_desc with
+          | Rtag (name, true, []) -> Ptyp_unboxed_variant name.txt
+          | Rtag _ | Rinherit _ ->
+              expecting $loc(field) "nullary polymorphic variant tag" }
     | LBRACKET BAR fields = row_field_list RBRACKET
         { Ptyp_variant(fields, Closed, None) }
     | LBRACKET field = row_field BAR fields = row_field_list RBRACKET

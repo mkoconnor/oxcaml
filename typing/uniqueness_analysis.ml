@@ -2080,6 +2080,9 @@ and pattern_match_barrier pat paths : UF.t =
   | Tpat_unboxed_bool _ ->
     (* unboxed bools are not allocations *)
     no_memory_access ()
+  | Tpat_unboxed_variant _ ->
+    (* unboxed variants are void: not allocations *)
+    no_memory_access ()
   | Tpat_unboxed_tuple _ ->
     (* unboxed tuples are not allocations *)
     no_memory_access ()
@@ -2105,6 +2108,7 @@ and pattern_match_single pat paths : Ienv.Extension.t * UF.t =
     | Tpat_constant _ -> Ienv.Extension.empty, UF.unused
     | Tpat_unboxed_unit -> Ienv.Extension.empty, UF.unused
     | Tpat_unboxed_bool _ -> Ienv.Extension.empty, UF.unused
+    | Tpat_unboxed_variant _ -> Ienv.Extension.empty, UF.unused
     | Tpat_construct (lbl, cd, _, pats, _) ->
       let uf_tag =
         Paths.learn_tag { tag = cd.cstr_tag; name_for_error = lbl } paths
@@ -2440,6 +2444,7 @@ let rec check_uniqueness_exp_desc ~borrows ~overwrite (ienv : Ienv.t) ~loc :
     UF.seq uf_body uf_all_cases
   | Texp_unboxed_unit -> UF.unused
   | Texp_unboxed_bool _ -> UF.unused
+  | Texp_unboxed_variant _ -> UF.unused
   | Texp_tuple (es, _) ->
     UF.pars
       (List.mapi

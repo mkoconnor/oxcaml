@@ -354,7 +354,8 @@ let pat
     | Tpat_any
     | Tpat_constant _
     | Tpat_unboxed_unit
-    | Tpat_unboxed_bool _ -> x.pat_desc
+    | Tpat_unboxed_bool _
+    | Tpat_unboxed_variant _ -> x.pat_desc
     | Tpat_var { id; name; uid; sort; mode } ->
       Tpat_var { id; name = map_loc sub name; uid; sort; mode }
     | Tpat_tuple l ->
@@ -581,6 +582,7 @@ let expr sub x =
         )
     | Texp_unboxed_unit -> Texp_unboxed_unit
     | Texp_unboxed_bool b -> Texp_unboxed_bool b
+    | Texp_unboxed_variant tag -> Texp_unboxed_variant tag
     | Texp_tuple (list, am) ->
         Texp_tuple (List.map (fun (label, e) -> label, sub.expr sub e) list, am)
     | Texp_unboxed_tuple list ->
@@ -1067,6 +1069,7 @@ let typ sub x =
     | Ttyp_unboxed_tuple list ->
         Ttyp_unboxed_tuple
           (List.map (fun (label, t) -> label, sub.typ sub t) list)
+    | Ttyp_unboxed_variant tag -> Ttyp_unboxed_variant tag
     | Ttyp_constr (path, lid, list) ->
         Ttyp_constr (path, map_loc_lid sub lid, List.map (sub.typ sub) list)
     | Ttyp_object (list, closed) ->

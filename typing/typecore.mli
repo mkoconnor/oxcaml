@@ -254,6 +254,7 @@ type always_static_allocation =
   | Src_pos
   | Unboxed_unit
   | Unboxed_bool
+  | Unboxed_variant
 
 type existential_binding =
   | Bind_already_bound

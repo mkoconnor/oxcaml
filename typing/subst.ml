@@ -430,7 +430,7 @@ let rec type_path s path =
         fatal_error "Subst.type_path"
      | Pextra_ty (p, extra) ->
          match extra with
-         | Pcstr_ty _ | Punboxed_ty ->
+         | Pcstr_ty _ | Punboxed_ty | Punboxed_variant _ ->
            Pextra_ty (type_path s p, extra)
          | Pext_ty -> Pextra_ty (value_path s p, extra)
 

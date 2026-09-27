@@ -22,6 +22,7 @@ and extra_ty =
   | Pcstr_ty of string
   | Pext_ty
   | Punboxed_ty
+  | Punboxed_variant of string
 
 let unboxed_version t = Pextra_ty (t, Punboxed_ty)
 
@@ -29,7 +30,7 @@ let boxed_version t =
   match t with
   | Pextra_ty (inner, Punboxed_ty) -> Some inner
   | Pident _ | Pdot _ | Papply _
-  | Pextra_ty (_, (Pcstr_ty _ | Pext_ty)) ->
+  | Pextra_ty (_, (Pcstr_ty _ | Pext_ty | Punboxed_variant _)) ->
     None
 
 let is_unboxed_version t = Option.is_some (boxed_version t)
@@ -47,7 +48,9 @@ let rec same p1 p2 =
         | (Pcstr_ty s1, Pcstr_ty s2) -> s1 = s2
         | (Pext_ty, Pext_ty) -> true
         | (Punboxed_ty, Punboxed_ty) -> true
-        | ((Pcstr_ty _ | Pext_ty | Punboxed_ty), _) -> false
+        | (Punboxed_variant s1, Punboxed_variant s2) -> s1 = s2
+        | ((Pcstr_ty _ | Pext_ty | Punboxed_ty | Punboxed_variant _), _) ->
+            false
       in same_extra && same p1 p2
   | (_, _) -> false
 
@@ -78,13 +81,18 @@ and compare_extra t1 t2 =
   | (Pext_ty, Pext_ty)
     -> 0
   | (Punboxed_ty, Punboxed_ty) -> 0
-  | (Pcstr_ty _, (Pext_ty | Punboxed_ty))
+  | (Punboxed_variant s1, Punboxed_variant s2) -> String.compare s1 s2
+  | (Pcstr_ty _, (Pext_ty | Punboxed_ty | Punboxed_variant _))
     -> -1
-  | ((Pext_ty | Punboxed_ty), Pcstr_ty _)
+  | ((Pext_ty | Punboxed_ty | Punboxed_variant _), Pcstr_ty _)
     -> 1
-  | (Pext_ty, Punboxed_ty)
+  | (Pext_ty, (Punboxed_ty | Punboxed_variant _))
     -> -1
-  | (Punboxed_ty, Pext_ty)
+  | ((Punboxed_ty | Punboxed_variant _), Pext_ty)
+    -> 1
+  | (Punboxed_ty, Punboxed_variant _)
+    -> -1
+  | (Punboxed_variant _, Punboxed_ty)
     -> 1
 
 let rec find_free_opt ids = function
@@ -118,6 +126,7 @@ let rec name ?(paren=kfalse) = function
       name ~paren p ^ if paren s then ".( " ^ s ^ " )" else "." ^ s
   | Papply(p1, p2) -> name ~paren p1 ^ "(" ^ name ~paren p2 ^ ")"
   | Pextra_ty (p, Pext_ty) -> name ~paren p
+  | Pextra_ty (_, Punboxed_variant tag) -> "[ `" ^ tag ^ " ]#"
   | Pextra_ty (p, Punboxed_ty) ->
     match p with
     | Pident id -> Ident.name id ^ "#"
@@ -131,6 +140,8 @@ let rec print ppf = function
       Format_doc.fprintf ppf "%a.%s" print p s
   | Papply(p1, p2) -> Format_doc.fprintf ppf "%a(%a)" print p1 print p2
   | Pextra_ty (p, Pext_ty) -> print ppf p
+  | Pextra_ty (_, Punboxed_variant tag) ->
+    Format_doc.fprintf ppf "[ `%s ]#" tag
   | Pextra_ty (p, Punboxed_ty) ->
     match p with
     | Pident id -> Format_doc.fprintf ppf "%a#" Ident.print_with_scope id
@@ -148,7 +159,8 @@ let flatten =
     | Pident id -> `Ok (id, acc)
     | Pdot (p, s) | Pextra_ty (p, Pcstr_ty s) -> flatten (s :: acc) p
     | Papply _ -> `Contains_apply
-    | Pextra_ty (p, (Pext_ty | Punboxed_ty)) -> flatten acc p
+    | Pextra_ty (p, (Pext_ty | Punboxed_ty | Punboxed_variant _)) ->
+        flatten acc p
   in
   fun t -> flatten [] t
 
@@ -168,12 +180,14 @@ let rec last = function
   | Pident id -> Ident.name id
   | Pdot(_, s) | Pextra_ty (_, Pcstr_ty s) -> s
   | Papply(_, p) | Pextra_ty (p, Pext_ty) -> last p
+  | Pextra_ty (_, Punboxed_variant tag) -> "[ `" ^ tag ^ " ]#"
   | Pextra_ty (p, Punboxed_ty) ->
     last p ^ "#"
 
 let is_constructor_typath p =
   match p with
-  | Pident _ | Pdot _ | Papply _ | Pextra_ty (_, Punboxed_ty) -> false
+  | Pident _ | Pdot _ | Papply _
+  | Pextra_ty (_, (Punboxed_ty | Punboxed_variant _)) -> false
   | Pextra_ty (_, (Pcstr_ty _ | Pext_ty)) -> true
 
 module T = struct
@@ -202,6 +216,7 @@ let rec hash_aux acc p =
       | Pcstr_ty s -> combine (combine acc 0) s
       | Pext_ty -> combine acc 1
       | Punboxed_ty -> combine acc 2
+      | Punboxed_variant tag -> combine (combine acc 3) tag
       end
 
 let hash p = hash_aux 0 p

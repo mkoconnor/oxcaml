@@ -879,6 +879,7 @@ rule token = parse
   | "#{" { HASHLBRACE }
   | "#false" { HASHFALSE }
   | "#true" { HASHTRUE }
+  | "#`" { HASH_BACKQUOTE }
   | "*"  { STAR }
   | ","  { COMMA }
   | "->" { MINUSGREATER }
@@ -914,6 +915,14 @@ rule token = parse
   | "[<" { LBRACKETLESS }
   | "[>" { LBRACKETGREATER }
   | "]"  { RBRACKET }
+  | "]#"
+      (* See Note [Lexing hack for float#]: we treat [ ]# ] like an identifier
+         immediately followed by [#], so that the postfix [#] of an anonymous
+         unboxed variant type [ [ `foo ]# ] is lexed as HASH_SUFFIX rather than
+         HASH.  This disambiguates it from the class-type syntax [ [ `foo ] #c ],
+         exactly as [float#] is disambiguated from [float #c].  Method sends
+         such as [ e.[i]#m ] still work because they accept HASH_SUFFIX. *)
+      { enqueue_hash_suffix_from_end_of_lexbuf_window lexbuf; RBRACKET }
   | "]>" {
       if Syntax_mode.quotations_enabled () then
         RBRACKETGREATER

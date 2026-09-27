@@ -43,6 +43,7 @@ module Simple : sig
     | `Constant of constant
     | `Unboxed_unit
     | `Unboxed_bool of bool
+    | `Unboxed_variant of string
     | `Tuple of (string option * pattern) list
     | `Unboxed_tuple of (string option * pattern * Jkind.sort) list
     | `Construct of
@@ -104,6 +105,7 @@ module Head : sig
     | Constant of constant
     | Unboxed_unit
     | Unboxed_bool of bool
+    | Unboxed_variant of string
     | Tuple of string option list
     | Unboxed_tuple of (string option * Jkind.sort) list
     | Record of

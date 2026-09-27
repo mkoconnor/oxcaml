@@ -1504,6 +1504,45 @@ let step_find_unboxed_version decl =
           | Tconstr (path, args, _) -> Aliases (path, args)
           | _ -> Lacks_unboxed_version
 
+(* The type declaration for an anonymous unboxed variant type [[ `tag ]#].
+   Its identity is carried entirely by the path [Pextra_ty (base, Punboxed_variant
+   tag)]; the declaration itself is the same for every tag: an abstract type of
+   kind void (like [unit#]).  [base] is a fixed predefined identifier. *)
+let unboxed_variant_type_data base_path =
+  let base_id = Path.head base_path in
+  let type_jkind =
+    Jkind.of_builtin
+      ~why:(Unboxed_primitive base_id)
+      Jkind.Const.Builtin.kind_of_unboxed_unit
+    |> Jkind.mark_best
+  in
+  let uid = Uid.of_predef_id base_id in
+  let decl =
+    { type_params = [];
+      type_arity = 0;
+      type_kind = Type_abstract Definition;
+      type_jkind;
+      type_ikind = Types.ikinds_todo "env unboxed variant";
+      type_private = Asttypes.Public;
+      type_manifest = None;
+      type_variance = [];
+      type_separability = [];
+      type_is_newtype = false;
+      type_expansion_scope = Btype.lowest_level;
+      type_loc = Location.none;
+      type_attributes = [];
+      type_unboxed_default = false;
+      type_uid = uid;
+      type_unboxed_version = None;
+    }
+  in
+  { tda_declaration = decl;
+    tda_descriptions = Type_abstract (Btype.type_origin decl);
+    tda_shape = Shape.leaf uid;
+    tda_unboxed_version_descriptions = None;
+    tda_hidden = false;
+  }
+
 let rec find_type_data path env seen =
   match
     StagedPath.Map.find (path_at_current_stage env path) env.local_constraints
@@ -1534,6 +1573,8 @@ let rec find_type_data path env seen =
               type_of_cstr path cda.cda_description
           | Punboxed_ty ->
               find_type_unboxed_version_data p env seen
+          | Punboxed_variant _tag ->
+              unboxed_variant_type_data p
         end
     end
 and find_cstr path name env =

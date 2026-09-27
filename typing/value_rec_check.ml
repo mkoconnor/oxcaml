@@ -212,6 +212,7 @@ let classify_expression : Typedtree.expression -> sd =
 
     | Texp_unboxed_unit
     | Texp_unboxed_bool _
+    | Texp_unboxed_variant _
     | Texp_src_pos ->
         Static
 
@@ -701,6 +702,8 @@ let rec expression : Typedtree.expression -> term_judg =
     | Texp_unboxed_unit ->
       empty
     | Texp_unboxed_bool _ ->
+      empty
+    | Texp_unboxed_variant _ ->
       empty
     | Texp_new (pth, _, _, _) ->
       (*
@@ -1544,6 +1547,7 @@ and is_destructuring_pattern : type k . k general_pattern -> bool =
     | Tpat_constant _ -> true
     | Tpat_unboxed_unit -> true
     | Tpat_unboxed_bool _ -> true
+    | Tpat_unboxed_variant _ -> true
     | Tpat_tuple _ -> true
     | Tpat_unboxed_tuple _ -> true
     | Tpat_construct _ -> true

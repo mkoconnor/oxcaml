@@ -71,6 +71,7 @@ module Typ = struct
   let arrow ?loc ?attrs a b c d e = mk ?loc ?attrs (Ptyp_arrow (a, b, c, d, e))
   let tuple ?loc ?attrs a = mk ?loc ?attrs (Ptyp_tuple a)
   let unboxed_tuple ?loc ?attrs a = mk ?loc ?attrs (Ptyp_unboxed_tuple a)
+  let unboxed_variant ?loc ?attrs a = mk ?loc ?attrs (Ptyp_unboxed_variant a)
   let constr ?loc ?attrs a b = mk ?loc ?attrs (Ptyp_constr (a, b))
   let object_ ?loc ?attrs a b = mk ?loc ?attrs (Ptyp_object (a, b))
   let class_ ?loc ?attrs a b = mk ?loc ?attrs (Ptyp_class (a, b))
@@ -115,6 +116,7 @@ module Typ = struct
             Ptyp_tuple (List.map (fun (l, t) -> l, loop t) lst)
         | Ptyp_unboxed_tuple lst ->
           Ptyp_unboxed_tuple (List.map (fun (l, t) -> l, loop t) lst)
+        | Ptyp_unboxed_variant _ as d -> d
         | Ptyp_constr( { txt = Longident.Lident s }, [])
           when List.mem s var_names ->
             Ptyp_var (s, None)
@@ -215,6 +217,7 @@ module Pat = struct
   let interval ?loc ?attrs a b = mk ?loc ?attrs (Ppat_interval (a, b))
   let unboxed_unit ?loc ?attrs () = mk ?loc ?attrs Ppat_unboxed_unit
   let unboxed_bool ?loc ?attrs b = mk ?loc ?attrs (Ppat_unboxed_bool b)
+  let unboxed_variant ?loc ?attrs a = mk ?loc ?attrs (Ppat_unboxed_variant a)
   let tuple ?loc ?attrs a b = mk ?loc ?attrs (Ppat_tuple (a, b))
   let unboxed_tuple ?loc ?attrs a b = mk ?loc ?attrs (Ppat_unboxed_tuple (a, b))
   let construct ?loc ?attrs a b = mk ?loc ?attrs (Ppat_construct (a, b))
@@ -251,6 +254,7 @@ module Exp = struct
   let try_ ?loc ?attrs a b = mk ?loc ?attrs (Pexp_try (a, b))
   let unboxed_unit ?loc ?attrs () = mk ?loc ?attrs Pexp_unboxed_unit
   let unboxed_bool ?loc ?attrs b = mk ?loc ?attrs (Pexp_unboxed_bool b)
+  let unboxed_variant ?loc ?attrs a = mk ?loc ?attrs (Pexp_unboxed_variant a)
   let tuple ?loc ?attrs a = mk ?loc ?attrs (Pexp_tuple a)
   let unboxed_tuple ?loc ?attrs a = mk ?loc ?attrs (Pexp_unboxed_tuple a)
   let construct ?loc ?attrs a b = mk ?loc ?attrs (Pexp_construct (a, b))

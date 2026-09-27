@@ -616,6 +616,8 @@ and core_type1 ctxt f x =
         pp f "(%a)" (list (tuple_type_component ctxt) ~sep:"@;*@;") tl
     | Ptyp_unboxed_tuple l ->
       core_type1_labeled_tuple ctxt f ~unboxed:true l
+    | Ptyp_unboxed_variant l ->
+      pp f "[ `%s ]#" l
     | Ptyp_constr (li, l) ->
         pp f (* "%a%a@;" *) "%a%a"
           (fun f l -> match l with
@@ -839,6 +841,7 @@ and simple_pattern ctxt (f:Format.formatter) (x:pattern) : unit =
         record_pattern ctxt f ~unboxed:true l closed
     | Ppat_unboxed_unit -> pp f "#()"
     | Ppat_unboxed_bool b -> pp f "#%a" bool b
+    | Ppat_unboxed_variant l -> pp f "#`%s" l
     | Ppat_tuple (l, c) ->
         tuple_pattern ctxt f ~unboxed:false l c
     | Ppat_unboxed_tuple (l, c) ->
@@ -1257,6 +1260,7 @@ and simple_expr ctxt f x =
         pp f ")"
     | Pexp_unboxed_unit -> pp f "#()"
     | Pexp_unboxed_bool b -> pp f "#%a" bool b
+    | Pexp_unboxed_variant l -> pp f "#`%s" l
     | Pexp_tuple l ->
         labeled_tuple_expr ctxt f ~unboxed:false l
     | Pexp_unboxed_tuple l ->

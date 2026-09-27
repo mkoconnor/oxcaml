@@ -1054,6 +1054,10 @@ and transl_type_aux env ~row_context ~aliased ~policy mode styp =
                (List.map (fun (label, ctyp) -> label, ctyp.ctyp_type) tl))
     in
     ctyp (Ttyp_unboxed_tuple tl) ctyp_type
+  | Ptyp_unboxed_variant tag ->
+    Language_extension.assert_enabled ~loc Layouts Language_extension.Stable;
+    ctyp (Ttyp_unboxed_variant tag)
+      (newconstr (Predef.path_unboxed_variant tag) [])
   | Ptyp_constr(lid, stl) ->
       let (path, decl) = Env.lookup_type ~loc:lid.loc lid.txt env in
       let stl =

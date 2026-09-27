@@ -98,6 +98,7 @@ let rec pretty_val : type k . _ -> k general_pattern -> _ = fun ppf v ->
   | Tpat_constant c -> fprintf ppf "%s" (pretty_const c)
   | Tpat_unboxed_unit -> fprintf ppf "#()"
   | Tpat_unboxed_bool b -> fprintf ppf "#%a" bool b
+  | Tpat_unboxed_variant tag -> fprintf ppf "#`%s" tag
   | Tpat_tuple vs ->
       fprintf ppf "@[(%a)@]" (pretty_list pretty_labeled_val ",") vs
   | Tpat_unboxed_tuple vs ->

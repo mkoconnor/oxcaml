@@ -507,7 +507,7 @@ let rec iter_path_apply p ~f =
      f p1 p2 (* after recursing, so we know both paths are well typed *)
   | Pextra_ty (p, t) ->
      match t with
-     | Punboxed_ty -> iter_path_apply p ~f
+     | Punboxed_ty | Punboxed_variant _ -> iter_path_apply p ~f
      | Pcstr_ty _ | Pext_ty -> assert false
 
 let path_is_strict_prefix =

@@ -116,6 +116,7 @@ let rec var_from_pat pat_desc acc =
   | O (Tpat_fun_layout { id; _ }) -> id :: acc
   | O
       ( Tpat_any | Tpat_constant _ | Tpat_unboxed_unit | Tpat_unboxed_bool _
+      | Tpat_unboxed_variant _
       | Tpat_variant _ ) ->
     []
   | O
@@ -198,6 +199,7 @@ let rec rem_in_pat str pat should_remove =
     else pat
   | O
       ( Tpat_any | Tpat_constant _ | Tpat_unboxed_unit | Tpat_unboxed_bool _
+      | Tpat_unboxed_variant _
       | Tpat_variant _ ) ->
     pat
   | O

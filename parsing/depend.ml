@@ -100,6 +100,7 @@ let rec add_type bv ty =
   | Ptyp_arrow(_, t1, t2, _, _) -> add_type bv t1; add_type bv t2
   | Ptyp_tuple tl -> List.iter (fun (_, t) -> add_type bv t) tl
   | Ptyp_unboxed_tuple tl -> List.iter (fun (_, t) -> add_type bv t) tl
+  | Ptyp_unboxed_variant _ -> ()
   | Ptyp_constr(c, tl) -> add bv c; List.iter (add_type bv) tl
   | Ptyp_object (fl, _) ->
       List.iter
@@ -212,6 +213,7 @@ let rec add_pattern bv pat =
   | Ppat_interval _
   | Ppat_constant _ -> ()
   | Ppat_unboxed_unit -> ()
+  | Ppat_unboxed_variant _ -> ()
   | Ppat_unboxed_bool _ -> ()
   | Ppat_tuple (pl, _) -> List.iter (fun (_, p) -> add_pattern bv p) pl
   | Ppat_unboxed_tuple (pl, _) -> List.iter (fun (_, p) -> add_pattern bv p) pl
@@ -258,6 +260,7 @@ let rec add_expr bv exp =
   | Pexp_match(e, pel) -> add_expr bv e; add_cases bv pel
   | Pexp_try(e, pel) -> add_expr bv e; add_cases bv pel
   | Pexp_unboxed_unit -> ()
+  | Pexp_unboxed_variant _ -> ()
   | Pexp_unboxed_bool _ -> ()
   | Pexp_tuple el -> List.iter (fun (_, e) -> add_expr bv e) el
   | Pexp_unboxed_tuple el -> List.iter (fun (_, e) -> add_expr bv e) el

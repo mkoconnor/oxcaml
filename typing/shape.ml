@@ -1182,6 +1182,9 @@ let of_path ~find_shape ~namespace path =
         | Pcstr_ty name, _, _ -> proj (aux Type path) (name, ns)
         | Pext_ty, _, _ -> aux Extension_constructor path
         | Punboxed_ty, _, _ -> aux ns path
+        | Punboxed_variant _, _, _ ->
+            (* Anonymous void variant types have no meaningful sub-structure. *)
+            leaf' None
       end
   in
   aux namespace path

@@ -2457,6 +2457,7 @@ let rec with_new_idents_pat pat =
   | Tpat_constant _ -> ()
   | Tpat_unboxed_unit -> ()
   | Tpat_unboxed_bool _ -> ()
+  | Tpat_unboxed_variant _ -> ()
   | Tpat_tuple args -> List.iter (fun (_, pat) -> with_new_idents_pat pat) args
   | Tpat_construct (_, _, _, args, _) ->
     List.iter (fun (_, pat) -> with_new_idents_pat pat) args
@@ -2489,6 +2490,7 @@ let rec without_idents_pat pat =
   | Tpat_constant _ -> ()
   | Tpat_unboxed_unit -> ()
   | Tpat_unboxed_bool _ -> ()
+  | Tpat_unboxed_variant _ -> ()
   | Tpat_tuple args -> List.iter (fun (_, pat) -> without_idents_pat pat) args
   | Tpat_construct (_, _, _, args, _) ->
     List.iter (fun pat -> without_idents_pat pat) (List.map snd args)
@@ -2779,6 +2781,9 @@ and quote_value_pattern ~scopes p =
       Pat.constant loc const
     | Tpat_unboxed_unit -> Pat.unboxed_unit
     | Tpat_unboxed_bool b -> Pat.unboxed_bool loc b
+    | Tpat_unboxed_variant _ ->
+      Misc.fatal_error
+        "translquote: unboxed variant pattern not supported in quote"
     | Tpat_tuple pats ->
       let pats =
         List.map
@@ -2905,6 +2910,9 @@ and quote_core_type ~scopes ty =
         ts
     in
     Type.unboxed_tuple loc tups |> Type.wrap
+  | Ttyp_unboxed_variant _ ->
+    Misc.fatal_error
+      "translquote: unboxed variant type not supported in quote"
   | Ttyp_constr (path, _, tys) ->
     let ident = type_for_path loc env path
     and tys = List.map (quote_core_type ~scopes) tys in
@@ -3604,6 +3612,9 @@ and quote_expression_desc ~scopes ~transl stage e : Exp_desc.t =
       Exp_desc.try_ loc exp cases
     | Texp_unboxed_unit -> Exp_desc.unboxed_unit
     | Texp_unboxed_bool b -> Exp_desc.unboxed_bool loc b
+    | Texp_unboxed_variant _ ->
+      Misc.fatal_error
+        "translquote: unboxed variant expression not supported in quote"
     | Texp_tuple (exps, _) ->
       let exps =
         List.map

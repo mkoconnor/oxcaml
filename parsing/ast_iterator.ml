@@ -149,6 +149,7 @@ module T = struct
         sub.modes sub m1; sub.modes sub m2
     | Ptyp_tuple tyl -> List.iter (fun (_, e) -> sub.typ sub e) tyl
     | Ptyp_unboxed_tuple tyl -> List.iter (fun (_, e) -> sub.typ sub e) tyl
+    | Ptyp_unboxed_variant _ -> ()
     | Ptyp_constr (lid, tl) ->
         iter_loc_lid sub lid; List.iter (sub.typ sub) tl
     | Ptyp_object (ol, _o) ->
@@ -506,6 +507,7 @@ module E = struct
         sub.expr sub e; sub.cases sub pel
     | Pexp_try (e, pel) -> sub.expr sub e; sub.cases sub pel
     | Pexp_unboxed_unit -> ()
+    | Pexp_unboxed_variant _ -> ()
     | Pexp_unboxed_bool _ -> ()
     | Pexp_tuple el -> List.iter (fun (_, e) -> sub.expr sub e) el
     | Pexp_unboxed_tuple el -> List.iter (fun (_, e) -> sub.expr sub e) el
@@ -605,6 +607,7 @@ module P = struct
     | Ppat_constant _ -> ()
     | Ppat_interval _ -> ()
     | Ppat_unboxed_unit -> ()
+    | Ppat_unboxed_variant _ -> ()
     | Ppat_unboxed_bool _ -> ()
     | Ppat_tuple (pl, _) -> List.iter (fun (_, p) -> sub.pat sub p) pl
     | Ppat_unboxed_tuple (pl, _) -> List.iter (fun (_, p) -> sub.pat sub p) pl

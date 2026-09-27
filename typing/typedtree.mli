@@ -309,6 +309,8 @@ and 'k pattern_desc =
         (** #() *)
   | Tpat_unboxed_bool : bool -> value pattern_desc
         (** #false, #true *)
+  | Tpat_unboxed_variant : label -> value pattern_desc
+        (** #`tag : the sole inhabitant of the void type [[ `tag ]#] *)
   | Tpat_tuple :
       (string option * value general_pattern) list -> value pattern_desc
         (** (P1, ..., Pn)                  [(None,P1); ...; (None,Pn)])
@@ -579,6 +581,8 @@ and expression_desc =
         (** #() *)
   | Texp_unboxed_bool of bool
         (** #false, #true *)
+  | Texp_unboxed_variant of label
+        (** #`tag : the sole inhabitant of the void type [[ `tag ]#] *)
   | Texp_tuple of (string option * expression) list * locality_mode_r
         (** [Texp_tuple(el)] represents
             - [(E1, ..., En)]
@@ -1351,6 +1355,8 @@ and core_type_desc =
                   core_type * Mode.With_locality.Const.t modes
   | Ttyp_tuple of (string option * core_type) list
   | Ttyp_unboxed_tuple of (string option * core_type) list
+  | Ttyp_unboxed_variant of label
+      (** [[ `tag ]#] : an anonymous void variant type *)
   | Ttyp_constr of Path.t * Longident.t loc * core_type list
   | Ttyp_object of object_field list * closed_flag
   | Ttyp_class of Path.t * Longident.t loc * core_type list
