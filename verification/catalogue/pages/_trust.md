@@ -73,7 +73,13 @@ A few standard-library functions are made total by a cast, `external trust_total
 
 ## The toolchain
 
-- Z3 4.16.0. A goal counts as proved only when Z3 reports `unsat` for its negation within the resource limit. The compiler refuses a solver that reports another version unless it is given `-smt-solver-any-version`; the executable named by `-smt-solver` is trusted to be Z3.
+- Z3 4.16.0 is the default solver. A goal counts as proved only when the
+  solver reports `unsat` for its negation within the resource limit.
+  `-smt-solver ocaml` selects the optional bundled solver, `Vox SMT 0.1`,
+  which is also trusted. It reports `unknown` for unsupported queries,
+  including real arithmetic. Other solver versions require
+  `-smt-solver-any-version`; an external executable named by
+  `-smt-solver` is trusted to implement the reported solver.
 - `-smt-assume-verified` skips the verification of a unit, including its `[@@decreases]` termination proofs. The compiled unit records this, `-vox-audit` lists it, and a verified unit that imports such a unit's interface draws warning 229 (`unverified-import`). `verification/library/build.sh` verifies each unit in its module list when compiling it to bytecode (RSA, diff, the e-graphs, `Vox_machine_semantics` and `Vox_traversal` are not in that list; the tests that use them compile and verify them), then compiles the same source natively with `-smt-assume-verified`; the native compilation is recorded as verified because a verified compilation of the same program, with the same flags and interfaces, produced the unit's `.cmo`.
 - The verification caches. With `VOX_VERIFY_CACHE` set, a unit is not verified
   again when the compiler executable, the solver's version, the compilation-unit
