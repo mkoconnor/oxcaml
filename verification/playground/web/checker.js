@@ -3,8 +3,9 @@
 // browser and by differential/check-node.js in Node.
 //
 //   const check = await createChecker({ initZ3, loadChecker, fetchBytes });
-//   check('main.ml', source, wantLambda)
-//     -> { status, output, locations, lambda, queries, solverMs, totalMs }
+//   check('main.ml', source, wantLambda, wantQueries = false)
+//     -> { status, output, locations, lambda, proofQueries,
+//          proofQueriesTruncated, queries, solverMs, totalMs }
 //
 // initZ3 is the Emscripten factory from z3-solver's z3-built.js,
 // loadChecker(): evaluates vox.js and returns its exports, and
@@ -72,11 +73,29 @@ async function createChecker({ initZ3, loadChecker, fetchBytes, z3Options = {} }
     globalThis.jsoo_create_file('/static/' + path, text);
   }
 
-  function check(name, source, wantLambda) {
+  function check(name, source, wantLambda, wantQueries = false) {
     queries = 0;
     solverMs = 0;
+    const proofQueries = [];
+    let traceSize = 0;
+    let proofQueriesTruncated = false;
+    globalThis.voxProofQuery = wantQueries ? (query) => {
+      const size = new TextEncoder().encode(JSON.stringify(query)).length;
+      if (proofQueries.length >= 100 || traceSize + size > 1000000) {
+        proofQueriesTruncated = true;
+        globalThis.voxProofQuery = undefined;
+        return;
+      }
+      proofQueries.push(query);
+      traceSize += size;
+    } : undefined;
     const started = performance.now();
-    const result = checker.voxCheck(name, source, !!wantLambda);
+    let result;
+    try {
+      result = checker.voxCheck(name, source, !!wantLambda);
+    } finally {
+      globalThis.voxProofQuery = undefined;
+    }
     return {
       status: result.status,
       output: result.output,
@@ -87,6 +106,8 @@ async function createChecker({ initZ3, loadChecker, fetchBytes, z3Options = {} }
         start: { ...l.start }, end: { ...l.end },
       })),
       lambda: result.lambda,
+      proofQueries,
+      proofQueriesTruncated,
       queries,
       solverMs,
       totalMs: performance.now() - started,

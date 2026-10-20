@@ -91,6 +91,7 @@ z3=$here/node_modules/z3-solver/build
 echo "== site in $out"
 rm -rf "$out"
 mkdir -p "$out/lib"
+printf '{"type":"commonjs"}\n' > "$out/package.json"
 modules=$here/node_modules
 cp "$work/vox.js" "$z3/z3-built.js" "$z3/z3-built.wasm" "$out/"
 cp "$modules/coi-serviceworker/coi-serviceworker.min.js" "$out/"

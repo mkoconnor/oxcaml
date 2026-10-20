@@ -12,6 +12,7 @@ const verdictDetail = $('verdict-detail');
 const diagnostics = $('diagnostics');
 const erased = $('erased');
 const lambda = $('lambda');
+const goalPanel = createGoalPanel($('goals'));
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 $('shortcut').textContent = isMac ? '⌘ Enter' : 'Ctrl+Enter';
@@ -37,6 +38,7 @@ const edits = new Map(); // file -> the visitor's edited source
 
 async function loadExamples() {
   const response = await fetch('examples/index.json');
+  if (!response.ok) throw new Error('Could not load the examples.');
   examples = await response.json();
   for (const example of examples) {
     const option = document.createElement('option');
@@ -45,8 +47,14 @@ async function loadExamples() {
     exampleSelect.append(option);
   }
   await Promise.all(examples.map(async (example) => {
-    const text = await (await fetch('examples/' + example.file)).text();
+    const source = await fetch('examples/' + example.file);
+    if (!source.ok) throw new Error(`Could not load ${example.file}.`);
+    const text = await source.text();
     originals.set(example.file, text);
+    try {
+      const saved = localStorage.getItem('vox:playground:' + example.file);
+      if (saved !== null) edits.set(example.file, saved);
+    } catch {}
   }));
   const fromHash = examples.find((e) => '#' + e.file.replace(/\.ml$/, '') === location.hash);
   select((fromHash || examples[0]).file);
@@ -57,6 +65,16 @@ function select(file) {
   current = examples.find((e) => e.file === file);
   exampleSelect.value = file;
   $('summary').textContent = current.summary;
+  $('lesson').hidden = !current.lesson;
+  if (current.lesson) {
+    $('lesson-title').textContent = current.lesson.title;
+    $('lesson-body').textContent = current.lesson.body;
+    $('lesson-challenge').textContent = current.lesson.challenge;
+    $('lesson-detail').textContent = current.lesson.detail;
+  }
+  const index = examples.indexOf(current);
+  $('previous').disabled = index === 0;
+  $('next').disabled = index === examples.length - 1;
   $('command').textContent = `ocamlc -extension refinement_types -c ${file}`;
   editor.setValue(edits.get(file) ?? originals.get(file));
   editor.clearHistory();
@@ -66,6 +84,12 @@ function select(file) {
 }
 
 exampleSelect.addEventListener('change', () => select(exampleSelect.value));
+for (const [id, direction] of [['previous', -1], ['next', 1]]) {
+  $(id).addEventListener('click', () => {
+    const example = examples[examples.indexOf(current) + direction];
+    if (example) select(example.file);
+  });
+}
 $('restore').addEventListener('click', () => {
   edits.delete(current.file);
   editor.setValue(originals.get(current.file));
@@ -124,6 +148,7 @@ function check() {
   checkButton.disabled = true;
   erased.hidden = true;
   lambda.textContent = '';
+  goalPanel.clear();
   show('checking', 'Checking…', '');
   worker.postMessage({ id, name: current.file, source: pending.source });
 }
@@ -179,6 +204,9 @@ function finish({ result, error }) {
     show('rejected', 'Rejected', `The compiler rejects this program. ${timing}`);
   }
   renderDiagnostics(result, source);
+  if (source === editor.getValue()) {
+    goalPanel.show(result.proofQueries || [], result.proofQueriesTruncated);
+  }
   if (result.lambda) {
     lambda.textContent = result.lambda;
     erased.hidden = false;
@@ -203,11 +231,19 @@ function clearResult() {
   closePeek();
   erased.hidden = true;
   lambda.textContent = '';
+  goalPanel.clear();
   clearMarks();
   if (ready && !pending) show('idle', 'Not checked yet', 'Press Check to check this program.');
 }
 
 editor.on('change', () => {
+  if (current) {
+    edits.set(current.file, editor.getValue());
+    try {
+      localStorage.setItem('vox:playground:' + current.file, editor.getValue());
+    } catch {}
+  }
+  goalPanel.clear();
   if (!pending && verdict.dataset.state !== 'loading') {
     clearMarks();
     if (['accepted', 'rejected', 'unsupported'].includes(verdict.dataset.state)) {
@@ -498,8 +534,10 @@ if (!window.crossOriginIsolated) {
     'isolated pages. Serve the playground with the headers in its README (serve.py ' +
     'sends them), or over HTTP(S) so that the included service worker can add them; ' +
     'opening index.html as a file does not work.');
-  loadExamples();
+  loadExamples().catch((error) => show('failed', 'Examples unavailable',
+    error.message));
 } else {
   startWorker();
-  loadExamples();
+  loadExamples().catch((error) => show('failed', 'Examples unavailable',
+    error.message));
 }

@@ -36,7 +36,8 @@ const loaded = load().catch((error) => {
 onmessage = async ({ data }) => {
   const check = await loaded;
   try {
-    postMessage({ id: data.id, result: check(data.name, data.source, true) });
+    const result = check(data.name, data.source, true, true);
+    postMessage({ id: data.id, result });
   } catch (error) {
     postMessage({ id: data.id, error: String(error && error.message || error) });
   }

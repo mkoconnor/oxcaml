@@ -20,16 +20,29 @@
   </header>
   <p class="overview-intro">Vox is OxCaml with refinement types checked by Z3 at
     compile time, erased ghost code and affine ghost ownership. Pick an example,
-    edit it and check it. <strong>Everything runs in your browser:</strong> the
+    edit it and check it. Follow the guided lessons or choose an example.
+    <strong>Checking runs in your browser:</strong> the
     Vox compiler's front end and verifier are compiled to JavaScript with
     js_of_ocaml, and Z3 is compiled to WebAssembly. Nothing is sent to a
-    server.</p>
+    server. Programs are checked and their erased code is shown; this page
+    does not execute them. Your edits are saved in this browser.</p>
+
+  <section class="lesson" id="lesson" aria-label="Guided lesson" hidden>
+    <h2 id="lesson-title"></h2>
+    <p id="lesson-body"></p>
+    <p class="lesson-challenge"><strong>Try it:</strong>
+      <span id="lesson-challenge"></span></p>
+    <p class="lesson-detail" id="lesson-detail"></p>
+  </section>
 
   <div class="workspace">
     <section class="source" aria-label="Program">
       <div class="toolbar">
         <label for="example">Example</label>
         <select id="example"></select>
+        <button id="previous" type="button"
+                aria-label="Previous example">←</button>
+        <button id="next" type="button" aria-label="Next example">→</button>
         <button id="check" type="button" disabled>Check</button>
         <button id="restore" type="button" title="Discard your edits to this example">Restore</button>
         <span class="shortcut" id="shortcut">Ctrl+Enter</span>
@@ -45,6 +58,8 @@
         <button id="stop" type="button" hidden>Stop</button>
       </div>
       <pre class="diagnostics" id="diagnostics" hidden></pre>
+      <section class="goals" id="goals" aria-label="Proof goals" hidden>
+      </section>
       <details class="erased" id="erased" hidden>
         <summary>Erased program</summary>
         <p class="erased-note">The Lambda code the compiler generates, as
@@ -64,6 +79,7 @@
 </main>
 <script src="codemirror/codemirror.js"></script>
 <script src="codemirror/mllike.js"></script>
+<script src="goals.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

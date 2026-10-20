@@ -7,6 +7,20 @@ JavaScript with js_of_ocaml, and Z3 4.16.0, the version the native compiler
 uses, is the official WebAssembly build from npm (`z3-solver`). No server-side
 code is involved.
 
+Six guided lessons cover contracts, choosing a specification, termination,
+induction, ghost data and machine integers. Each has an editing exercise.
+Edits are saved per example in this browser; Restore reloads the shipped
+source. Programs are checked and their erased Lambda code is shown, but
+they are not executed.
+
+The Proof goals panel shows the actual solver queries, assumptions and
+available scalar countermodels. It includes retries and model searches,
+so an individual query result is distinct from the compiler's verdict for
+the whole program. Integer and rational model values stay exact strings.
+The abbreviated display has the complete SMT query alongside it. Display
+capture is limited to 100 queries or 1 MB and does not change the solver
+requests or the verifier's rules.
+
 ## Build
 
 From a configured checkout (see `AGENTS.md`), with the `oxcaml-5.4.0+oxcaml`
@@ -71,7 +85,9 @@ the build output.
   resource count at `(reset)`. Z3's timer threads are started before any
   check, since a worker cannot start one while it runs synchronous code.
 - `web/worker.js` runs the checker in a worker; `web/app.js` is the page
-  (CodeMirror 5, the example picker, diagnostics marked in the editor).
+  (CodeMirror 5, guided lessons, the example picker and diagnostics marked
+  in the editor). `web/goals.js` displays query descriptions reported by
+  the browser's solver adapter after each solver result.
 - Every location in the messages is a link. The driver reports where the
   output prints each location, with the location itself: the report
   printer wraps locations in a semantic tag, and the tag's marking
@@ -83,7 +99,9 @@ the build output.
   `--library-prefix`) for this, fetched when first shown. Locations inside
   message text ("at file ..., line 4, characters 23-71") are linked by their
   printed form.
-- `examples/` holds the examples and `examples/index.json` their order.
+- `examples/` holds the examples and `examples/index.json` their order and
+  lesson text. Run `node --test verification/playground/test-app.js` for
+  the page's result-state, query-capture and lesson-inventory tests.
 
 ## Limitations
 
