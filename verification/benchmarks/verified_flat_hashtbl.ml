@@ -40,6 +40,10 @@ let report name payload n operation count (bytes, time) =
   Printf.printf "%s,%s,%d,%s,%.3f,%.3f\n%!" name payload n operation
     (elapsed *. 1e9 /. float count) (allocated /. float count)
 
+let check_step acc i v = (acc * 1000003) lxor (i * 31 + Hashtbl.hash v)
+let report_check name payload n count sum =
+  Printf.printf "%s,%s,%d,check,%d,%d\n%!" name payload n count sum
+
 let rec fill : ('a : immutable_data).
     (table : 'a V.t) @ immutable -> (values : 'a iarray) @ immutable -> (index
       : int) ->
@@ -77,6 +81,35 @@ let rec churn_rounds : ('a : immutable_data).
     churn_rounds table values (index - 1) (Iarray.length values - offset)
       changed
 
+let rec mix : ('a : immutable_data).
+    (table : 'a V.t) @ immutable -> (values : 'a iarray) @ immutable ->
+    (index : int) -> (offset : int) ->
+    (p : {p : 'a V.permission | V.owner p === table}) @ unique read_write ->
+    {q : 'a V.permission | V.owner q === table} @ unique =
+  fun table values index offset p ->
+    let n = Iarray.length values in
+    if index >= n then p else begin
+      ignore (Sys.opaque_identity
+        (V.find table (key (index + offset)) (borrow_ p)));
+      ignore (Sys.opaque_identity
+        (V.mem table (key (2 * n + index)) (borrow_ p)));
+      let removed = V.remove table (key (index + offset)) p in
+      let changed = V.replace table (key (index + n - offset))
+        (Iarray.get values index) removed in
+      mix table values (index + 1) offset changed
+    end
+
+let rec mix_rounds : ('a : immutable_data).
+    (table : 'a V.t) @ immutable -> (values : 'a iarray) @ immutable ->
+    (index : int) -> (offset : int) ->
+    (p : {p : 'a V.permission | V.owner p === table}) @ unique read_write ->
+    {q : 'a V.permission | V.owner q === table} @ unique =
+  fun table values index offset p ->
+    if index = 0 then p else
+    let changed = mix table values 0 offset p in
+    mix_rounds table values (index - 1) (Iarray.length values - offset)
+      changed
+
 let rec replace_rounds : ('a : immutable_data).
     (table : 'a V.t) @ immutable -> (values : 'a iarray) @ immutable -> (index
       : int) ->
@@ -93,6 +126,9 @@ let verified : ('a : immutable_data).
       values ->
   let n = Iarray.length values in
   let batches = max 1 (100000 * work_factor / n) in
+  (let r : 'a V.created = V.create () in
+   let _ = fill r.#table values 0 r.#permission in
+   ignore (Sys.opaque_identity r.#table));
   let timing = stamp () in
   for _batch = 1 to batches do
     let r : 'a V.created = V.create () in
@@ -109,6 +145,10 @@ let verified : ('a : immutable_data).
   let hits, misses = queries n in
   let rounds = max 1 (1000000 * work_factor / n) in
   let iterations = rounds * n in
+  for i = 0 to n - 1 do
+    ignore (Sys.opaque_identity
+      (V.find r.#table (Iarray.get hits i) (borrow_ built)))
+  done;
   let timing = stamp () in
   for _round = 1 to rounds do
     for i = 0 to n - 1 do
@@ -117,6 +157,10 @@ let verified : ('a : immutable_data).
     done
   done;
   report name payload n "hit" iterations timing;
+  for i = 0 to n - 1 do
+    ignore (Sys.opaque_identity
+      (V.mem r.#table (Iarray.get misses i) (borrow_ built)))
+  done;
   let timing = stamp () in
   let found = ref 0 in
   for _round = 1 to rounds do
@@ -141,11 +185,26 @@ let verified : ('a : immutable_data).
       (borrow_ changed)));
     assert (V.find r.#table (key (i + offset)) (borrow_
       changed) = (Iarray.get values i))
-  done
+  done;
+  let timing = stamp () in
+  let changed = mix_rounds r.#table values batches offset changed in
+  report name payload n "mixed" (4 * n * batches) timing;
+  let count = ref 0 and sum = ref 0 in
+  for i = 0 to 3 * n - 1 do
+    match V.find_opt r.#table (key i) (borrow_ changed) with
+    | None -> ()
+    | Some v -> incr count; sum := check_step !sum i v
+  done;
+  report_check name payload n !count !sum
 
 let standard payload values =
   let n = Iarray.length values in
   let batches = max 1 (100000 * work_factor / n) in
+  (let table = Standard.create 16 in
+   for i = 0 to n - 1 do
+     Standard.replace table (key i) (Iarray.get values i)
+   done;
+   ignore (Sys.opaque_identity table));
   let timing = stamp () in
   for _batch = 1 to batches do
     let table = Standard.create 16 in
@@ -162,6 +221,9 @@ let standard payload values =
   let hits, misses = queries n in
   let rounds = max 1 (1000000 * work_factor / n) in
   let iterations = rounds * n in
+  for i = 0 to n - 1 do
+    ignore (Sys.opaque_identity (Standard.find table (Iarray.get hits i)))
+  done;
   let timing = stamp () in
   for _round = 1 to rounds do
     for i = 0 to n - 1 do
@@ -169,6 +231,9 @@ let standard payload values =
     done
   done;
   report "stdlib" payload n "hit" iterations timing;
+  for i = 0 to n - 1 do
+    ignore (Sys.opaque_identity (Standard.mem table (Iarray.get misses i)))
+  done;
   let timing = stamp () in
   let found = ref 0 in
   for _round = 1 to rounds do
@@ -198,7 +263,25 @@ let standard payload values =
   for i = 0 to n - 1 do
     assert (not (Standard.mem table (key (i + n - offset))));
     assert (Standard.find table (key (i + offset)) = (Iarray.get values i))
-  done
+  done;
+  let timing = stamp () in
+  for batch = 0 to batches - 1 do
+    let offset = if batch mod 2 = 0 then offset else n - offset in
+    for i = 0 to n - 1 do
+      ignore (Sys.opaque_identity (Standard.find table (key (i + offset))));
+      ignore (Sys.opaque_identity (Standard.mem table (key (2 * n + i))));
+      Standard.remove table (key (i + offset));
+      Standard.replace table (key (i + n - offset)) (Iarray.get values i)
+    done
+  done;
+  report "stdlib" payload n "mixed" (4 * n * batches) timing;
+  let count = ref 0 and sum = ref 0 in
+  for i = 0 to 3 * n - 1 do
+    match Standard.find_opt table (key i) with
+    | None -> ()
+    | Some v -> incr count; sum := check_step !sum i v
+  done;
+  report_check "stdlib" payload n !count !sum
 
 let () =
   let name = Sys.argv.(1) in

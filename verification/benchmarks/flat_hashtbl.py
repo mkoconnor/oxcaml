@@ -4,14 +4,17 @@ import argparse
 import contextlib
 import hashlib
 import json
+import math
 import os
 import platform
+import re
 import shlex
 from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = (ROOT / 'verification/benchmarks/verified_flat_hashtbl.ml').read_text()
@@ -51,11 +54,12 @@ def prepare_base(directory, compiler):
             raise RuntimeError('unexpected dependency source: ' + path)
         target.write_text(source.replace(before, after))
 
-    # The upstream discover program also emits () on macOS. Elsewhere it
-    # enables popcnt only on x86_64; leave discovery intact on those hosts.
-    if platform.system() == 'Darwin':
-        replace('base/src/dune', '(run ./discover/discover.exe -o %{targets})',
-                '(write-file %{targets} "()")')
+    # The discover program links dune-configurator, which the switch
+    # compiled with another compiler, so it cannot be built here. It emits
+    # () on macOS and -mpopcnt on x86_64; the flag only affects Base's C
+    # popcount stub, which Hashtbl does not use, so write () everywhere.
+    replace('base/src/dune', '(run ./discover/discover.exe -o %{targets})',
+            '(write-file %{targets} "()")')
     replace('base/shadow-stdlib/gen/dune', 'compiler-libs.common',
             'compiler-libs.frontend')
     replace('base/shadow-stdlib/gen/gen.ml',
@@ -108,6 +112,94 @@ def prepare_base(directory, compiler):
     return directory / '_build/vox'
 
 
+def busy_cpus(interval=1.0):
+    """CPUs busy over the next interval, from /proc/stat (Linux only)."""
+    def sample():
+        with open('/proc/stat') as f:
+            fields = [int(x) for x in f.readline().split()[1:]]
+        idle = fields[3] + fields[4]
+        return sum(fields[:8]) - idle, sum(fields[:8])
+    busy0, total0 = sample()
+    time.sleep(interval)
+    busy1, total1 = sample()
+    return (busy1 - busy0) / max(1, total1 - total0) * (os.cpu_count() or 1)
+
+
+def load_average():
+    return ' '.join(Path('/proc/loadavg').read_text().split()[:3])
+
+
+def wait_until_idle(limit, timeout):
+    """Wait until fewer than limit CPUs are busy; return the last reading."""
+    deadline = time.monotonic() + timeout
+    while True:
+        busy = busy_cpus()
+        if busy < limit:
+            return busy
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeError(f'machine not idle: {busy:.2f} CPUs busy')
+        print(f'# waiting: {busy:.2f} CPUs busy, load {load_average()}',
+              file=sys.stderr, flush=True)
+        time.sleep(min(30, remaining))
+
+
+def linux_info():
+    def read(path):
+        try:
+            return Path(path).read_text().strip()
+        except OSError:
+            return None
+    cpu = next((line.split(':', 1)[1].strip()
+                for line in Path('/proc/cpuinfo').read_text().splitlines()
+                if line.startswith('model name')),
+               platform.processor())
+    cpufreq = '/sys/devices/system/cpu/cpu0/cpufreq/'
+    return {'cpu': cpu, 'threads': os.cpu_count(),
+            'governor': read(cpufreq + 'scaling_governor'),
+            'driver': read(cpufreq + 'scaling_driver'),
+            'epp': read(cpufreq + 'energy_performance_preference'),
+            'boost': read('/sys/devices/system/cpu/cpufreq/boost'),
+            'kernel': platform.release()}
+
+
+def validate_options(parser, args):
+    if args.work_factor < 1 or args.repeats < 1 or any(
+            n <= 0 for n in args.sizes):
+        parser.error('sizes, work factor and repeats must be positive')
+    if len(set(args.sizes)) != len(args.sizes):
+        parser.error('sizes must not repeat')
+    if len(set(args.implementations)) != len(args.implementations):
+        parser.error('implementations must not repeat')
+    if 'base' in args.implementations and not (
+            args.base_build or args.prepare_base):
+        parser.error('base requires --base-build or --prepare-base')
+    if args.cpu is not None or args.idle_cpus is not None:
+        if platform.system() != 'Linux':
+            parser.error('--cpu and --idle-cpus require Linux')
+    if args.idle_cpus is not None and (
+            not math.isfinite(args.idle_cpus) or args.idle_cpus <= 0):
+        parser.error('--idle-cpus must be finite and positive')
+    if not math.isfinite(args.idle_timeout) or args.idle_timeout <= 0:
+        parser.error('--idle-timeout must be finite and positive')
+    if args.cpu is not None:
+        if not shutil.which('taskset'):
+            parser.error('--cpu requires taskset')
+        allowed = os.sched_getaffinity(0)
+        selected = set()
+        for part in args.cpu.split(','):
+            if not re.fullmatch(r'[0-9]+(?:-[0-9]+)?', part):
+                parser.error('--cpu requires CPU numbers or ranges, '
+                             'e.g. 0,2-3')
+            bounds = [int(n) for n in part.split('-')]
+            first, last = bounds[0], bounds[-1]
+            if first > last or last > max(allowed):
+                parser.error('--cpu contains an unavailable CPU or range')
+            selected.update(range(first, last + 1))
+        if not selected <= allowed:
+            parser.error('--cpu contains CPUs outside this process affinity')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--sizes', nargs='+', type=int,
@@ -121,14 +213,18 @@ def main():
                         help='download and build Base in this directory')
     parser.add_argument('--base-build', type=Path,
                         help='Dune context directory containing Base v0.17.3')
+    parser.add_argument('--cpu', help='pin each run to these CPUs (taskset -c)')
+    parser.add_argument('--idle-cpus', type=float,
+                        help='before each run, wait until fewer CPUs than '
+                        'this are busy (Linux); record load before and after')
+    parser.add_argument('--idle-timeout', type=float, default=4 * 3600)
+    parser.add_argument('--warmup', action='store_true',
+                        help='run each executable once at 4096 entries first')
     parser.add_argument('--implementations', nargs='+',
                         choices=['stdlib', 'simd', 'scalar', 'base'],
                         default=['stdlib', 'simd', 'scalar'])
     args = parser.parse_args()
-    if args.work_factor < 1 or args.repeats < 1 or any(n <= 0 for n in args.sizes):
-        parser.error('sizes and repeats must be positive')
-    if 'base' in args.implementations and not (args.base_build or args.prepare_base):
-        parser.error('base requires --base-build')
+    validate_options(parser, args)
     compiler = ROOT / '_install/bin/ocamlopt'
     if args.prepare_base:
         args.base_build = prepare_base(args.prepare_base, compiler)
@@ -139,7 +235,10 @@ def main():
     scalar_flags = (['-fno-vectorize', '-fno-slp-vectorize']
                     if 'clang' in c_version.lower() else
                     ['-fno-tree-vectorize', '-fno-tree-slp-vectorize'])
+    linux = linux_info() if platform.system() == 'Linux' else None
     print('# ' + json.dumps({'machine': platform.machine(),
+          'linux': linux, 'cpu_affinity': args.cpu,
+          'idle_cpus': args.idle_cpus,
           'platform': platform.platform(),
           'cpu': (subprocess.check_output(
               ['sysctl', '-n', 'machdep.cpu.brand_string'], text=True).strip()
@@ -150,6 +249,8 @@ def main():
           'compiler': str(compiler), 'flags': ['-O3'],
           'c_compiler': c_compiler, 'scalar_flags': scalar_flags,
           'initial_capacity': 16, 'work_factor': args.work_factor,
+          'implementations': args.implementations, 'sizes': args.sizes,
+          'repeats': args.repeats,
           'query_order': 'shuffled',
           'library_dir': str(args.library_dir),
           'base': ({'version': 'v0.17.3',
@@ -248,6 +349,7 @@ module Standard = struct
   let find t k = Base.Hashtbl.find_exn t k
   let mem t k = Base.Hashtbl.mem t k
   let remove t k = Base.Hashtbl.remove t k
+  let find_opt t k = Base.Hashtbl.find t k
 end
 """
             source = (PROGRAM[:PROGRAM.index('module V =')] + adapter +
@@ -267,6 +369,13 @@ end
                             'measure_base.ml', '-o', str(exe)],
                            cwd=directory, check=True)
             executables['base'] = exe
+        pin = ['taskset', '-c', args.cpu] if args.cpu else []
+        if args.warmup:
+            for name in args.implementations:
+                backend = name if name in ('base', 'scalar') else 'simd'
+                exe = executables[backend]
+                subprocess.run([*pin, str(exe), name, '4096', '1'], check=True,
+                               stdout=subprocess.DEVNULL, timeout=300)
         print('repeat,implementation,payload,entries,operation,'
               'ns_per_op,bytes_per_op',
               flush=True)
@@ -276,9 +385,18 @@ end
                 order.reverse()
             for n in args.sizes:
                 for name in order:
-                    exe = executables[name if name in ('base', 'scalar') else 'simd']
-                    result = subprocess.check_output([str(exe), name, str(n), str(args.work_factor)],
-                                                     text=True, timeout=300)
+                    backend = name if name in ('base', 'scalar') else 'simd'
+                    exe = executables[backend]
+                    if args.idle_cpus is not None:
+                        busy = wait_until_idle(
+                            args.idle_cpus, args.idle_timeout)
+                        before = load_average()
+                    result = subprocess.check_output(
+                        [*pin, str(exe), name, str(n), str(args.work_factor)],
+                        text=True, timeout=1800)
+                    if args.idle_cpus is not None:
+                        print(f'# load,{repeat},{name},{n},{busy:.2f},'
+                              f'{before},{load_average()}', flush=True)
                     for line in result.splitlines():
                         print(f'{repeat},{line}', flush=True)
 
