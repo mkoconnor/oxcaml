@@ -324,6 +324,14 @@ val walk_locks_for_legacy_construct : env:t -> Mode.Hint.pinpoint -> unit
     other mode axis. *)
 val walk_locks_for_partial_construct : env:t -> Mode.Hint.pinpoint -> unit
 
+(** Constrains every enclosing closure to be stateful without affecting any
+    other mode axis. *)
+val walk_locks_for_stateful_construct : env:t -> Mode.Hint.pinpoint -> unit
+
+(** Constrains every enclosing closure to be nonportable without affecting any
+    other mode axis. *)
+val walk_locks_for_nonportable_construct : env:t -> Mode.Hint.pinpoint -> unit
+
 val lookup_value:
   ?use:bool -> loc:Location.t -> Longident.t -> t ->
   Path.t * value_description * mode_with_locks

@@ -1,4 +1,4 @@
-type t = Int | Bool | Bigint
+type t = Int | Bool | Bigint | Real
 
 val bigint_path : string -> Path.t
 

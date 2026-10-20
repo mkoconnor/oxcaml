@@ -6,6 +6,10 @@ let library = ref false
 
 let audit = ref false
 
+let probabilistic = ref false
+
+let probability_profile = "probability-v6"
+
 let registered = ref false
 
 let add_arguments () =
@@ -20,7 +24,10 @@ let add_arguments () =
         ( "-vox-audit",
           Arg.Set audit,
           " Print what the verification of this unit trusts, including in \
-           the units it depends on" ) ]
+           the units it depends on" );
+        ( "-vox-probabilistic",
+          Arg.Set probabilistic,
+          " Admit a probabilistic executable with one initial credit root" ) ]
   end
 
 type external_kind =
@@ -245,7 +252,7 @@ let total_primitive env (primitive : Primitive.description) ty =
   | "%boolnot" | "%sequand" | "%sequor" -> all [Vox_type.Bool]
   | "%equal" | "%notequal" | "%lessthan" | "%lessequal" | "%greaterthan"
   | "%greaterequal" | "%compare" ->
-    all [Vox_type.Int; Vox_type.Bool; Vox_type.Bigint]
+    all [Vox_type.Int; Vox_type.Bool; Vox_type.Bigint; Vox_type.Real]
   | _ -> false
 
 let trusted_external env (description : Typedtree.value_description) =
@@ -436,7 +443,244 @@ let binding_name (binding : Typedtree.value_binding) =
   | Tpat_var { name; _ } | Tpat_alias { name; _ } -> Some name.txt
   | _ -> None
 
-let scan ~structure ~signature =
+let uid_owner = function
+  | Shape.Uid.Item { comp_unit; _ } -> comp_unit
+  | _ -> ""
+
+let probability_root env (description : Types.value_description) =
+  if uid_owner description.val_uid <> "Vox_probability"
+  then false
+  else
+    match
+      Env.find_value
+        (Path.Pdot (Path.Pident (Ident.create_persistent "Vox_probability"),
+                    "run")) env
+    with
+    | root ->
+      let root = Subst.Lazy.force_value_description root in
+      Shape.Uid.equal root.val_uid description.val_uid
+    | exception Not_found -> false
+
+let probability_scan ~exports ~structure ~signature =
+  let items = Items.create () in
+  let forbidden name loc =
+    Items.add items Cmi_format.Vox_probability_forbidden name loc
+  in
+  let forbidden_owner = function
+    | "Borrow" | "Borrow_iarray" | "Vox_string_view" -> true
+    | "Stdlib__Random" | "Stdlib__Domain" | "Stdlib__Thread"
+    | "Stdlib__Effect" | "Stdlib__Gc" | "Stdlib__Sys"
+    | "Stdlib__Obj" | "Stdlib__Marshal"
+    | "Dynlink" | "Thread" | "Domainslib" -> true
+    | name -> String.starts_with ~prefix:"Camlinternal" name
+  in
+  let rec exported_module env path module_type =
+    match path, module_type with
+    | [], _ -> Some module_type
+    | _, Mty_functor (_, result, _) -> exported_module env path result
+    | _, Mty_strengthen (inner, _, _) -> exported_module env path inner
+    | name :: rest, Mty_signature signature ->
+      List.find_map (function
+        | Sig_module (id, _, declaration, _, _) when Ident.name id = name ->
+          exported_module env rest declaration.md_type
+        | _ -> None) signature
+    | _, Mty_ident path' ->
+      (match Env.find_modtype_expansion path' env with
+      | module_type -> exported_module env path module_type
+      | exception Not_found -> Some (Mty_ident path'))
+    | _ -> Some module_type
+  in
+  let contains_value ~skip_stdlib predicate env module_type =
+    let seen = ref Path.Set.empty in
+    let rec visit = function
+      | Mty_signature signature ->
+        List.exists (function
+          | Sig_value (id, value, _) -> predicate (Ident.name id) value
+          | Sig_module (_, _, declaration, _, _) -> visit declaration.md_type
+          | _ -> false) signature
+      | Mty_functor (_, result, _) -> visit result
+      | Mty_strengthen (inner, _, _) -> visit inner
+      | Mty_alias path | Mty_ident path when Path.Set.mem path !seen -> false
+      | Mty_alias path ->
+        seen := Path.Set.add path !seen;
+        let owner = Ident.name (Path.head path) in
+        if skip_stdlib &&
+           (owner = "Stdlib" || String.starts_with ~prefix:"Stdlib__" owner)
+        then false
+        else (match Env.find_module path env with
+          | declaration -> visit declaration.md_type
+          | exception Not_found -> false)
+      | Mty_ident path ->
+        seen := Path.Set.add path !seen;
+        (match Env.find_modtype_expansion path env with
+        | module_type -> visit module_type
+        | exception Not_found -> false)
+    in
+    visit module_type
+  in
+  let modules = ref [] and opened = ref None in
+  let repeated = ref false and direct = ref None and alias = ref None in
+  (* A constraint can replace a root UID even if the final interface hides
+     its containing module. Check every enclosing interface. *)
+  let interfaces = ref (match exports with
+    | None -> []
+    | Some signature -> [0, Mty_signature signature]) in
+  let with_ref cell value f =
+    let saved = !cell in
+    cell := value;
+    Fun.protect ~finally:(fun () -> cell := saved) f
+  in
+  let open Typedtree in
+  let open Tast_iterator in
+  let iterator =
+    { default_iterator with
+      structure_item = (fun self item ->
+        (match item.str_desc with
+        | Tstr_primitive value ->
+          Items.add items Cmi_format.Vox_probability_external
+            value.val_name.txt value.val_loc
+        | _ -> ());
+        default_iterator.structure_item self item);
+      signature_item = (fun self item ->
+        (match item.sig_desc with
+        | Tsig_value {val_val = {val_kind = Val_prim _; _};
+                      val_name; val_loc; _} ->
+          Items.add items Cmi_format.Vox_probability_external
+            val_name.txt val_loc
+        | _ -> ());
+        default_iterator.signature_item self item);
+      open_declaration = (fun self declaration ->
+        with_ref opened (Some declaration.open_expr) (fun () ->
+          default_iterator.open_declaration self declaration));
+      module_binding = (fun self binding ->
+        let allowed =
+          match binding.mb_expr.mod_desc with
+          | Tmod_ident _ -> Some binding.mb_expr
+          | _ -> None
+        in
+        let names = Option.value binding.mb_name.txt ~default:"_" :: !modules in
+        with_ref modules names (fun () ->
+          with_ref alias allowed (fun () ->
+            default_iterator.module_binding self binding)));
+      module_expr = (fun self expression ->
+        (match expression.mod_desc with
+        | Tmod_ident (path, _) ->
+          let path = Env.normalize_module_path None expression.mod_env path in
+          let owner = Ident.name (Path.head path) in
+          if owner = "Stdlib" && not (Option.fold ~none:false
+                ~some:(fun e -> e == expression) !opened)
+          then forbidden "standard library module escapes" expression.mod_loc;
+          if forbidden_owner owner
+          then forbidden owner expression.mod_loc;
+          let is_open = Option.fold ~none:false
+              ~some:(fun e -> e == expression) !opened in
+          let carries_root = contains_value ~skip_stdlib:true
+              (fun _ value -> probability_root expression.mod_env value)
+              expression.mod_env expression.mod_type in
+          if not is_open && owner <> "Stdlib" &&
+             contains_value ~skip_stdlib:false (fun name value ->
+               let value_owner = uid_owner value.val_uid in
+               forbidden_owner value_owner
+               || is_total_cast expression.mod_env value
+               || (unsafe_primitive expression.mod_env value
+                   || String.starts_with ~prefix:"Stdlib" value_owner
+                      && contains_substring ~sub:"unsafe" name)
+                  && not (mentions_refinement expression.mod_env
+                            value.val_type))
+               expression.mod_env expression.mod_type
+          then forbidden "module exposes unsafe capabilities"
+                 expression.mod_loc;
+          if not is_open && owner <> "Vox_probability" && carries_root
+          then forbidden "module contains an escaping credit root"
+                 expression.mod_loc;
+          if not is_open && owner = "Vox_probability" && carries_root then begin
+            if not (Option.fold ~none:false
+                      ~some:(fun e -> e == expression) !alias)
+            then forbidden "credit root module escapes" expression.mod_loc;
+            match path with
+            | Path.Pident _ ->
+              List.iter (fun (depth, module_type) ->
+                let relative, _ = Misc.Stdlib.List.split_at
+                    (List.length !modules - depth) !modules in
+                match exported_module expression.mod_env (List.rev relative)
+                        module_type with
+                | None | Some (Mty_alias _) -> ()
+                | Some _ ->
+                  forbidden "credit root module is sealed by interface"
+                    expression.mod_loc) !interfaces
+            | _ -> ()
+          end
+        | Tmod_apply (_, argument, _, _, _) ->
+          if contains_value ~skip_stdlib:true
+              (fun _ value -> probability_root argument.mod_env value)
+              argument.mod_env argument.mod_type
+          then forbidden "credit root module is passed to a functor"
+                 argument.mod_loc
+        | _ -> ());
+        let repeats = match expression.mod_desc with
+          | Tmod_functor _ -> true | _ -> !repeated
+        in
+        let exposed = match expression.mod_desc with
+          | Tmod_constraint (_, module_type, _, _) ->
+            (List.length !modules, module_type) :: !interfaces
+          | _ -> !interfaces
+        in
+        with_ref interfaces exposed (fun () ->
+          with_ref repeated repeats (fun () ->
+            default_iterator.module_expr self expression)));
+      class_expr = (fun self expression ->
+        with_ref repeated true (fun () ->
+          default_iterator.class_expr self expression));
+      expr = (fun self expression ->
+        let erased = List.exists
+          (fun (extra, _, _) -> match extra with
+            | Texp_ghost -> true | _ -> false) expression.exp_extra in
+        let repeats = !repeated || erased ||
+          match expression.exp_desc with
+          | Texp_function _ | Texp_while _ | Texp_for _ | Texp_lazy _
+          | Texp_probe _ | Texp_letop _ | Texp_list_comprehension _
+          | Texp_array_comprehension _ -> true
+          | _ -> false
+        in
+        with_ref repeated repeats (fun () ->
+          (match expression.exp_desc with
+          | Texp_ident {desc; _} ->
+            let owner = uid_owner desc.val_uid in
+            if forbidden_owner owner
+            then forbidden owner expression.exp_loc;
+            if probability_root expression.exp_env desc
+               && not (Option.fold ~none:false
+                         ~some:(fun e -> e == expression) !direct)
+            then forbidden "credit root escapes initialization"
+                   expression.exp_loc
+          | Texp_pack _ ->
+            forbidden "first-class module" expression.exp_loc
+          | Texp_quote _ | Texp_splice _ ->
+            forbidden "metaprogramming" expression.exp_loc
+          | Texp_match (_, _, _, _ :: _, _)
+          | Texp_try (_, _, _ :: _) ->
+            forbidden "effect handler" expression.exp_loc
+          | _ -> ());
+          match expression.exp_desc with
+          | Texp_apply (({exp_desc = Texp_ident {desc; _}; _} as fn),
+                        args, _, _, _, _)
+            when probability_root fn.exp_env desc ->
+            let full = List.length args = 3 &&
+              List.for_all (function _, Arg _ -> true | _ -> false) args in
+            if !repeated || not full
+            then forbidden "credit root must be applied in initialization"
+                   expression.exp_loc
+            else Items.add items Cmi_format.Vox_probability_root
+                   "Vox_probability.run" expression.exp_loc;
+            with_ref direct (Some fn) (fun () ->
+              default_iterator.expr self expression)
+          | _ -> default_iterator.expr self expression)) }
+  in
+  Option.iter (iterator.structure iterator) structure;
+  Option.iter (iterator.signature iterator) signature;
+  Items.to_list items
+
+let scan ?exports ~structure ~signature () =
   let items = Items.create () in
   if !Clflags.unsafe
   then
@@ -509,7 +753,7 @@ let scan ~structure ~signature =
   in
   Option.iter (iterator.structure iterator) structure;
   Option.iter (iterator.signature iterator) signature;
-  Items.to_list items
+  Items.to_list items @ probability_scan ~exports ~structure ~signature
 
 let file_digest source_file =
   match Digest.file source_file with
@@ -522,9 +766,19 @@ let file_digest source_file =
 let source_digest (ast : Parsetree.structure) =
   Digest.to_hex (Digest.string (Marshal.to_string ast [Marshal.No_sharing]))
 
+let origin source_file =
+  { Cmi_format.vox_kind = Cmi_format.Vox_probability_origin;
+    vox_name = probability_profile ^ ":" ^ file_digest source_file ^
+      (if !Clflags.preprocessor = None && !Clflags.all_ppx = []
+       then ":plain" else ":preprocessed");
+    vox_location = "";
+    vox_count = 1 }
+
 let config () =
   String.concat " "
-    ([ Printf.sprintf "noassert=%b unsafe=%b nopervasives=%b rectypes=%b"
+    ([ probability_profile;
+       "unit=" ^ Env.get_current_unit_name ();
+       Printf.sprintf "noassert=%b unsafe=%b nopervasives=%b rectypes=%b"
          !Clflags.noassert !Clflags.unsafe !Clflags.nopervasives
          !Clflags.recursive_types ]
     @ List.rev_map
@@ -563,7 +817,8 @@ let interface_record ~source_file signature =
         vox_config = config ();
         vox_solver = "";
         vox_imports = [];
-        vox_items = scan ~structure:None ~signature:(Some signature) }
+        vox_items = origin source_file ::
+          scan ~structure:None ~signature:(Some signature) () }
   else None
 
 (* The record in a compiled interface. *)
@@ -675,10 +930,11 @@ let check_imports ~source_file =
         | Some _ | None -> ())
       (Env.imports ())
 
-let record_implementation ~source_file ~ast structure =
+let record_implementation ~source_file ~ast ~exports structure =
   if enabled ()
   then begin
     check_imports ~source_file;
+    let items = scan ~exports ~structure:(Some structure) ~signature:None () in
     let source = source_digest ast
     and config = config ()
     and imports = imports () in
@@ -690,7 +946,7 @@ let record_implementation ~source_file ~ast structure =
         vox_config = config;
         vox_solver = solver;
         vox_imports = imports;
-        vox_items = scan ~structure:(Some structure) ~signature:None }
+        vox_items = origin source_file :: items }
     in
     implementation_record := Some record
   end

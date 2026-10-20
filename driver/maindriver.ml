@@ -49,6 +49,7 @@ let main argv ppf =
     if Clflags.(should_stop_after Compiler_pass.Lambda)
       then raise Continue;
     Compenv.readenv ppf Before_link;
+    Vox_audit.check_probability_options ();
     if
       List.length
         (List.filter (fun x -> !x)
@@ -135,7 +136,10 @@ let main argv ppf =
           Compenv.default_output !output_name
       in
       Compmisc.init_path ();
-      Bytelink.link (Compenv.get_objfiles ~with_ocamlparam:true) target;
+      let objects = Compenv.get_objfiles ~with_ocamlparam:true in
+      Vox_audit.admit_probability ~native:false objects;
+      Bytelink.link objects target;
+      Vox_audit.print_probability_admission ();
       Warnings.check_fatal ();
     end;
   with

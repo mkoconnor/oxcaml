@@ -1,15 +1,35 @@
 open Types
 
-type t = Int | Bool | Bigint
+type t = Int | Bool | Bigint | Real
 
 let bigint_path name =
   Path.Pdot (Path.Pident (Ident.create_persistent "Stdlib__Bigint"), name)
+
+let real_path =
+  Path.Pdot (Path.Pident (Ident.create_persistent "Vox_real"), "t")
+
+let is_real env path =
+  try
+    let declaration = Env.find_type path env in
+    match path, declaration.type_uid with
+    | Path.Pident id, Shape.Uid.Item { comp_unit = "Vox_real"; _ }
+      when Env.get_current_unit_name () = "Vox_real"
+           && Ident.name id = "t" ->
+      (match declaration.type_kind with
+       | Type_abstract _ -> Option.is_none declaration.type_manifest
+       | _ -> false)
+    | _, Shape.Uid.Item { comp_unit = "Vox_real"; _ } ->
+      Shape.Uid.equal declaration.type_uid
+        (Env.find_type real_path env).type_uid
+    | _ -> false
+  with Not_found -> false
 
 let classify env ty =
   match get_desc (Ctype.expand_head env ty) with
   | Tconstr (path, [], _) when Path.same path Predef.path_int -> Some Int
   | Tconstr (path, [], _) when Path.same path Predef.path_bool -> Some Bool
   | Tconstr (path, [], _) when Path.same path (bigint_path "t") -> Some Bigint
+  | Tconstr (path, [], _) when is_real env path -> Some Real
   | _ -> None
 
 let rec classify_payload env ty =
@@ -53,6 +73,15 @@ let builtin_c_primitives =
         ["caml_vox_int_ctz"];
       owned ["Vox_iarray"] ["caml_vox_iarray_sub"; "caml_vox_iarray_set"];
       owned ["Vox_sequence"] ["caml_vox_sequence_length"];
+      owned ["Vox_real"]
+        [ "caml_vox_real_of_bigint";
+          "caml_vox_real_neg";
+          "caml_vox_real_add";
+          "caml_vox_real_sub";
+          "caml_vox_real_mul";
+          "caml_vox_real_div";
+          "caml_vox_real_le";
+          "caml_vox_real_lt" ];
       owned ["Pref"; "Ghost_pref"] ~native:"caml_pref_own"
         ["caml_pref_own_bytecode"];
       owned ["Pref"; "Ghost_pref"]

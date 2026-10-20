@@ -39,6 +39,7 @@ let certificate symbols (result : Solver.result) =
         | Bool_value value -> "bool", string_of_bool value
         | Int_value value -> "int63", Int64.to_string value
         | Bigint_value value -> "int", value
+        | Rational_value (n, d) -> "real", n ^ "/" ^ d
       in
       Printf.sprintf "[%d,%s,%s]" (index symbol)
         (json_string kind) (json_string value)

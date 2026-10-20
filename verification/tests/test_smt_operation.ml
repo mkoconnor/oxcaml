@@ -2988,7 +2988,7 @@ let frontend_reclamation () =
   Printf.printf "Frontend reclamation: %d work, %d callbacks recovered\n%!"
     work (2 * !callbacks)
 
-module Compact_distinct_resources = struct
+module _ = struct
   module F = Vox_smt_frontend
   module S = Vox_smt_sexp
   module R = Vox_smt_resource
@@ -3110,7 +3110,7 @@ module Compact_distinct_resources = struct
     repeated_assumptions true
 end
 
-module Boolean_alias_resources = struct
+module _ = struct
   module F = Vox_smt_frontend
   module S = Vox_smt_sexp
   module R = Vox_smt_resource

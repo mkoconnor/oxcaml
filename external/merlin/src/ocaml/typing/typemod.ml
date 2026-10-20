@@ -3614,6 +3614,87 @@ let modtype_of_package env loc pack =
   in
   Subst.modtype Keep Subst.identity mty
 
+(* Unpacking resets the origin of exception constructors. Until packages carry
+   that origin, their payloads must cross any enclosing isolation boundary. *)
+let package_exception_crossing env mty =
+  let combine f xs =
+    List.fold_left
+      (fun crossing x -> Mode.Crossing.join crossing (f x))
+      Mode.Crossing.min xs
+  in
+  let rec crossing paths env = function
+    | Mty_for_hole -> Mode.Crossing.max
+    | Mty_ident path ->
+        if Path.Set.mem path paths then Mode.Crossing.max else
+        begin match Env.find_modtype_expansion path env with
+        | mty -> crossing (Path.Set.add path paths) env mty
+        | exception Not_found -> Mode.Crossing.max
+        end
+    | Mty_alias path ->
+        if Path.Set.mem path paths then Mode.Crossing.max else
+        begin match Env.find_module path env with
+        | declaration ->
+            crossing (Path.Set.add path paths) env declaration.md_type
+        | exception Not_found -> Mode.Crossing.max
+        end
+    | Mty_strengthen (mty, _, _) -> crossing paths env mty
+    | Mty_functor (parameter, result, _) ->
+        let env =
+          match parameter with
+          | Unit | Named (None, _, _) -> env
+          | Named (Some id, mty, mode) ->
+              let mode =
+                Mode.(mode |> alloc_as_value |> Value.disallow_right)
+              in
+              Env.add_module ~arg:true id Mp_present mty ~mode env
+        in
+        crossing paths env result
+    | Mty_signature signature ->
+        let env = Env.add_signature signature env in
+        combine (item paths env) signature
+  and item paths env = function
+    | Sig_typext (_, extension, _, _)
+      when (let result =
+              Ctype.newconstr extension.ext_type_path extension.ext_type_params
+            in
+            match get_desc (Ctype.expand_head env result) with
+            | Tconstr (path, _, _) -> Path.same path Predef.path_exn
+            | _ -> false) ->
+        begin match extension.ext_args with
+        | Cstr_tuple arguments ->
+            combine
+              (fun ({ca_type; ca_modalities; _} : Types.constructor_argument) ->
+                Ctype.crossing_of_ty env ~modalities:ca_modalities ca_type)
+              arguments
+        | Cstr_record labels ->
+            combine
+              (fun (label : Types.label_declaration) ->
+                match label.ld_mutable with
+                | Mutable _ -> Mode.Crossing.max
+                | Immutable ->
+                    Ctype.crossing_of_ty env ~modalities:label.ld_modalities
+                      label.ld_type)
+              labels
+        end
+    | Sig_module (_, _, declaration, _, _) ->
+        crossing paths env declaration.md_type
+    | Sig_value _ | Sig_type _ | Sig_typext _ | Sig_modtype _ | Sig_class _
+    | Sig_class_type _ | Sig_jkind _ -> Mode.Crossing.min
+  in
+  crossing Path.Set.empty env mty
+
+let check_package_exception_crossing ~env ~loc mty =
+  let crossing = package_exception_crossing env mty in
+  let crosses axis =
+    Mode.Crossing.Per_axis.equal axis
+      (Mode.Crossing.proj axis crossing)
+      (Mode.Crossing.Per_axis.min axis)
+  in
+  if not (crosses (Comonadic Statefulness) && crosses (Monadic Visibility)) then
+    Env.walk_locks_for_stateful_construct ~env (loc, Mode.Hint.Module);
+  if not (crosses (Comonadic Portability) && crosses (Monadic Contention)) then
+    Env.walk_locks_for_nonportable_construct ~env (loc, Mode.Hint.Module)
+
 (* CR zqian: [package_subtype] should take [modes], but piping this through
   [ctype] is too much. Instead, we take the conservative approach. *)
 let package_subtype env pack1 pack2 =
@@ -3942,6 +4023,7 @@ and type_module_aux ~alias ~hold_locks ~strengthen ~funct_body anchor env
         | _ ->
             raise (Error(smod.pmod_loc, env, Not_a_packed_module exp.exp_type))
       in
+      check_package_exception_crossing ~env ~loc:smod.pmod_loc mty;
       check_for_generated_type_or_jkind ~funct_body env smod.pmod_loc mty
         (fun tj -> Not_allowed_in_functor_body tj);
       { mod_desc = Tmod_unpack(exp, mty);
@@ -5380,7 +5462,8 @@ let type_implementation target modulename initial_env ast =
           in
           Typecore.force_delayed_checks ();
           Verification.run_unit ?interface str;
-          Vox_trust.record_implementation ~source_file:sourcefile ~ast str;
+          Vox_trust.record_implementation ~source_file:sourcefile ~ast
+            ~exports:dclsig str;
           Mode.erase_hints ();
           Typecore.optimise_allocations ();
           (* It is important to run these checks after the inclusion test above,
@@ -5430,7 +5513,8 @@ let type_implementation target modulename initial_env ast =
           in
           Typecore.force_delayed_checks ();
           Verification.run_unit str;
-          Vox_trust.record_implementation ~source_file:sourcefile ~ast str;
+          Vox_trust.record_implementation ~source_file:sourcefile ~ast
+            ~exports:simple_sg str;
           Mode.erase_hints ();
           Typecore.optimise_allocations ();
           (* See comment above. Here the target signature contains all

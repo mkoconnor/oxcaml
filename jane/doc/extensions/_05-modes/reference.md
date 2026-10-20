@@ -98,34 +98,26 @@ let noncross () = (* can't be portable *)
   raise (Noncrossing ((:=) r))
 ```
 
-WARNING: currently, first-class modules do not account for portability and contention
-of extension constructors defined inside them. This leads to a soundness problem:
+Exceptions also cross statefulness and visibility with identical restrictions.
+
+First-class modules do not retain the originating capsule of their exception
+constructors. Unpacking a package whose exception payloads cannot cross both
+portability and contention therefore requires a nonportable context. Likewise,
+payloads that cannot cross both statefulness and visibility require a stateful
+context. These restrictions apply to explicit and pattern unpacking, including
+exceptions exposed through nested modules, aliases and functor results.
+An abstract module type whose contents cannot be inspected is checked
+conservatively.
+
+Nullary exceptions and exceptions carrying immutable data such as integers
+permit portable, stateless unpacking:
 
 ```ocaml
-module type S = sig
-    exception Exn of string ref
-end
+module type S = sig exception Number of int end
 
-let make_s : (unit -> (module S)) Modes.Portable.t =
-    let module M = struct
-        exception Exn of string ref
-    end
-    in
-    { portable = fun () -> (module M : S) }
-
-let (foo @ portable) () =
-    let module M = (val make_s.portable ()) in
-    raise (M.Exn (ref "foo"))
-
-let (bar @ portable) f =
-    let module M = (val make_s.portable ()) in
-    try f () with
-    | M.Exn r -> print_endline !r (* [r] is uncontended despite crossing capsules *)
-
-let () = bar foo (* prints "foo" *)
+let (number @ portable stateless) (module M : S) e =
+    match e with M.Number n -> n | _ -> 0
 ```
-
-Exceptions also cross statefulness and visibility with identical restrictions.
 
 # Modalities
 Modalities, as described in the [syntax](../syntax) section, can be thought of as functions

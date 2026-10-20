@@ -2307,3 +2307,241 @@ Error: Signature mismatch:
          because its mutable field "contents" is being written.
        However, the second is "stateless".
 |}]
+
+module type Exception_ref = sig exception E of int ref end
+module Packed_exception = struct exception E of int ref end
+[%%expect{|
+module type Exception_ref = sig exception E of int ref end
+module Packed_exception : sig exception E of int ref end
+|}]
+
+let (mutate_exception @ stateless) packed e =
+  let module M = (val packed : Exception_ref) in
+  match e with M.E r -> r.contents <- r.contents + 1 | _ -> ()
+[%%expect{|
+Line 2, characters 17-45:
+2 |   let module M = (val packed : Exception_ref) in
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 1-3, characters 35-62
+         which is expected to be "stateless".
+|}]
+
+let (unpack_exception_parameter @ stateless)
+    (module M : Exception_ref) e =
+  match e with M.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 12-13:
+2 |     (module M : Exception_ref) e =
+                ^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 2-3, characters 4-49
+         which is expected to be "stateless".
+|}]
+
+let (unpack_exception_pattern @ stateless) packed e =
+  let (module M : Exception_ref) = packed in
+  match e with M.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 14-15:
+2 |   let (module M : Exception_ref) = packed in
+                  ^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 1-3, characters 43-49
+         which is expected to be "stateless".
+|}]
+
+module type Nested_exception = sig module N : Exception_ref end
+[%%expect{|
+module type Nested_exception = sig module N : Exception_ref end
+|}]
+
+let (unpack_nested_exception @ stateless) packed e =
+  let module M = (val packed : Nested_exception) in
+  match e with M.N.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 17-48:
+2 |   let module M = (val packed : Nested_exception) in
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 1-3, characters 42-51
+         which is expected to be "stateless".
+|}]
+
+module type Aliased_exception = sig module N = Packed_exception end
+[%%expect{|
+module type Aliased_exception = sig module N = Packed_exception end
+|}]
+
+let (unpack_aliased_exception @ stateless) packed e =
+  let module M = (val packed : Aliased_exception) in
+  match e with M.N.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 17-49:
+2 |   let module M = (val packed : Aliased_exception) in
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 1-3, characters 43-51
+         which is expected to be "stateless".
+|}]
+
+module type Exception_functor = sig module F () : Exception_ref end
+[%%expect{|
+module type Exception_functor =
+  sig module F : functor () -> Exception_ref end
+|}]
+
+let (unpack_exception_functor @ stateless) packed e =
+  let module M = (val packed : Exception_functor) in
+  let module N = M.F () in
+  match e with N.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 17-49:
+2 |   let module M = (val packed : Exception_functor) in
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 1-4, characters 43-49
+         which is expected to be "stateless".
+|}]
+
+module Abstract_exception (X : sig
+  module type S
+  val packed : (module S) @@ stateless portable
+end) = struct
+  let (unpack_abstract @ stateless) () =
+    let module M = (val X.packed) in
+    ()
+end
+[%%expect{|
+Line 6, characters 19-33:
+6 |     let module M = (val X.packed) in
+                       ^^^^^^^^^^^^^^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 5-7, characters 36-6
+         which is expected to be "stateless".
+|}]
+
+module type Mutable_exception = sig
+  exception E of { mutable number : int }
+end
+[%%expect{|
+module type Mutable_exception =
+  sig exception E of { mutable number : int; } end
+|}]
+
+let (unpack_mutable_exception @ stateless)
+    (module M : Mutable_exception) e =
+  match e with M.E r -> r.number <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 12-13:
+2 |     (module M : Mutable_exception) e =
+                ^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 2-3, characters 4-47
+         which is expected to be "stateless".
+|}]
+
+module type Aliased_exn_type = sig
+  type t = exn = ..
+  type t += E of int ref
+end
+[%%expect{|
+module type Aliased_exn_type =
+  sig type t = exn = .. type t += E of int ref end
+|}]
+
+let (unpack_aliased_exn_type @ stateless) packed e =
+  let module M = (val packed : Aliased_exn_type) in
+  match e with M.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 17-48:
+2 |   let module M = (val packed : Aliased_exn_type) in
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: The module is "stateful"
+       but is expected to be "stateless"
+         because it is used inside the function at lines 1-3, characters 42-49
+         which is expected to be "stateless".
+|}]
+
+module type Exception_callback = sig exception E of (unit -> unit) end
+[%%expect{|
+module type Exception_callback = sig exception E of (unit -> unit) end
+|}]
+
+let (unpack_nonportable_callback @ portable)
+    (module M : Exception_callback) e =
+  match e with M.E f -> f () | _ -> ()
+[%%expect{|
+Line 2, characters 12-13:
+2 |     (module M : Exception_callback) e =
+                ^
+Error: The module is "nonportable"
+       but is expected to be "portable"
+         because it is used inside the function at lines 2-3, characters 4-38
+         which is expected to be "portable".
+|}]
+
+let (unpack_contended_reference @ portable)
+    (module M : Exception_ref) e =
+  match e with M.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+Line 2, characters 12-13:
+2 |     (module M : Exception_ref) e =
+                ^
+Error: The module is "nonportable"
+       but is expected to be "portable"
+         because it is used inside the function at lines 2-3, characters 4-49
+         which is expected to be "portable".
+|}]
+
+module type Safe_exceptions = sig
+  exception Empty
+  exception Number of int
+  exception Record of { number : int }
+  exception Callback of (unit -> unit) @@ stateless portable
+end
+[%%expect{|
+module type Safe_exceptions =
+  sig
+    exception Empty
+    exception Number of int
+    exception Record of { number : int; }
+    exception Callback of (unit -> unit) @@ stateless
+  end
+|}]
+
+let (unpack_safe_exceptions @ stateless portable) packed e =
+  let module M = (val packed : Safe_exceptions) in
+  match e with
+  | M.Empty -> 0
+  | M.Number n -> n
+  | M.Record { number } -> number
+  | M.Callback f -> f (); 0
+  | _ -> 0
+let (unpack_safe_parameter @ stateless portable)
+    (module M : Safe_exceptions) e =
+  match e with M.Number n -> n | _ -> 0
+[%%expect{|
+val unpack_safe_exceptions : (module Safe_exceptions) -> exn -> int = <fun>
+val unpack_safe_parameter : (module Safe_exceptions) -> exn -> int = <fun>
+|}]
+
+module type Ordinary_package = sig val number : int end
+let (unpack_ordinary @ stateless portable)
+    (module M : Ordinary_package) = M.number
+let (unpack_stateful @ stateful) packed e =
+  let module M = (val packed : Exception_ref) in
+  match e with M.E r -> r.contents <- 1 | _ -> ()
+[%%expect{|
+module type Ordinary_package = sig val number : int end
+val unpack_ordinary : (module Ordinary_package) -> int = <fun>
+val unpack_stateful : (module Exception_ref) -> exn -> unit = <fun>
+|}]

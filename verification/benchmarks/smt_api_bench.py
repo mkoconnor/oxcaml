@@ -77,7 +77,7 @@ def certificate_script(script, certificate):
         return assumption_script(prefix, answer), 'unsat'
     if kind != 'model':
         raise ValueError('invalid certificate kind')
-    scalar_sorts = {b'Bool', b'Int', (b'_', b'BitVec', b'63')}
+    scalar_sorts = {b'Bool', b'Int', b'Real', (b'_', b'BitVec', b'63')}
     declarations = {int(name[1:]): sort
                     for name, arguments, sort in active_declarations(prefix)
                     if re.fullmatch(rb'v[0-9]+', name) and not arguments
@@ -96,6 +96,13 @@ def certificate_script(script, certificate):
             raise ValueError('invalid model value')
         if kind == 'bool' and sort == b'Bool' and value in ('true', 'false'):
             encoded = value.encode()
+        elif (kind == 'real' and sort == b'Real'
+              and re.fullmatch(r'(0|-?[1-9][0-9]*)/[1-9][0-9]*', value)):
+            numerator, denominator = value.split('/')
+            if numerator.startswith('-'):
+                numerator = f'(- {numerator[1:]})'
+            encoded = (f'(/ (to_real {numerator}) '
+                       f'(to_real {denominator}))').encode()
         elif (kind in ('int', 'int63') and sort in
               (b'Int', (b'_', b'BitVec', b'63'))
               and re.fullmatch(r'0|-?[1-9][0-9]*', value)):

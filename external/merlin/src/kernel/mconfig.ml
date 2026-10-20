@@ -447,6 +447,7 @@ let ocaml_ignored_flags =
     "-smt-unused-steps-precise";
     "-vox-audit";
     "-vox-library";
+    "-vox-probabilistic";
     "-absname";
     "-alias-deps";
     "-annot";

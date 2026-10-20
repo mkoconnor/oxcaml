@@ -1104,7 +1104,7 @@ let signature_rollback () =
   inspect [];
   print_endline "Resized signature rollback and reuse passed"
 
-module Compact_distinct_equality = struct
+module _ = struct
   module T = Vox_smt_term
   module E = Vox_smt_equality
 
@@ -1366,7 +1366,7 @@ module Compact_distinct_equality = struct
     interruption true
 end
 
-module Compact_distinct_propagation = struct
+module _ = struct
   module T = Vox_smt_term
   module E = Vox_smt_equality
   let check condition message = if not condition then failwith message

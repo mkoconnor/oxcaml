@@ -28,6 +28,15 @@ val permutation_count : (before : int list) -> (after : int list) -> (target :
       after target
       else true} @@ total
 
+val permutation_length : (before : int list) -> (after : int list) ->
+  {u : unit | if permutation before after then
+    Vox_sequence.length before = Vox_sequence.length after else true}
+  @@ total
+
+val sorted_copy : (values : int list) ->
+  {result : int list | sorted result && permutation values result &&
+    Vox_sequence.length result = Vox_sequence.length values} @@ total
+
 val count_extensional : (left : int list) -> (right : int list) ->
     ((target : int) ->
       {u : unit | count left target === count right target}) @ total ->
@@ -252,6 +261,14 @@ val sorted_sub : (values : int list) -> (first : Bigint.t) ->
         total
 
 val insert : int -> int list -> int list @@ total
+val insert_def : (value : int) -> (values : int list) ->
+  {u : unit | insert value values === (match values with
+    | [] -> [value]
+    | head :: tail -> if value <= head then value :: values
+      else head :: insert value tail)} @@ total
+val sorted_copy_unfold : (values : int list) ->
+  {u : unit | sorted_copy values === (match values with
+    | [] -> [] | head :: tail -> insert head (sorted_copy tail))} @@ total
 val insert_sorted : (value : int) -> (values : int list) ->
   {u : unit | if sorted values then sorted (insert value values) else true}
   @@ total

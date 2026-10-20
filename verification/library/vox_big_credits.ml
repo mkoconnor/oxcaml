@@ -11,19 +11,19 @@ module type S = sig
   val empty : unit -> {t : token | credits t = 0Z} @ unique total ghost @@ total
 
   val tick : (token : {t : token | credits t > 0Z})
-      @ unique total ghost ->
+      @ unique immutable total ghost ->
     {t : token |
       credits t = Bigint.sub (credits token) 1Z} @ unique total ghost @@ total
 
   val split : (amount : Bigint.t) @ ghost ->
     (token : {t : token | 0Z <= amount && amount <= credits t})
-      @ unique total ghost ->
+      @ unique immutable total ghost ->
     {p : partition | credits p.left = amount &&
       credits p.right = Bigint.sub (credits token) amount} @ unique @@ total
 
-  val merge : (left : token) @ unique total ghost ->
+  val merge : (left : token) @ unique immutable total ghost ->
     (right : {t : token | 0Z <= credits left && 0Z <= credits t})
-      @ unique total ghost ->
+      @ unique immutable total ghost ->
     {t : token |
       credits t = Bigint.add (credits left) (credits right)} @ unique total ghost @@ total
 
@@ -44,7 +44,7 @@ module Make () = struct
     ())
 
   let (tick @ total) (token : {t : token | credits t > 0Z}
-        @ unique total ghost) :
+        @ unique immutable total ghost) :
       {t : token |
       credits t = Bigint.sub (credits token) 1Z} @ unique total ghost =
     ghost_ (credits_def (borrow_ token));
@@ -56,7 +56,7 @@ module Make () = struct
 
   let (split @ total) (amount : Bigint.t @ ghost)
       (token : {t : token | 0Z <= amount && amount <= credits t}
-        @ unique total ghost) :
+        @ unique immutable total ghost) :
       {p : partition | credits p.left = amount &&
         credits p.right = Bigint.sub (credits token) amount} @ unique =
     let left = { balance = ghost_ (amount : amount) } in
@@ -69,9 +69,9 @@ module Make () = struct
       credits_def (borrow_ result.right));
     result
 
-  let (merge @ total) (left : token @ unique total ghost)
+  let (merge @ total) (left : token @ unique immutable total ghost)
       (right : {t : token | 0Z <= credits left && 0Z <= credits t}
-        @ unique total ghost) :
+        @ unique immutable total ghost) :
       {t : token |
       credits t = Bigint.add (credits left) (credits right)} @ unique total ghost =
     ghost_ (credits_def (borrow_ left); credits_def (borrow_ right));

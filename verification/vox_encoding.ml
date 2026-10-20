@@ -473,6 +473,7 @@ let rec classify ctx env stack ty =
     | Some Vox_type.Int -> Some Int63
     | Some Vox_type.Bool -> Some Bool
     | Some Vox_type.Bigint -> Some Int
+    | Some Vox_type.Real -> Some Real
     | None when Option.is_some (iarray_element env ty) -> Some (iarray_sort ctx)
     | None ->
       begin match type_key env ty with
@@ -644,7 +645,7 @@ let declarations ctx data =
                   | Some data -> visit acc data.declaration
                   | None -> acc
                   end
-                | Bool | Int63 | Int | Opaque _ -> acc)
+                | Bool | Int63 | Int | Real | Opaque _ -> acc)
               acc
               (Constructor.fields constructor))
           acc declaration.constructors
@@ -708,7 +709,7 @@ let declarations_of_sort ctx = function
     | Some data -> declarations ctx data
     | None -> []
     end
-  | Bool | Int63 | Int | Opaque _ -> []
+  | Bool | Int63 | Int | Real | Opaque _ -> []
 
 let sort_has_unsupported_logical_equality ctx sort =
   let seen = Hashtbl.create 16 in
@@ -729,7 +730,7 @@ let sort_has_unsupported_logical_equality ctx sort =
                 (Constructor.fields constructor))
             data.declaration.constructors
       end
-    | Bool | Int63 | Int -> false
+    | Bool | Int63 | Int | Real -> false
   in
   loop sort
 
@@ -848,17 +849,19 @@ let operation ctx env ~function_type ~result_type name args =
   let physical_equality op =
     match argument_type with
     | Some (Vox_type.Int | Vox_type.Bool) -> equality op
-    | Some Vox_type.Bigint | None -> None
+    | Some (Vox_type.Bigint | Vox_type.Real) | None -> None
   in
   let structural_equality op =
     match argument_type with
-    | Some (Vox_type.Int | Vox_type.Bool | Vox_type.Bigint) -> equality op
+    | Some (Vox_type.Int | Vox_type.Bool | Vox_type.Bigint | Vox_type.Real) ->
+      equality op
     | None -> None
   in
-  let comparison int_op bigint_op =
+  let comparison int_op bigint_op real_op =
     match argument_type with
     | Some Vox_type.Int -> binary Int63 int_op
     | Some Vox_type.Bigint -> binary Int bigint_op
+    | Some Vox_type.Real -> binary Real real_op
     | Some Vox_type.Bool | None -> None
   in
   let bigint_division op =
@@ -931,10 +934,10 @@ let operation ctx env ~function_type ~result_type name args =
     | "%notequal" -> structural_equality Ne
     | "%eq" -> physical_equality Eq
     | "%noteq" -> physical_equality Ne
-    | "%lessthan" -> comparison Lt Int_lt
-    | "%lessequal" -> comparison Le Int_le
-    | "%greaterthan" -> comparison Gt Int_gt
-    | "%greaterequal" -> comparison Ge Int_ge
+    | "%lessthan" -> comparison Lt Int_lt Real_lt
+    | "%lessequal" -> comparison Le Int_le Real_le
+    | "%greaterthan" -> comparison Gt Int_gt Real_gt
+    | "%greaterequal" -> comparison Ge Int_ge Real_ge
     | "%ltint" -> binary Int63 Lt
     | "%leint" -> binary Int63 Le
     | "%gtint" -> binary Int63 Gt
@@ -944,7 +947,7 @@ let operation ctx env ~function_type ~result_type name args =
         match argument_type, args with
         | Some Vox_type.Bool, [Some x; Some y] ->
           Some (App (And, [App (Not, [x]); y]))
-        | _ -> comparison Lt Int_lt
+        | _ -> comparison Lt Int_lt Real_lt
       in
       begin match lt, equality Eq with
       | Some lt, Some eq ->
@@ -964,6 +967,14 @@ let operation ctx env ~function_type ~result_type name args =
     | "caml_bigint_mul" -> binary Int Int_mul
     | "caml_bigint_div" -> bigint_division Int_div
     | "caml_bigint_modulo" -> bigint_division Int_mod
+    | "caml_vox_real_of_bigint" -> unary Int Real_of_int
+    | "caml_vox_real_neg" -> unary Real Real_neg
+    | "caml_vox_real_add" -> binary Real Real_add
+    | "caml_vox_real_sub" -> binary Real Real_sub
+    | "caml_vox_real_mul" -> binary Real Real_mul
+    | "caml_vox_real_div" -> binary Real Real_div
+    | "caml_vox_real_le" -> binary Real Real_le
+    | "caml_vox_real_lt" -> binary Real Real_lt
     | "%boolnot" -> unary Bool Not
     | "%sequand" -> binary Bool And
     | "%sequor" -> binary Bool Or

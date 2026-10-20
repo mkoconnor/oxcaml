@@ -789,6 +789,48 @@ let (count_extensional @ total) :
   permutation_def left right;
   ()
 
+let rec (insert_length @ total) (value : int) (values : int list) :
+    {u : unit | length (insert value values) = Bigint.add 1Z (length values)} =
+  insert_def value values;
+  length_def values; length_def (insert value values);
+  match values with
+  | [] -> ()
+  | _ :: tail -> insert_length value tail; ()
+
+let rec (bag_length @ total) (values : int list) :
+    {u : unit | length (bag values) = length values} =
+  bag_def values; length_def values;
+  match values with
+  | [] -> ()
+  | head :: tail ->
+    bag_length tail;
+    insert_length head (bag tail);
+    ()
+
+let (permutation_length @ total) (before : int list) (after : int list) :
+    {u : unit | if permutation before after then
+      length before = length after else true} =
+  permutation_def before after;
+  bag_length before; bag_length after;
+  ()
+
+let[@def] sorted_copy (values : int list) :
+    {result : int list | sorted result && permutation values result &&
+      length result = length values} =
+  let result = bag values in
+  ghost_ (
+    bag_sorted values; bag_length values;
+    count_extensional values result (fun target -> bag_count values target));
+  result
+
+let (sorted_copy_unfold @ total) (values : int list) :
+    {u : unit | sorted_copy values === (match values with
+      | [] -> [] | head :: tail -> insert head (sorted_copy tail))} =
+  sorted_copy_def values; bag_def values;
+  match values with
+  | [] -> ()
+  | _ :: tail -> sorted_copy_def tail; ()
+
 let[@def] multiplicity (values : multiset) (target : int) = count values target
 
 let (bag_multiplicity @ total) : (values : int list) -> (target : int) ->

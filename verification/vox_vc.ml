@@ -2666,20 +2666,23 @@ let unfolding_equation env loc path fn_type arity =
     | Rexp_refinement (_, e) | Rexp_ghost e -> variable e
     | _ -> None
   in
+  let rec without_refinement e =
+    match e.rexp_desc with
+    | Rexp_refinement (_, e) | Rexp_ghost e -> without_refinement e
+    | _ -> e
+  in
   match get_desc (Ctype.expand_head env result) with
   | Trefine
       ({ ref_pred =
            { rexp_desc =
-               Rexp_logical_equal
-                 ( { rexp_desc =
-                       Rexp_apply ({ rexp_desc = Rexp_ident p; _ }, args);
-                     _
-                   },
-                   _ );
+               Rexp_logical_equal (application, _);
              _
            };
          _
        } as refinement)
+    ->
+    begin match (without_refinement application).rexp_desc with
+    | Rexp_apply ({ rexp_desc = Rexp_ident p; _ }, args)
     when same_path p
          && List.compare_lengths args parameters = 0
          && List.for_all2
@@ -2692,6 +2695,8 @@ let unfolding_equation env loc path fn_type arity =
               args parameters ->
     ( List.map (fun (binder, ty) -> binder, fst (refinements ty)) parameters,
       refinement )
+    | _ -> fail ()
+    end
   | _ -> fail ()
 
 (* A local definition is not unfolded while its own lemma is checked, or when
@@ -5777,7 +5782,7 @@ let check_termination ?unused_steps ~poll ~prove ~self ~fn ~measure () =
     (fun e ->
       match sort ctx.encoding e.exp_env e.exp_type with
       | Some (Int63 | Int) -> ()
-      | Some (Bool | Opaque _ | Datatype _) | None ->
+      | Some (Bool | Real | Opaque _ | Datatype _) | None ->
         Location.raise_errorf ~loc:e.exp_loc
           "Unsupported decreases expression: expected int or Bigint.t")
     components;
@@ -5836,7 +5841,7 @@ let check_termination ?unused_steps ~poll ~prove ~self ~fn ~measure () =
                 both And
                   (both Int_ge value (Big_integer "0"))
                   (both Int_lt value entry)
-              | Bool | Opaque _ | Datatype _ -> assert false
+              | Bool | Real | Opaque _ | Datatype _ -> assert false
             in
             if rest = []
             then smaller

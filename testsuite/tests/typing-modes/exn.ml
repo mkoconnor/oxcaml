@@ -422,8 +422,6 @@ end
 module type S = sig exception Exn of string ref end
 |}]
 
-(* CR dkalinichenko: fix. *)
-
 let make_s : (unit -> (module S)) Modes.Portable.t =
     let module M = struct
         exception Exn of string ref
@@ -441,7 +439,13 @@ let (foo @ portable) () =
     raise (M.Exn (ref "foo"))
 
 [%%expect{|
-val foo : unit -> 'a = <fun>
+Line 2, characters 19-43:
+2 |     let module M = (val make_s.portable ()) in
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+Error: The module is "nonportable"
+       but is expected to be "portable"
+         because it is used inside the function at lines 1-3, characters 21-29
+         which is expected to be "portable".
 |}]
 
 let (bar @ portable) f =
@@ -451,13 +455,13 @@ let (bar @ portable) f =
     | _ -> "other exception"
 
 [%%expect{|
-val bar : (unit -> string) -> string = <fun>
-|}]
-
-let _ = bar foo
-
-[%%expect{|
-- : string = "foo"
+Line 2, characters 19-43:
+2 |     let module M = (val make_s.portable ()) in
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+Error: The module is "nonportable"
+       but is expected to be "portable"
+         because it is used inside the function at lines 1-5, characters 21-28
+         which is expected to be "portable".
 |}]
 
 (* Regression test for internal ticket 6242. *)

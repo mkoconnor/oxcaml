@@ -61,6 +61,20 @@ compile -w -228 -c proof_axioms.mli
 compile -w -228 -c proof_axioms.ml
 compile -c proof.ml
 audit -c proof_client.ml
+echo "== Verified counterpart from another compilation unit"
+cat > primitive.ml <<'EOF'
+external length : int list -> Bigint.t @@ total = "caml_vox_sequence_length"
+let nonnegative (xs : int list) : {n : Bigint.t | n >= 0Z} = length xs
+EOF
+case "$OCAMLC" in
+  *ocamlopt*) extension=cmx ;;
+  *) extension=cmo ;;
+esac
+compile -w -228 -c primitive.ml -o "vox_sequence.$extension"
+cp vox_sequence.cmi renamed.cmi
+compile -w -228 -smt-assume-verified -c primitive.ml -o "renamed.$extension"
+echo 'let result = Renamed.nonnegative []' > renamed_user.ml
+compile -c renamed_user.ml
 echo "== Erased proof dependency, replaced interface"
 printf '%s\n' 'let harmless = 42' > proof_axioms.ml
 printf '%s\n' 'val harmless : int' > proof_axioms.mli

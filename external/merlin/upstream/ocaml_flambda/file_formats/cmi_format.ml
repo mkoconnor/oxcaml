@@ -36,6 +36,12 @@ type vox_item_kind =
                              that returns a value of any type, -unsafe or an
                              unsafe attribute *)
 
+  | Vox_probability_origin (* raw source digest and admission profile *)
+  | Vox_probability_root   (* a direct initialization call of run *)
+  | Vox_probability_forbidden
+  | Vox_probability_external (* includes declarations under -vox-library *)
+  | Vox_probability_native_object (* digest of the matching native object *)
+
 type vox_item = {
   vox_kind : vox_item_kind;
   vox_name : string;

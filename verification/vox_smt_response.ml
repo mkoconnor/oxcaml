@@ -119,6 +119,52 @@ let model symbols response =
           else Some (Int64.shift_right (Int64.shift_left n 1) 1))
     | value -> integer value
   in
+  let unsigned_integer text =
+    decimal_integer text && text.[0] <> '-'
+  in
+  let negate text =
+    if text = "0" then text
+    else if text.[0] = '-' then String.sub text 1 (String.length text - 1)
+    else "-" ^ text
+  in
+  let real_atom text =
+    if unsigned_integer text then Some (text, "1")
+    else
+      match String.split_on_char '.' text with
+      | [whole; fraction] when unsigned_integer whole && fraction <> "" ->
+        let digits =
+          String.for_all (fun c -> c >= '0' && c <= '9') fraction
+        in
+        if not digits then None
+        else
+          let rec trim_end i =
+            if i > 0 && fraction.[i - 1] = '0' then trim_end (i - 1)
+            else i
+          in
+          let places = trim_end (String.length fraction) in
+          let numerator = whole ^ String.sub fraction 0 places in
+          let rec trim_start i =
+            if i + 1 < String.length numerator && numerator.[i] = '0'
+            then trim_start (i + 1)
+            else i
+          in
+          let start = trim_start 0 in
+          Some
+            (String.sub numerator start (String.length numerator - start),
+             "1" ^ String.make places '0')
+      | _ -> None
+  in
+  let rec real = function
+    | Atom text -> real_atom text
+    | List [Atom "-"; value] ->
+      Option.map (fun (n, d) -> negate n, d) (real value)
+    | List [Atom "/"; numerator; denominator] -> (
+      match real numerator, real denominator with
+      | Some (n, "1"), Some (d, "1") when d <> "0" && d.[0] <> '-' ->
+        Some (n, d)
+      | _ -> None)
+    | _ -> None
+  in
   let value symbol sexp =
     match Symbol.sort symbol, sexp with
     | Bool, Atom "true" -> Some (Bool_value true)
@@ -133,6 +179,8 @@ let model symbols response =
           if n < -4611686018427387904L || n > 4611686018427387903L
           then None
           else Some (Int_value n))
+    | Real, sexp ->
+      Option.map (fun (n, d) -> Rational_value (n, d)) (real sexp)
     | (Opaque _ | Datatype _), _ -> None
     | _ -> None
   in
@@ -142,7 +190,7 @@ let model symbols response =
     | s :: ss, List [Atom name; v] :: vs when name = "v" ^ string_of_int i ->
       begin match Symbol.sort s with
       | Opaque _ | Datatype _ -> bindings (i + 1) acc ss vs
-      | Bool | Int63 | Int ->
+      | Bool | Int63 | Int | Real ->
         Option.bind (value s v) (fun v ->
             bindings (i + 1) ((s, v) :: acc) ss vs)
       end

@@ -12,8 +12,9 @@ let (same_list @ total) (x : int list) : {y : int list | y = x} = x;;
 Line 1, characters 59-60:
 1 | let (same_list @ total) (x : int list) : {y : int list | y = x} = x;;
                                                                ^
-Error: In refinements and ghost code, "=" works only at int, bool and Bigint.t,
-       not at "int list". Use "x === y" for logical equality.
+Error: In refinements and ghost code, "=" works only at int, bool,
+       Bigint.t and Vox_real.t, not at "int list".
+       Use "x === y" for logical equality.
 |}]
 
 let (same_string @ total) (x : string) : {y : string | not (y <> x)} = x;;
@@ -21,8 +22,8 @@ let (same_string @ total) (x : string) : {y : string | not (y <> x)} = x;;
 Line 1, characters 62-64:
 1 | let (same_string @ total) (x : string) : {y : string | not (y <> x)} = x;;
                                                                   ^^
-Error: In refinements and ghost code, "<>" works only at int,
-       bool and Bigint.t, not at "string".
+Error: In refinements and ghost code, "<>" works only at int, bool,
+       Bigint.t and Vox_real.t, not at "string".
        Use "not (x === y)" for logical equality.
 |}]
 
@@ -51,6 +52,7 @@ let (in_ghost_code @ total) (x : int list) = ghost_ (x = x);;
 Line 1, characters 55-56:
 1 | let (in_ghost_code @ total) (x : int list) = ghost_ (x = x);;
                                                            ^
-Error: In refinements and ghost code, "=" works only at int, bool and Bigint.t,
-       not at "int list". Use "x === y" for logical equality.
+Error: In refinements and ghost code, "=" works only at int, bool,
+       Bigint.t and Vox_real.t, not at "int list".
+       Use "x === y" for logical equality.
 |}]

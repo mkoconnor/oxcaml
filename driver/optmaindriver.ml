@@ -101,6 +101,11 @@ let main unix argv ppf ~flambda2 =
       end
     end;
     Compenv.readenv ppf Before_link;
+    Vox_audit.check_probability_options ();
+    if !Vox_trust.probabilistic && !Oxcaml_flags.use_cached_generic_functions
+    then Location.raise_errorf
+      "Probabilistic admission: cached generic-function objects are \
+       unsupported";
     if
       List.length (List.filter (fun x -> !x)
                      [make_package; make_archive; shared; instantiate;
@@ -193,8 +198,29 @@ let main unix argv ppf ~flambda2 =
       Compmisc.init_path ();
       Compmisc.with_ppf_dump ~file_prefix:target (fun ppf_dump ->
           let objs = Compenv.get_objfiles ~with_ocamlparam:true in
-          Compiler.link
-            ~ppf_dump objs target);
+          Vox_audit.native_probability_object := (fun file ->
+            let info, crc = Compilenv.read_unit_info file in
+            if info.ui_requires_metaprogramming
+               || info.ui_quoted_cmi <> [] || info.ui_quoted_cmx <> []
+            then Location.raise_errorf
+              "Probabilistic admission: %s requires metaprogramming" file;
+            let imports values = List.map (fun value ->
+              Compilation_unit.Name.to_string (Import_info.name value),
+              Option.map Digest.to_hex (Import_info.crc value)) values in
+            Some { Vox_audit.unit_name =
+                     Compilation_unit.name_as_string info.ui_unit;
+                   ordinary = Compilation_unit.is_plain_name info.ui_unit
+                     && info.ui_arg_descr = None
+                     && (match info.ui_format with
+                         | Lambda.Mb_struct _ -> true
+                         | Lambda.Mb_instantiating_functor _ -> false);
+                   record = Compilenv.read_vox_record file;
+                   imports = imports info.ui_imports_cmi;
+                   native_imports = imports info.ui_imports_cmx;
+                   native_digest = Some (Digest.to_hex crc) });
+          Vox_audit.admit_probability ~native:true objs;
+          Compiler.link ~ppf_dump objs target;
+          Vox_audit.print_probability_admission ());
       Warnings.check_fatal ();
     end;
   with

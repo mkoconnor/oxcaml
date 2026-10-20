@@ -12,7 +12,9 @@ exception Cancelled
     and uses seconds. Validation, encoding, solving and scalar model/core
     retrieval share one resource limit and deadline. Callback exceptions
     propagate unchanged. A fresh term arena and solver belong to each call.
-    [request_model] defaults to [true]; [false] skips scalar model retrieval. *)
+    [request_model] defaults to [true]; [false] skips scalar model retrieval.
+    Queries containing [Real] return [Unknown]: this solver does not implement
+    exact real arithmetic. *)
 val check :
   ?request_model:bool ->
   ?cancelled:(unit -> bool) ->

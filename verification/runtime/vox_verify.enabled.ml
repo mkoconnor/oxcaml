@@ -301,7 +301,7 @@ let smaller_model check ?resource_limit (query : Vox_smt.query) model =
            ( And,
              [ App (Int_le, [Big_integer (Int64.to_string (Int64.neg small)); v]);
                App (Int_le, [v; Big_integer bound]) ] ))
-    | Bool | Opaque _ | Datatype _ -> None
+    | Bool | Real | Opaque _ | Datatype _ -> None
   in
   let magnitude (symbol, (value : Vox_smt.value)) =
     if not (source_name (Vox_smt.Symbol.label symbol))
@@ -314,7 +314,7 @@ let smaller_model check ?resource_limit (query : Vox_smt.query) model =
           (match Int64.of_string_opt n with
           | Some n -> Int64.abs n
           | None -> Int64.max_int)
-      | Bool_value _ -> None
+      | Bool_value _ | Rational_value _ -> None
   in
   let largest = List.fold_left max 0L (List.filter_map magnitude model) in
   let within small =
@@ -354,6 +354,7 @@ let counterexample model =
     | Bool_value b -> string_of_bool b
     | Int_value n -> Int64.to_string n
     | Bigint_value n -> n ^ "Z"
+    | Rational_value (n, d) -> if d = "1" then n else n ^ "/" ^ d
   in
   match model with
   | None -> None
@@ -421,6 +422,7 @@ let prove poll check ~batch loc query =
             | Bool -> "bool"
             | Int63 -> "int"
             | Int -> "bigint"
+            | Real -> "real"
             | Opaque _ -> "opaque"
             | Datatype datatype -> Vox_smt.Datatype.label datatype))
         query.Vox_smt.symbols;

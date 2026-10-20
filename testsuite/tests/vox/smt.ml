@@ -53,3 +53,28 @@ let () = check ~int_width:63
 [%%expect{|
 Exception: Vox_smt.Sort_error "not a proposition: Expected Bool, got Int".
 |}]
+
+let () =
+  let credit = Symbol.create ~label:"credit" Real in
+  let real n = App (Real_of_int, [Big_integer n]) in
+  let half = App (Real_div, [real "1"; real "2"]) in
+  let q =
+    {datatypes = []; symbols = [credit]; functions = [];
+     facts = [{label = "funded"; term = App (Real_le, [half; Var credit])}];
+     goal =
+       {label = "remaining";
+        term = App (Real_ge,
+          [App (Real_sub, [Var credit; half]); real "0"])}}
+  in
+  Format.printf "%s%!" (to_smtlib ~int_width:63 ~timeout_ms:5000 q);;
+[%%expect{|
+(set-option :print-success false)
+(set-option :produce-models true)
+(set-option :timeout 5000)
+(set-option :rlimit 0)
+(set-logic ALL)
+(declare-fun v0 () Real)
+(assert (<= (/ (to_real 1) (to_real 2)) v0))
+(assert (not (>= (- v0 (/ (to_real 1) (to_real 2))) (to_real 0))))
+(check-sat)
+|}]

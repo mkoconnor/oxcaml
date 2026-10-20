@@ -11712,7 +11712,7 @@ and type_ident env ?(recarg=Rejected) lid =
             match get_desc (expand_head env ty) with
             | Tpoly (ty, []) -> is_scalar ty
             | _ -> begin match Vox_type.classify env ty with
-                | Some (Int | Bool | Bigint) -> true
+                | Some (Int | Bool | Bigint | Real) -> true
                 | None -> false
               end
           in
@@ -11747,7 +11747,7 @@ and type_ident env ?(recarg=Rejected) lid =
                  in
                  Location.raise_errorf ~loc:lid.loc
                    "@[In refinements and ghost code,@ %a works only at int,@ \
-                    bool and Bigint.t,@ not at %a.@ \
+                    bool,@ Bigint.t and Vox_real.t,@ not at %a.@ \
                     Use %a for logical equality.@]"
                    Style.inline_code op
                    (Style.as_inline_code Printtyp.Doc.type_expr) arg
@@ -17522,7 +17522,7 @@ let () = type_decreases := (fun self fn measure ->
   let component sexp measure =
     match Vox_type.classify env measure.exp_type with
     | Some Bigint -> ()
-    | Some (Int | Bool) | None ->
+    | Some (Int | Bool | Real) | None ->
         unify_exp ~sexp env measure (instance Predef.type_int)
   in
   (* A tuple is a lexicographic measure. *)

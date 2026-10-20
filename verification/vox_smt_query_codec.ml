@@ -44,7 +44,17 @@ let ops =
      Int_gt;
      Int_ge;
      Int_of_int63;
-     Int63_of_int
+     Int63_of_int;
+     Real_of_int;
+     Real_add;
+     Real_sub;
+     Real_mul;
+     Real_div;
+     Real_neg;
+     Real_lt;
+     Real_le;
+     Real_gt;
+     Real_ge
   |]
 
 let invalid () = invalid_arg "Malformed Vox API query capture"
@@ -107,6 +117,7 @@ let write_portable_call out call =
     | Bool -> put_int out 0
     | Int63 -> put_int out 1
     | Int -> put_int out 2
+    | Real -> put_int out 5
     | Opaque n ->
       put_int out 3;
       put_int out n
@@ -483,6 +494,7 @@ module Local_query = struct
     | Sort, 0 -> Bool
     | Sort, 1 -> Int63
     | Sort, 2 -> Int
+    | Sort, 3 -> Real
     | Sorts, 0 -> []
     | Constructors, 0 -> []
     | Fields, 0 -> []
@@ -680,7 +692,7 @@ end
 (* Bump this version when [call] or any serialized [Vox_smt] layout changes.
    Only the standard writer handles runtime values; the reader checks the object
    graph and rebuilds handles with fresh identities. *)
-let local_version = "vox-api-query-local-v3"
+let local_version = "vox-api-query-local-v4"
 
 let write_call out (call : call) =
   output_string out local_version;
@@ -693,6 +705,7 @@ let read_call input =
   match input_line input with
   | exception End_of_file -> None
   | version when version = local_version
+                 || version = "vox-api-query-local-v3"
                  || version = "vox-api-query-local-v2" ->
     if input_line input <> Sys.ocaml_version then invalid ();
     Some (Local_query.decode (Local_graph.read input))
@@ -718,6 +731,7 @@ let read_call input =
       | 0 -> Bool
       | 1 -> Int63
       | 2 -> Int
+      | 5 -> Real
       | 3 -> Opaque (get_int input)
       | 4 -> Datatype (get_ref input datatypes)
       | _ -> invalid ()

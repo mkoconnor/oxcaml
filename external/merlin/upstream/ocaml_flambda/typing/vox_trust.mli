@@ -32,6 +32,13 @@ val check_external : Env.t -> Typedtree.value_description -> unit
 (** [-vox-audit] *)
 val audit : bool ref
 
+(** [-vox-probabilistic]: check whole-program admission at link time. *)
+val probabilistic : bool ref
+
+(** Change this when admission rules or their metadata change, so previous
+    compilations cannot evade a new check. *)
+val probability_profile : string
+
 (** [-smt-assume-verified]: the verifier skips this unit. *)
 val assume_verified : bool ref
 
@@ -43,11 +50,12 @@ val unexpected_solver : string ref
     interface whose verification was skipped. Does nothing without
     [-extension refinement_types]. *)
 val record_implementation :
-  source_file:string -> ast:Parsetree.structure -> Typedtree.structure -> unit
+  source_file:string -> ast:Parsetree.structure -> exports:Types.signature ->
+  Typedtree.structure -> unit
 
-(** The settings that change how a unit is typed or what verification may
-    rely on: [-noassert], [-unsafe], [-nopervasives], [-rectypes], [-open]
-    and the language extensions. *)
+(** The compilation unit identity and settings that change how a unit is typed
+    or what verification may rely on: [-noassert], [-unsafe], [-nopervasives],
+    [-rectypes], [-open] and the language extensions. *)
 val config : unit -> string
 
 (** The record of the last implementation, for its .cmi, .cmo and .cmx. *)

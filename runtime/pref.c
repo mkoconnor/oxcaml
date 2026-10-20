@@ -99,6 +99,17 @@ CAMLprim value caml_logical_map_cardinal(value map) { return Val_unit; }
 CAMLprim value caml_logical_map_difference(value left, value right)
 { return Val_unit; }
 
+/* Real arithmetic has ghost results. Retaining or partially applying a
+   primitive may still require its runtime symbol, as for logical maps. */
+CAMLprim value caml_vox_real_of_bigint(value n) { return Val_unit; }
+CAMLprim value caml_vox_real_neg(value x) { return Val_unit; }
+CAMLprim value caml_vox_real_add(value x, value y) { return Val_unit; }
+CAMLprim value caml_vox_real_sub(value x, value y) { return Val_unit; }
+CAMLprim value caml_vox_real_mul(value x, value y) { return Val_unit; }
+CAMLprim value caml_vox_real_div(value x, value y) { return Val_unit; }
+CAMLprim value caml_vox_real_le(value x, value y) { return Val_unit; }
+CAMLprim value caml_vox_real_lt(value x, value y) { return Val_unit; }
+
 CAMLprim value caml_pref_heap_empty(value unit) { return Val_unit; }
 CAMLprim value caml_pref_heap_mem(value heap, value cell) { return Val_unit; }
 CAMLprim value caml_pref_heap_at(value heap, value cell) { return Val_unit; }

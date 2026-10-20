@@ -59,6 +59,7 @@ let () =
         | Bool -> p
         | Int63 -> n
         | Int -> Big_integer "0"
+        | Real -> app Real_of_int [Big_integer "0"]
         | Opaque _ -> assert false
         | Datatype _ -> assert false
       in
@@ -114,6 +115,39 @@ let () =
   assert (
     List.mem "(set-logic ALL)"
       (String.split_on_char '\n' (serialize (query (app Eq [z; z])))))
+
+let () =
+  let real = app Real_of_int [Big_integer "1"] in
+  List.iter
+    (fun op ->
+      check ~int_width:63 (query (app Eq [app op [real; real]; real]));
+      sort_error
+        (query (app Eq [app op [real; Big_integer "1"]; real])))
+    [Real_add; Real_sub; Real_mul; Real_div];
+  List.iter
+    (fun op -> check ~int_width:63 (query (app op [real; real])))
+    [Real_lt; Real_le; Real_gt; Real_ge];
+  check ~int_width:63 (query (app Eq [app Real_neg [real]; real]));
+  sort_error (query (app Eq [real; Big_integer "1"]));
+  sort_error (query (app Eq [app Real_of_int [integer 1]; real]));
+  sort_error (query (app Eq [app Real_div [real]; real]));
+  let symbol = Symbol.create ~label:"real" Real in
+  let interpret text =
+    Vox_smt_response.interpret_response ~resources:(ref None)
+      [symbol] "sat" ("((v0 " ^ text ^ "))")
+  in
+  List.iter
+    (fun (text, n, d) ->
+      assert (interpret text = Invalid (Some [symbol, Rational_value (n, d)])))
+    ["0.0", "0", "1"; "0.125", "125", "1000";
+     "(- 12.50)", "-125", "10"; "(/ 1.0 3.0)", "1", "3";
+     "(- (/ 1.0 3.0))", "-1", "3";
+     "(/ 123456789012345678901234567890.0 7.0)",
+       "123456789012345678901234567890", "7"];
+  List.iter
+    (fun text -> assert (interpret text = Invalid None))
+    ["(/ 1.0 0.0)"; "0.333?"; "1e10";
+     "(root-obj (+ (^ x 2) (- 2)) 2)"]
 
 let () =
   let x = Symbol.create ~label:"x" Int63 in
@@ -669,6 +703,7 @@ let () =
   let module Codec = Vox_smt_query_codec in
   let machine = Symbol.create ~label:"machine\nvalue" Int63 in
   let integer = Symbol.create ~label:"integer" Int in
+  let real = Symbol.create ~label:"real" Real in
   let boolean = Symbol.create ~label:"boolean" Bool in
   let opaque = Symbol.create ~label:"opaque" (Opaque (-7)) in
   let datatype = Datatype.create ~label:"node" in
@@ -696,6 +731,11 @@ let () =
     | Int_neg -> App (Int_neg, [i])
     | Int_of_int63 -> App (Int_of_int63, [m])
     | Int63_of_int -> App (Int63_of_int, [i])
+    | Real_of_int -> App (Real_of_int, [i])
+    | Real_neg -> App (Real_neg, [Var real])
+    | (Real_add | Real_sub | Real_mul | Real_div
+      | Real_lt | Real_le | Real_gt | Real_ge) as op ->
+      App (op, [Var real; App (Real_of_int, [Big_integer "2"])])
   in
   let shared =
     App
@@ -712,7 +752,7 @@ let () =
   in
   let query =
     { datatypes = [{ datatype; constructors = [leaf; node] }];
-      symbols = [machine; integer; boolean; opaque; data];
+      symbols = [machine; integer; boolean; opaque; data; real];
       functions = [f];
       facts =
         List.map
@@ -762,6 +802,13 @@ let () =
           assert (second.assumptions = None && second.resource_limit = None);
           assert (not second.request_model);
           assert (Codec.read_call input = None));
+      Out_channel.with_open_bin file (fun out ->
+          Codec.write_portable_call out call);
+      In_channel.with_open_bin file (fun input ->
+          match Codec.read_call input with
+          | Some decoded ->
+            assert (serialize decoded.query = serialize call.query)
+          | None -> failwith "Missing portable real query");
       let malformed text =
         Out_channel.with_open_bin file (fun output -> output_string output text);
         match In_channel.with_open_bin file Codec.read_call with
@@ -1675,6 +1722,24 @@ let () =
 let () =
   let check q = Embedded.check ~request_model:false ~clock:(fun () -> 0.)
       ~timeout_ms:10000 ~int_width:63 q in
+  let real = Symbol.create ~label:"real" Real in
+  let function_ = Function.create ~label:"real_argument"
+      ~arguments:[Real] ~result:Bool in
+  let datatype = Datatype.create ~label:"real_field" in
+  let constructor =
+    Constructor.create ~datatype ~label:"Real_field" ["value", Real]
+  in
+  let one = app Real_of_int [Big_integer "1"] in
+  List.iter
+    (fun q ->
+      assert ((check_features ~int_width:63 q).real_arithmetic);
+      assert ((check q).validity =
+        Unknown (Some "exact real arithmetic is not supported")))
+    [query ~symbols:[real] (Boolean true);
+     query ~functions:[function_] (Boolean true);
+     query ~datatypes:[{datatype; constructors = [constructor]}]
+       (Boolean true);
+     query (app Eq [one; one])];
   List.iter (fun count ->
     let symbols = List.init count (fun i ->
       Symbol.create ~label:(string_of_int i) Int63) in

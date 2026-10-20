@@ -1,0 +1,22 @@
+Vox probabilistic admission passed.
+Assumptions: ideal fresh uniform draws and atomic sampling.
+module opens admitted
+custom linker inputs rejected
+missing root rejected
+separate roots rejected
+repeated initialization rejected
+root alias rejected
+hidden root rejected
+hidden aliases admitted
+sealed root module rejected
+anonymous functor root rejected
+hidden prophecy rejected
+skipped verification rejected
+unapproved library assumption rejected
+erased implementation dependency rejected
+stale interface rejected
+archive and runtime substitution rejected
+random state access rejected
+inferred kernel interface rejected
+counterfeit kernel rejected
+artifact checks passed

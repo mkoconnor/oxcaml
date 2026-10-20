@@ -3943,7 +3943,7 @@ let finite_product_replay () =
     | _ -> failwith "Unexpected finite product interruption result");
     recover frontend) [1; 2; 4; 8; 16; 32]
 
-module Compact_distinct_frontend = struct
+module _ = struct
   module F = Vox_smt_frontend
 
   let check condition message = if not condition then failwith message
@@ -4430,7 +4430,7 @@ let () =
   Protocol_options.run ();
   print_endline "SMT engine tests passed"
 
-module Polynomial_sign_safety = struct
+module _ = struct
 module F = Vox_smt_frontend
 module S = Vox_smt_sexp
 module R = Vox_smt_resource
@@ -4546,7 +4546,7 @@ let () =
   print_endline "Polynomial sign safety passed"
 end
 
-module Sparse_relation_safety = struct
+module _ = struct
 module E = Vox_smt_engine
 module T = Vox_smt_term
 module R = Vox_smt_resource
@@ -4690,7 +4690,7 @@ let () =
   print_endline "Sparse relation safety passed"
 end
 
-module Affine_factor_safety = struct
+module _ = struct
 module F = Vox_smt_frontend
 module S = Vox_smt_sexp
 module R = Vox_smt_resource

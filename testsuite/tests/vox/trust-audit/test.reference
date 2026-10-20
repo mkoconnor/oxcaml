@@ -69,6 +69,11 @@ Warning 229 [unverified-import]: The interface of Asserted was produced by a com
 Vox audit of proof_client.ml and the N units it depends on
 Externals whose refinement is assumed:
   Proof_axioms.bogus (proof_axioms.ml:1)
+== Verified counterpart from another compilation unit
+File "renamed_user.ml", line 1:
+Warning 229 [unverified-import]: The interface of Renamed was produced by a compilation that skipped
+  verification (-smt-assume-verified), and no verified compilation
+  of the same program was found; its refinements are assumed.
 == Erased proof dependency, replaced interface
 Vox audit of proof_client.ml and the N units it depends on
 Interface digest checks failed (audit incomplete):

@@ -91,6 +91,7 @@ type result =
     solving_seconds : float
   }
 
+exception Unsupported_real
 exception Cancelled
 exception Callback_error of exn * Printexc.raw_backtrace
 
@@ -137,6 +138,7 @@ let encode ~poll ~has_bitwise ~machine_multiplication terms solver resource
   let sort = function
     | Bool -> Term.Bool
     | Int -> Term.Int
+    | Real -> raise Unsupported_real
     | Int63 -> machine_sort
     | Datatype datatype -> Term.Named (Datatypes.find datatypes datatype)
     | Opaque id ->
@@ -454,6 +456,7 @@ let check ?(request_model = true) ?(cancelled = fun () -> false)
                || not (Symbols.mem declared symbol)
             then invalid_arg "Vox_smt_embedded.check: assumption") assumptions)
           assumptions;
+        if features.real_arithmetic then raise Unsupported_real;
         let terms = Term.create () in
         let solver = Engine.create terms in
         Term.with_poll terms poll (fun () ->
@@ -518,6 +521,8 @@ let check ?(request_model = true) ?(cancelled = fun () -> false)
           Resource.check resource;
           validity)
       with
+      | Unsupported_real ->
+        Source.Unknown (Some "exact real arithmetic is not supported")
       | Model.Unavailable reason ->
         core := None;
         Source.Unknown (Some ("model unavailable: " ^ reason))

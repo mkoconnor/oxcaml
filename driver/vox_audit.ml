@@ -320,3 +320,299 @@ let print_unit ~source_file ~current ~record =
   in
   print Format.std_formatter ~source_file ~current ~record
     ~imports
+
+type probability_object =
+  { unit_name : string;
+    ordinary : bool;
+    record : vox_unit option;
+    imports : (string * string option) list;
+    native_imports : (string * string option) list;
+    native_digest : string option }
+
+let native_probability_object = ref (fun _ -> None)
+
+let probability_error format =
+  Printf.ksprintf
+    (fun message ->
+      Location.raise_errorf "Probabilistic admission: %s" message)
+    format
+
+let check_probability_options () =
+  if !Vox_trust.probabilistic
+  then begin
+    if Clflags.(!make_archive || !make_package || !instantiate || !functorize
+                || !shared || !output_c_object || !nopervasives)
+    then probability_error "requires an ordinary executable link";
+    if Clflags.(!ccobjs <> [] || !all_ccopts <> [] || !dllibs <> []
+                || !dllpaths <> [] || !c_compiler <> None
+                || !use_runtime <> "" || !use_prims <> ""
+                || !runtime_variant <> "" || !custom_runtime
+                || not !with_runtime
+                || !include_manifests <> [] || !hidden_include_manifests <> []
+                || !uses_metaprogramming || !requires_metaprogramming)
+    then probability_error "custom runtime or linker inputs are unsupported"
+  end
+
+let byte_probability_object file =
+  with_magic file Config.cmo_magic_number (fun channel ->
+      let position = input_binary_int channel in
+      seek_in channel position;
+      let unit = (input_value channel : Cmo_format.compilation_unit_descr) in
+      { unit_name = Compilation_unit.name_as_string unit.cu_name;
+        ordinary = Compilation_unit.is_plain_name unit.cu_name
+          && unit.cu_arg_descr = None
+          && (match unit.cu_format with
+              | Lambda.Mb_struct _ -> true
+              | Lambda.Mb_instantiating_functor _ -> false);
+        record = Cmi_format.input_vox_record channel;
+        imports = imports_with_digests (Array.to_list unit.cu_imports);
+        native_imports = [];
+        native_digest = None })
+
+(* Raw hashes of the reviewed kernel sources, admitted only without
+   preprocessing. -vox-library does not confer approval. *)
+let probability_kernel =
+  [ ("Vox_probability",
+     ("e1b716ff567bb92eaba50525b197ef26",
+      Some "dd1646be8f149200e01185d6d052759a"));
+    ("Vox_sequence",
+     ("77f104870a4db3843489bd4ad549a332",
+      Some "045bb8d6852673dc002bc02585879d00"));
+    ("Vox_real",
+     ("438145b8e8a0eb5c005ce6d03a8009f1",
+      Some "bcf860db7016d25c1cbc6d9ab54ee239"));
+    ("Vox_expectation",
+     ("e0cea057b942b093403de21b6acd9f8d",
+      None));
+    ("Vox_real_credits",
+     ("b94f2286decd308bb1a8c8e45f2b136c",
+      Some "015bf1d267934ad64af8b34b9f31e4c5")) ]
+
+let admit_probability ~native objfiles =
+  if !Vox_trust.probabilistic
+  then begin
+    check_probability_options ();
+    let extension = if native then ".cmx" else ".cmo" in
+    let read = if native then !native_probability_object
+      else byte_probability_object in
+    let resolve file =
+      match Load_path.find file with
+      | file -> file
+      | exception Not_found -> probability_error "cannot find %s" file
+    in
+    let digest file =
+      match Digest.file file with
+      | value -> Digest.to_hex value
+      | exception Sys_error _ -> probability_error "cannot read %s" file
+    in
+    let same_installation_file file =
+      let baseline = Filename.concat Config.standard_library_default
+        (Filename.basename file) in
+      Sys.file_exists baseline && digest file = digest baseline
+    in
+    let require_installation file =
+      if not (same_installation_file file)
+      then probability_error "%s differs from the installed runtime" file
+    in
+    let runtime_units =
+      let file = Filename.concat Config.standard_library_default "stdlib.cma" in
+      match with_magic file Config.cma_magic_number (fun channel ->
+        let position = input_binary_int channel in
+        seek_in channel position;
+        let library = (input_value channel : Cmo_format.library) in
+        List.map (fun unit -> Compilation_unit.name_as_string
+          unit.Cmo_format.cu_name) library.lib_units) with
+      | Some units -> units
+      | None -> probability_error "cannot inspect the installed stdlib.cma"
+    in
+    let installed_interface name file =
+      List.mem name runtime_units && same_installation_file file
+    in
+    let archive = resolve (if native then "stdlib.cmxa" else "stdlib.cma") in
+    require_installation archive;
+    if native then begin
+      require_installation (Filename.remove_extension archive ^ Config.ext_lib);
+      require_installation (resolve ("libasmrun" ^ Config.ext_lib))
+    end else require_installation (resolve "runtime-launch-info");
+    let selected = Hashtbl.create 32 in
+    List.iter (fun requested ->
+      if not (Filename.check_suffix requested extension)
+      then probability_error "only loose %s inputs are supported: %s"
+             extension requested;
+      let file = resolve requested in
+      match read file with
+      | None -> probability_error "cannot inspect %s" file
+      | Some object_ ->
+        if not object_.ordinary then probability_error
+          "%s is not an ordinary compilation unit" object_.unit_name;
+        if Hashtbl.mem selected object_.unit_name
+        then probability_error "duplicate unit %s" object_.unit_name;
+        Hashtbl.add selected object_.unit_name (file, object_)) objfiles;
+    let stdexit = resolve ("std_exit" ^ extension) in
+    require_installation stdexit;
+    if native then
+      require_installation (Filename.remove_extension stdexit ^ Config.ext_obj);
+    let checked = Hashtbl.create 64 in
+    let roots = ref 0 in
+    let origin record =
+      List.filter (fun item -> item.vox_kind = Vox_probability_origin)
+        record.vox_items
+    in
+    let check_record ~interface name record =
+      let record = match record with
+        | Some record -> record
+        | None -> probability_error "%s has no verification record" name
+      in
+      if record.vox_status = Vox_not_verified
+         || (not interface && record.vox_status <> Vox_verified)
+      then probability_error "%s was not verified" name;
+      if record.vox_solver <> ""
+      then probability_error "%s used an unapproved solver" name;
+      (match origin record with
+      | [item] when String.starts_with
+                      ~prefix:(Vox_trust.probability_profile ^ ":")
+                      item.vox_name -> ()
+      | _ -> probability_error "%s has no current admission record" name);
+      if List.exists (fun flag ->
+           List.mem flag (String.split_on_char ' ' record.vox_config))
+           ["noassert=true"; "unsafe=true"]
+      then probability_error "%s used unsafe compilation options" name;
+      let kernel = match List.assoc_opt name probability_kernel with
+        | None -> false
+        | Some (implementation_hash, interface_hash) ->
+          if List.exists (fun flag ->
+               String.starts_with ~prefix:"open=" flag
+               || String.starts_with ~prefix:"open_cmi=" flag
+               || List.mem flag ["nopervasives=true"; "rectypes=true"])
+               (String.split_on_char ' ' record.vox_config)
+          then probability_error
+            "%s used unsupported kernel compilation options" name;
+          let expected = if interface then
+              match interface_hash with
+              | Some hash ->
+                if record.vox_status <> Vox_interface then probability_error
+                  "%s requires its reviewed explicit interface" name;
+                hash
+              | None ->
+                if record.vox_status <> Vox_verified then probability_error
+                  "%s requires an inferred interface" name;
+                implementation_hash
+            else implementation_hash in
+          (match origin record with
+          | [item] when item.vox_name =
+              Vox_trust.probability_profile ^ ":" ^ expected ^ ":plain" -> true
+          | _ -> probability_error "%s is not the reviewed kernel source" name)
+      in
+      if not kernel then List.iter (fun item ->
+        match item.vox_kind with
+        | Vox_probability_origin | Vox_probability_native_object -> ()
+        | Vox_probability_root ->
+          if not interface then begin
+            if not (Hashtbl.mem selected name)
+            then probability_error "%s has an unlinked credit root" name;
+            roots := !roots + item.vox_count
+          end
+        | Vox_probability_forbidden | Vox_probability_external
+        | Vox_refined_external | Vox_total_external | Vox_total_cast
+        | Vox_builtin | Vox_cast_use | Vox_external | Vox_unsafe ->
+          probability_error "%s uses %s (%s)" name item.vox_name
+            item.vox_location) record.vox_items;
+      record
+    in
+    let rec visit name expected =
+      let cmi = match find name ".cmi" with
+        | Some file -> file
+        | None -> probability_error "%s has no interface" name in
+      if List.mem name runtime_units && not (same_installation_file cmi)
+      then probability_error "%s differs from the installed runtime" name;
+      let interface, imports = match read_cmi cmi with
+        | Some result -> result
+        | None -> probability_error "cannot inspect %s" cmi in
+      let actual = Option.join (List.assoc_opt name imports) in
+      (match expected with
+      | Some expected when actual <> Some expected ->
+        probability_error "%s has a mismatched interface digest" name
+      | _ -> ());
+      if not (Hashtbl.mem checked name) then begin
+        Hashtbl.add checked name ();
+        if installed_interface name cmi then begin
+          match Hashtbl.find_opt selected name with
+          | None -> ()
+          | Some (file, _) ->
+            require_installation file;
+            if native then require_installation
+              (Filename.remove_extension file ^ Config.ext_obj)
+        end else begin
+          if List.mem name ["Borrow"; "Borrow_iarray"; "Vox_string_view"]
+          then probability_error "%s uses prophecy" name;
+          let file, object_ = match Hashtbl.find_opt selected name with
+            | Some pair -> pair
+            | None ->
+              let file = match find name extension with
+                | Some file -> file
+                | None -> probability_error
+                    "%s has no implementation for its proof dependencies" name
+              in
+              match read file with
+              | Some object_ when object_.unit_name = name -> file, object_
+              | _ -> probability_error "cannot inspect %s" file
+          in
+          if not object_.ordinary then probability_error
+            "%s is not an ordinary compilation unit" name;
+          (match Option.join (List.assoc_opt name object_.imports) with
+          | Some _ -> ()
+          | None -> probability_error "%s has no own-interface digest" name);
+          let implementation = check_record ~interface:false name
+            object_.record in
+          if native then begin
+            let hashes = List.filter (fun item ->
+              item.vox_kind = Vox_probability_native_object)
+              implementation.vox_items in
+            match hashes with
+            | [item] when item.vox_name = digest
+                (Filename.remove_extension file ^ Config.ext_obj) -> ()
+            | _ -> probability_error "%s has no matching native object" name
+          end;
+          let interface = check_record ~interface:true name interface in
+          let all_imports = imports @ object_.imports @
+            List.map recorded_import
+              (implementation.vox_imports @ interface.vox_imports) in
+          List.iter (fun (dependency, expected) ->
+            (* Alias-only imports have no digest and add no assumptions. *)
+            if Option.is_some expected then visit dependency expected)
+            all_imports;
+          List.iter (fun (dependency, expected) ->
+            match expected with
+            | None -> ()
+            | Some expected ->
+              let file, dependency_object =
+                match Hashtbl.find_opt selected dependency with
+                | Some pair -> pair
+                | None ->
+                  let file = resolve
+                    (String.uncapitalize_ascii dependency ^ extension) in
+                  match read file with
+                  | Some object_ -> file, object_
+                  | None -> probability_error "cannot inspect %s" file
+              in
+              if dependency_object.native_digest <> Some expected
+              then probability_error "%s has a mismatched native digest"
+                     dependency;
+              (match find dependency ".cmi" with
+              | Some cmi when installed_interface dependency cmi ->
+                require_installation file
+              | _ -> ());
+              visit dependency None) object_.native_imports
+        end
+      end
+    in
+    Hashtbl.iter (fun name (_, object_) ->
+      visit name (Option.join (List.assoc_opt name object_.imports))) selected;
+    if !roots <> 1 then
+      probability_error "expected one initial credit root, found %d" !roots
+  end
+
+let print_probability_admission () =
+  if !Vox_trust.probabilistic then
+    Format.printf "Vox probabilistic admission passed.@.\
+      Assumptions: ideal fresh uniform draws and atomic sampling.@."

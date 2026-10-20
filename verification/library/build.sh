@@ -12,7 +12,14 @@ modules=(vox_sequence vox_http_spec vox_http_model vox_http
          vox_cdcl_total_proof vox_cdcl_total
          vox_credits vox_ordered_sequence vox_merge_proofs vox_sort_cost
          vox_merge_sort vox_lz4_model vox_parallel borrow borrow_iarray
-         pref vox_pref_semantics ghost_pref vox_big_credits vox_ackermann
+         pref vox_pref_semantics ghost_pref vox_big_credits
+         vox_span_credits
+         vox_quotient vox_real vox_real_credits
+         vox_expectation vox_probability
+         vox_harmonic vox_quicksort_cost vox_quicksort_partition
+         vox_quicksort_average vox_randomized_quicksort vox_sorting_buffer
+         vox_collision_bound vox_collision_sampling vox_geometric_cost
+         vox_fair_coin vox_ackermann
          vox_union_find_potential vox_union_find_levels vox_union_find_path_cost
          vox_union_find_model vox_union_find_forest vox_union_find_rank
          vox_union_find_mass vox_union_find_link vox_union_find_worker
@@ -101,7 +108,8 @@ compilers="$(cd "$prefix/bin" && pwd -P)/ocamlc.opt $(cd "$prefix/bin" && pwd -P
     # parameter. These modules still undergo all refinement and termination
     # checks.
     case "$module" in
-      vox_http | vox_http_model | vox_cdcl_total | vox_cdcl_total_proof | vox_table_* | \
+      vox_http | vox_http_model | vox_cdcl_total | vox_cdcl_total_proof | \
+      vox_span_credits | vox_table_* | \
       vox_verified_flat_hashtbl)
         module_flags=$flags ;;
     esac
@@ -141,7 +149,7 @@ for module in "${modules[@]}"; do
   case "$module" in
     vox_sat_proof | vox_cdcl_total_proof) continue ;;
   esac
-  cp "$module".{cmi,cmx} "$destination/"
+  cp "$module".{cmi,cmo,cmx,o} "$destination/"
   if [[ -f "$module.mli" ]]; then
     cp "$module.mli" "$destination/"
   fi

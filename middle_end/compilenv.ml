@@ -375,7 +375,17 @@ let save_unit_info filename ~main_module_block_format ~arg_descr ~static_data =
   let current_unit =
     build_unit_info ~main_module_block_format ~arg_descr ~static_data
   in
-  write_unit_info ?vox:!Vox_trust.implementation_record current_unit filename
+  let vox = Option.map (fun (record : Cmi_format.vox_unit) ->
+    let object_file = Filename.remove_extension filename ^ Config.ext_obj in
+    if Filename.check_suffix filename ".cmx"
+       && !Clflags.stop_after = None && Sys.file_exists object_file
+    then
+      { record with vox_items =
+          { Cmi_format.vox_kind = Cmi_format.Vox_probability_native_object;
+            vox_name = Digest.to_hex (Digest.file object_file);
+            vox_location = ""; vox_count = 1 } :: record.vox_items }
+    else record) !Vox_trust.implementation_record in
+  write_unit_info ?vox current_unit filename
 
 let new_const_symbol () =
   Current_unit.symbol_for_new_const ()

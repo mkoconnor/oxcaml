@@ -3077,6 +3077,24 @@ class CompleteApiOperationTests(unittest.TestCase):
                 api_benchmark.certificate_script(
                     script, dict(kind='model', bindings=bindings))
 
+    def test_certificate_preserves_exact_real_fractions(self):
+        script = b'(declare-const v0 Real)(check-sat)'
+        value = '-123456789012345678901234567890/7'
+        proof, expected = api_benchmark.certificate_script(
+            script, dict(kind='model', bindings=[[0, 'real', value]]))
+        self.assertEqual(expected, 'sat')
+        self.assertIn(
+            b'(/ (to_real (- 123456789012345678901234567890)) (to_real 7))',
+            proof)
+        for kind, value in [('real', '1/0'), ('real', '1/-3'),
+                            ('real', '0.333?'), ('int', '1')]:
+            with self.assertRaises(ValueError):
+                api_benchmark.certificate_script(
+                    script, dict(kind='model', bindings=[[0, kind, value]]))
+        with self.assertRaises(ValueError):
+            api_benchmark.certificate_script(
+                script, dict(kind='model', bindings=[]))
+
     def test_certificate_preserves_exact_assumption_subset(self):
         script = (b'(declare-const v0 Bool)(declare-const v1 Bool)'
                   b'(assert (not v0))(check-sat-assuming (v0 v1))')

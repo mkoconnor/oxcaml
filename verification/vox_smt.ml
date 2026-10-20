@@ -7,6 +7,7 @@ and sort =
   | Bool
   | Int63
   | Int
+  | Real
   | Opaque of int
   | Datatype of datatype
 
@@ -89,7 +90,7 @@ let datatypes_well_founded ?(poll = fun () -> ()) declarations =
                      | Datatype datatype ->
                        Hashtbl.mem declared datatype.datatype_id
                        && Hashtbl.mem inhabited datatype.datatype_id
-                     | Bool | Int63 | Int | Opaque _ -> true)
+                     | Bool | Int63 | Int | Real | Opaque _ -> true)
                    constructor.constructor_fields)
                declaration.constructors
         then begin
@@ -183,6 +184,16 @@ type op =
   | Int_ge
   | Int_of_int63
   | Int63_of_int
+  | Real_of_int
+  | Real_add
+  | Real_sub
+  | Real_mul
+  | Real_div
+  | Real_neg
+  | Real_lt
+  | Real_le
+  | Real_gt
+  | Real_ge
 
 type term =
   | Boolean of bool
@@ -223,7 +234,8 @@ let compare_operands ~poll left right =
     poll ();
     if left == right then 0 else
     let tag = function
-      | Bool -> 0 | Int63 -> 1 | Int -> 2 | Opaque _ -> 3 | Datatype _ -> 4 in
+      | Bool -> 0 | Int63 -> 1 | Int -> 2 | Real -> 3
+      | Opaque _ -> 4 | Datatype _ -> 5 in
     let order = Int.compare (tag left) (tag right) in
     if order <> 0 then order else match left, right with
     | Opaque a, Opaque b -> Int.compare a b
@@ -361,11 +373,21 @@ let operator = function
   | Int_ge -> ">="
   | Int_of_int63 -> "int_of_int63"
   | Int63_of_int -> "int63_of_int"
+  | Real_of_int -> "to_real"
+  | Real_add -> "+"
+  | Real_sub | Real_neg -> "-"
+  | Real_mul -> "*"
+  | Real_div -> "/"
+  | Real_lt -> "<"
+  | Real_le -> "<="
+  | Real_gt -> ">"
+  | Real_ge -> ">="
 
 let sort_name = function
   | Bool -> "Bool"
   | Int63 -> "Int"
   | Int -> "Int"
+  | Real -> "Real"
   | Opaque id -> Printf.sprintf "opaque(%d)" id
   | Datatype datatype -> Printf.sprintf "datatype(%s)" datatype.datatype_label
 
@@ -407,6 +429,10 @@ let operator_signature = function
   | Int_lt | Int_le | Int_gt | Int_ge -> Fixed ([Int; Int], Bool)
   | Int_of_int63 -> Fixed ([Int63], Int)
   | Int63_of_int -> Fixed ([Int], Int63)
+  | Real_of_int -> Fixed ([Int], Real)
+  | Real_add | Real_sub | Real_mul | Real_div -> Fixed ([Real; Real], Real)
+  | Real_neg -> Fixed ([Real], Real)
+  | Real_lt | Real_le | Real_gt | Real_ge -> Fixed ([Real; Real], Bool)
 
 let rec term_sort = function
   | Boolean _ -> Bool
@@ -434,10 +460,14 @@ let rec term_sort = function
     | Conditional, _ -> error "ite expects 3 operands")
 
 type query_features =
-  { bitvector_encoding : bool; machine_multiplication : bool }
+  { bitvector_encoding : bool;
+    machine_multiplication : bool;
+    real_arithmetic : bool
+  }
 
 let check_features ?(poll = fun () -> ()) ~int_width q =
   let bitvector_encoding = ref false and machine_multiplication = ref false in
+  let real_arithmetic = ref false in
   poll ();
   if int_width <> 63 then raise (Unsupported_target int_width);
   let datatypes = Hashtbl.create 16 in
@@ -475,6 +505,7 @@ let check_features ?(poll = fun () -> ()) ~int_width q =
     match sort with
     | Datatype datatype when not (Hashtbl.mem datatypes datatype.datatype_id) ->
       error "Undeclared SMT datatype %S" datatype.datatype_label
+    | Real -> real_arithmetic := true
     | Bool | Int63 | Int | Opaque _ | Datatype _ -> ()
   in
   List.iter
@@ -636,6 +667,8 @@ let check_features ?(poll = fun () -> ()) ~int_width q =
     | App (op, args) -> (
       (match op with
       | Mul -> machine_multiplication := true
+      | Real_of_int | Real_add | Real_sub | Real_mul | Real_div | Real_neg
+      | Real_lt | Real_le | Real_gt | Real_ge -> real_arithmetic := true
       | Bit_and | Bit_or | Bit_xor | Shift_right_logical | Shift_left
       | Shift_right_arithmetic -> bitvector_encoding := true
       | _ -> ());
@@ -669,7 +702,8 @@ let check_features ?(poll = fun () -> ()) ~int_width q =
   List.iter fact q.facts;
   fact q.goal;
   { bitvector_encoding = !bitvector_encoding;
-    machine_multiplication = !machine_multiplication }
+    machine_multiplication = !machine_multiplication;
+    real_arithmetic = !real_arithmetic }
 
 let check ?poll ~int_width q =
   ignore (check_features ?poll ~int_width q)
@@ -1021,7 +1055,7 @@ let to_smtlib_query ?(poll = fun () -> ()) ?resource_limit ?assumptions
   let opaque_ids =
     let collect ids = function
       | Opaque id -> if List.mem id ids then ids else id :: ids
-      | Bool | Int63 | Int | Datatype _ -> ids
+      | Bool | Int63 | Int | Real | Datatype _ -> ids
     in
     let ids =
       List.fold_left (fun ids s -> collect ids (Symbol.sort s)) [] q.symbols
@@ -1064,6 +1098,7 @@ let to_smtlib_query ?(poll = fun () -> ()) ?resource_limit ?assumptions
     | Bool -> "Bool"
     | Int63 -> if has_bitwise then "(_ BitVec 63)" else "Int"
     | Int -> "Int"
+    | Real -> "Real"
     | Opaque id -> Hashtbl.find opaque_names id
     | Datatype datatype -> Hashtbl.find datatype_names datatype.datatype_id
   in
@@ -1231,27 +1266,29 @@ let to_smtlib_query ?(poll = fun () -> ()) ?resource_limit ?assumptions
     (Printf.sprintf "(set-option :rlimit %d)\n"
        (Option.value resource_limit ~default:0));
   let limits = take () in
-  let rec uses_int t =
-    term_sort t = Int
+  let unbounded_sort = function Int | Real -> true | _ -> false in
+  let rec uses_unbounded t =
+    unbounded_sort (term_sort t)
     ||
     match t with
     | App (_, args) | Call (_, args) | Construct (_, args) ->
-      List.exists uses_int args
-    | Is (_, value) | Select (_, _, value) -> uses_int value
+      List.exists uses_unbounded args
+    | Is (_, value) | Select (_, _, value) -> uses_unbounded value
     | Boolean _ | Integer _ | Big_integer _ | Var _ -> false
   in
-  let has_int =
-    List.exists (fun s -> Symbol.sort s = Int) q.symbols
+  let has_unbounded =
+    List.exists (fun s -> unbounded_sort (Symbol.sort s)) q.symbols
     || List.exists
          (fun f ->
-           Function.result f = Int || List.mem Int (Function.arguments f))
+           unbounded_sort (Function.result f)
+           || List.exists unbounded_sort (Function.arguments f))
          q.functions
-    || List.exists (fun f -> uses_int f.term) (q.goal :: q.facts)
+    || List.exists (fun f -> uses_unbounded f.term) (q.goal :: q.facts)
   in
   add
     (if
-       has_int || opaque_ids <> [] || q.datatypes <> [] || uses_general Div
-       || uses_general Rem || has_bitwise
+       has_unbounded || opaque_ids <> [] || q.datatypes <> []
+       || uses_general Div || uses_general Rem || has_bitwise
      then "(set-logic ALL)\n"
      else if multiplications = [] && q.functions = []
      then "(set-logic QF_LIA)\n"
@@ -1411,7 +1448,7 @@ let to_smtlib_query ?(poll = fun () -> ()) ?resource_limit ?assumptions
   List.iter
     (fun symbol ->
       match Symbol.sort symbol with
-      | Bool | Int | Opaque _ | Datatype _ -> ()
+      | Bool | Int | Real | Opaque _ | Datatype _ -> ()
       | Int63 -> bounded (Var symbol))
     q.symbols;
   List.iter bounded multiplications;
@@ -1475,6 +1512,7 @@ type value =
   | Bool_value of bool
   | Int_value of int64
   | Bigint_value of string
+  | Rational_value of string * string
 
 type validity =
   | Valid
@@ -1521,18 +1559,18 @@ let explain_invalid query model =
     | App (op, args) -> (
       let name =
         match op with
-        | Add | Int_add -> "+"
-        | Sub | Int_sub -> "-"
-        | Mul | Int_mul -> "*"
-        | Div | Int_div -> "/"
+        | Add | Int_add | Real_add -> "+"
+        | Sub | Int_sub | Real_sub -> "-"
+        | Mul | Int_mul | Real_mul -> "*"
+        | Div | Int_div | Real_div -> "/"
         | Rem | Int_mod -> "mod"
-        | Neg | Int_neg -> "negate"
+        | Neg | Int_neg | Real_neg -> "negate"
         | Eq -> "="
         | Ne -> "<>"
-        | Lt | Int_lt -> "<"
-        | Le | Int_le -> "<="
-        | Gt | Int_gt -> ">"
-        | Ge | Int_ge -> ">="
+        | Lt | Int_lt | Real_lt -> "<"
+        | Le | Int_le | Real_le -> "<="
+        | Gt | Int_gt | Real_gt -> ">"
+        | Ge | Int_ge | Real_ge -> ">="
         | Not -> "not"
         | And -> "&&"
         | Or -> "||"
@@ -1546,6 +1584,7 @@ let explain_invalid query model =
         | Shift_right_arithmetic -> "asr"
         | Int_of_int63 -> "Bigint.of_int"
         | Int63_of_int -> "int_of_bigint"
+        | Real_of_int -> "Real.of_bigint"
       in
       match args with
       | [left; right] ->
@@ -1575,6 +1614,7 @@ let explain_invalid query model =
           | Bool_value b -> string_of_bool b
           | Int_value n -> Int64.to_string n
           | Bigint_value n -> n ^ "Z"
+          | Rational_value (n, d) -> n ^ "/" ^ d
         in
         add ("Model: " ^ symbol_name symbol ^ " = " ^ value))
       values);

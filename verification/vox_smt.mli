@@ -4,6 +4,7 @@ type sort =
   | Bool
   | Int63
   | Int
+  | Real
   | Opaque of int
   | Datatype of datatype
 
@@ -71,7 +72,8 @@ end
 
 (** Unprefixed arithmetic wraps modulo [2^63] and uses signed order. [Int_*]
     operations use unbounded integers. General machine-integer multiplication is
-    uninterpreted. *)
+    uninterpreted. [Real_*] operations use exact real arithmetic; [Real_div]
+    has SMT total semantics, so callers must exclude zero divisors. *)
 type op =
   | Add
   | Sub
@@ -108,6 +110,16 @@ type op =
   | Int_ge
   | Int_of_int63
   | Int63_of_int  (** Wraps modulo [2^63]. *)
+  | Real_of_int
+  | Real_add
+  | Real_sub
+  | Real_mul
+  | Real_div
+  | Real_neg
+  | Real_lt
+  | Real_le
+  | Real_gt
+  | Real_ge
 
 type term =
   | Boolean of bool
@@ -159,11 +171,15 @@ val term_sort : term -> sort
 val check : ?poll:(unit -> unit) -> int_width:int -> query -> unit
 
 type query_features =
-  { bitvector_encoding : bool; machine_multiplication : bool }
+  { bitvector_encoding : bool;
+    machine_multiplication : bool;
+    real_arithmetic : bool
+  }
 
 (** Validates like [check] and records machine-integer multiplication and
     whether a bitwise or shift operator selects the bitvector encoding. This
-    includes all six bitwise and shift operators. *)
+    includes all six bitwise and shift operators. [real_arithmetic] includes
+    Real declarations, datatype fields, and operations. *)
 val check_features :
   ?poll:(unit -> unit) -> int_width:int -> query -> query_features
 
@@ -188,10 +204,10 @@ val abstract_bitwise :
     explicit conversions to mathematical integers preserve the sign. Constant
     multiplication and bitvector multiplication are exact. Other integer-encoded
     multiplication is a shared uninterpreted function. Queries using [Int],
-    opaque sorts, datatypes, or general machine division use ALL; other queries
-    use QF_LIA or QF_UFLIA. Callers must exclude zero divisors when modeling
-    OCaml normal returns. [Int_div]/[Int_mod] use Euclidean semantics; callers
-    must supply the zero-divisor behavior. [resource_limit] sets Z3's
+    [Real], opaque sorts, datatypes, or general machine division use ALL; other
+    queries use QF_LIA or QF_UFLIA. Callers must exclude zero divisors when
+    modeling OCaml normal returns. [Int_div]/[Int_mod] use Euclidean semantics;
+    callers must supply the zero-divisor behavior. [resource_limit] sets Z3's
     deterministic [rlimit] for the query; it must be positive, and omitting it
     makes the query unlimited. With [assumptions], Boolean symbols of the query,
     the query asks for an unsat core and is checked assuming them
@@ -230,11 +246,13 @@ val to_smtlib_query :
   query ->
   smtlib_query
 
-(** Integer model values are signed, including on a narrower host. *)
+(** Integer model values are signed, including on a narrower host.
+    [Rational_value (n, d)] is the exact fraction [n/d], with positive [d]. *)
 type value =
   | Bool_value of bool
   | Int_value of int64
   | Bigint_value of string
+  | Rational_value of string * string
 
 type validity =
   | Valid

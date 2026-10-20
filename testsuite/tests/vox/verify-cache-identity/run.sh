@@ -95,3 +95,22 @@ strict "18 (incremental, working)" "$OCAMLC" -smt-incremental
 solver "4.16.0 - 64 bit" fails
 strict "19 (incremental, failing, unit cache)" "$OCAMLC" -smt-incremental
 strict "20 (incremental, failing, query cache)" "$OCAMLC" -smt-incremental -w +a
+solver "4.16.0 - 64 bit" works
+cat > primitive.ml <<'EOF'
+external length : int list -> Bigint.t @@ total = "caml_vox_sequence_length"
+let nonnegative (xs : int list) : {n : Bigint.t | n >= 0Z} = length xs
+EOF
+unit_name() {
+  label=$1; name=$2
+  if "$OCAMLC" -nostdlib -I "$STDLIB" -extension refinement_types \
+       -smt-solver ./solver -c primitive.ml -o "$name.cmo" \
+       > unit-name.log 2>&1
+  then echo "$label: accepted"
+  elif grep -q "Refinement could not be proved" unit-name.log
+  then echo "$label: rejected"
+  else cat unit-name.log; exit 1
+  fi
+}
+unit_name "21 (builtin owner, cold cache)" vox_sequence
+unit_name "22 (different unit, warm cache)" client
+unit_name "23 (builtin owner, warm cache)" vox_sequence
