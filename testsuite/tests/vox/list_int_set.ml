@@ -72,7 +72,6 @@
         | Nil -> ()
         | Cons (_, left_tail) ->
           match right with
-          | Nil -> ()
           | Cons (_, right_tail) ->
             same_repr_equal left_tail right_tail;
             ())

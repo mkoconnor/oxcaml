@@ -50,5 +50,4 @@ let (correct @ total) : (bytes : B.u32) -> (cursor_local : B.u32) -> (cursor : B
             X.run_def c3 s3; X.step_def (I.Local_set cursor_local) s3; E.step_def (I.Local_set cursor_local) s3.X.machine;
             L.replaced_def state.X.machine.E.locals cursor_local (S.I32 (S.add32 cursor bytes)) out;
             match L.set state.X.machine.E.locals cursor_local (S.I32 (S.add32 cursor bytes)) with
-            | None -> ()
             | Some locals -> X.run_def C.Empty {X.memory = state.X.memory; machine = {E.locals; stack = state.X.machine.E.stack}})

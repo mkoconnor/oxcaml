@@ -31,14 +31,13 @@ let (correct @ total) : (fragment : Save.fragment) @ immutable -> (signature : G
         Geometry.two_def cells 0 0 (D.S (D.S D.Z)) (3 + env) 2 (H.length remaining);
         Geometry.split_def cells 0 0 (D.S (D.S D.Z));
         (match cells with Plan.Copy (_, _, Plan.Copy (_, _, after)) ->
-          Geometry.split_def after 1 1 (D.S D.Z) | _ -> ())
-      | _ -> ());
+          Geometry.split_def after 1 1 (D.S D.Z)));
     match fragment.Save.copies with
     | Plan.Copy (_, _, Plan.Copy (_, _, (Plan.Copy (_, _, Plan.Copy (_, _, Plan.Copy (_, _, Plan.Copy (_, _, tail)))) as cells))) ->
       ghost_ (Geometry.two_def cells 0 0 (D.S (D.S D.Z)) (3 + env) 2 (H.length remaining);
         Geometry.split_def cells 0 0 (D.S (D.S D.Z));
         (match cells with Plan.Copy (_, _, Plan.Copy (_, _, after)) ->
-          Geometry.split_def after 1 1 (D.S D.Z); (match after with Plan.Copy (_, _, Plan.Copy (_, _, end_)) -> Geometry.split_def end_ 2 2 D.Z | _ -> ()) | _ -> ());
+          Geometry.split_def after 1 1 (D.S D.Z); (match after with Plan.Copy (_, _, Plan.Copy (_, _, end_)) -> Geometry.split_def end_ 2 2 D.Z));
         Split.correct tail (3 + env) 2 (H.length remaining) Plan.End; Split.split_def tail (3 + env) 2 (H.length remaining);
         Wasm_scatter_memory.zero_def (); Memory.header_def pc current accumulator;
         W.words_def (Memory.header pc current accumulator);
@@ -50,6 +49,6 @@ let (correct @ total) : (fragment : Save.fragment) @ immutable -> (signature : G
             Cross.matches_def p2 16 16 w2 tail; (match p2, w2 with Plan.Copy (_, _, p3), Q.Word (_, w3) ->
               Cross.matches_def p3 24 24 w3 tail; (match p3, w3 with Plan.Copy (_, _, p4), Q.Word (_, w4) ->
                 Cross.matches_def p4 32 32 w4 tail; (match p4, w4 with Plan.Copy (_, _, p5), Q.Word (_, w5) ->
-                  Cross.matches_def p5 40 40 w5 tail; Cross.matches_def tail 48 48 Q.End tail | _ -> ()) | _ -> ()) | _ -> ()) | _ -> ()) | _ -> ());
+                  Cross.matches_def p5 40 40 w5 tail; Cross.matches_def tail 48 48 Q.End tail)))));
       tail
     | _ -> unreachable_ ()

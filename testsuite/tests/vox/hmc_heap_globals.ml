@@ -52,9 +52,8 @@ let (step @ total) : (program : I.program) @ immutable -> (globals : X.globals) 
     X.step_def program globals heap_limit stack_limit configuration;
     Q.decode_def heap configuration.X.state; F.decode_def heap a; U.step_def program abstract;
     lookup heap program.I.origin.C.origin.P.globals globals index ();
-    (match M.decode_environment (M.view heap) a.F.env with None -> () | Some env ->
+    (match M.decode_environment (M.view heap) a.F.env with Some env ->
       S.load_def program.I.origin.C.origin.P.globals env (G.Global index));
     match X.step program globals heap_limit stack_limit configuration with
-    | X.Exhausted _ -> ()
     | X.Advanced out -> Q.decode_def heap out.X.state;
       match out.X.state with Q.Running (b, _) -> F.decode_def heap b | _ -> ())

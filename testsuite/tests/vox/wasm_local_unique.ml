@@ -8,5 +8,4 @@ let rec (replaced @ total) : (before : S.stack) @ immutable -> (index : B.u32) -
   L.replaced_def before index value left; L.replaced_def before index value right;
   match before, left, right with
   | S.Push (_, rest), S.Push (_, a), S.Push (_, b) ->
-    if index = 0 then () else replaced rest (index - 1) value a b ()
-  | _ -> ())
+    if index = 0 then () else replaced rest (index - 1) value a b ())

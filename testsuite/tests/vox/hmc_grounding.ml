@@ -98,10 +98,7 @@ let (entry_realized @ total) : (root : D.mono) @ immutable -> (bindings : assign
           let _ = Pref.equal p q in let _ = Pref.equal p p in let _ = Pref.equal q q in
           lookup_def bindings p; lookup_def middle p;
           lookup_def bindings q;
-          word_assignment bindings p rho agrees (); word_assignment bindings q rho agrees ()
-        | _ -> ())
-      | _ -> ())
-    | _ -> ())
+          word_assignment bindings p rho agrees (); word_assignment bindings q rho agrees ())))
 
 type payload = {term : D.term; proof : D.typing; assignments : assignments}
 type grounded = {p : payload | D.typed D.Z D.Empty_context p.term

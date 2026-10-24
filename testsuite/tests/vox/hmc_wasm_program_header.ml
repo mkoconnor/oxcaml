@@ -22,12 +22,10 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (byt
     Dispatch.pc_offset_def (); M.load_def memory base 8 M.W32; M.address_def base 8 M.W32;
     M.size_def M.W32; M.count_def M.W32;
     match Codec.decode bytes with
-    | None -> ()
     | Some (tag, middle) ->
       Cell.word_suffix bytes tag middle (); Cell.eight_def (); Cell.shift memory base 8 (base + 8) bytes ();
       Codec.decode_def middle;
       (match Codec.decode_limb middle with
-      | None -> ()
       | Some (lo, rest) ->
         Bytes.take_def D.Z rest;
         let prefix = Prefix.limb middle D.Z lo rest B.End () in

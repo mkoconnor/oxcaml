@@ -159,8 +159,7 @@ let nil_principal (element : Copy_spec.ty @ immutable) =
   | _ -> failwith "nil must infer a fresh element variable");
   (match V.elaborate term (borrow_ inferred) with
   | Some checked -> (match Hm_checked_elaboration.derivation checked with
-    | D.Empty_list (D.Free _) -> () | _ -> failwith "nil elaboration")
-  | None -> failwith "nil rejected")
+    | D.Empty_list (D.Free _) -> () | _ -> failwith "nil elaboration"))
 
 let () =
   nil_principal Copy_spec.Boolean;

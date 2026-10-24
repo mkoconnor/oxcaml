@@ -39,5 +39,4 @@ let rec (straight_line @ total) : (code : C.t) @ immutable -> (tail : T.code) @ 
     | C.Next (instruction, rest) ->
       Lift.ordinary_def instruction; step_def configuration; T.step_def body; E.step_def instruction before;
       (match E.step instruction before with
-      | E.Done next -> straight_line rest tail labels next after ()
-      | _ -> ()))
+      | E.Done next -> straight_line rest tail labels next after ()))

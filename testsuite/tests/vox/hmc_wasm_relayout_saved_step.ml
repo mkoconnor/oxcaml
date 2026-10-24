@@ -89,8 +89,7 @@ let (correct @ total) : (signature : G.signature) @ immutable -> (next_signature
       Seg.take_def (D.S D.Z) (Heap.Cell (accumulator, body)); Seg.take_def D.Z body;
       let bind = match instruction with G.Bind _ -> true | _ -> false in
       Hmc_wasm_relayout_value.correct signature bind next context schema fragment capacity max_pc saved old accumulator (Heap.Cell (accumulator, body))
-        env_count saved_count old_count temporaries more state.X.memory copied base before_frame copied_frame full copied_cells tail ()
-    | _ -> ());
+        env_count saved_count old_count temporaries more state.X.memory copied base before_frame copied_frame full copied_cells tail ());
     Heap.length_def copied_cells; Heap.length_def after_cells; Heap.length_def (Heap.Cell (accumulator, after_body));
     Splice.shared state.X.memory copied after base ();
     Hmc_wasm_relayout_finish.correct fragment state base_local base old_pc current accumulator after_body copied after copied_frame after_frame tail ())

@@ -21,7 +21,7 @@ let rec (find_valid @ total) : (blocks : G.table) @ immutable -> (sites : T.site
     {u : unit | O.instruction blocks label (G.Call (T.entry exit)) && T.exit_valid blocks exit} @ ghost =
   fun blocks sites label exit premise -> ghost_ (
     find_def sites label; T.valid_def blocks sites;
-    match sites with T.Empty -> () | T.Site (id, _, rest) ->
+    match sites with T.Site (id, _, rest) ->
       if Hm_elaboration_check.index_equal id label then () else find_valid blocks rest label exit ())
 
 type instruction = Keep of G.instruction | Tail_call [@@inductive]

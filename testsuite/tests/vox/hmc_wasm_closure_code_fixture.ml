@@ -74,8 +74,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
               (match X.run (Code.emit 0 1) state with
               | X.Done after ->
                 if after.X.memory <> memory || after.X.machine.E.locals <> result.Code.locals
-                  || after.X.machine.E.stack <> S.Empty then failwith "call closure code read"
-              | _ -> failwith "call closure code trap");
+                  || after.X.machine.E.stack <> S.Empty then failwith "call closure code read");
               {memory; expected = memory; prefix = [I.I32_const address; I.Local_set 0; I.I32_const 999; I.Local_set 1];
                 code = Code.emit 0 1; cursor = index})
           | _ -> failwith "call index encoding")

@@ -84,7 +84,6 @@ let rec (lookup_valid @ total) :
     valid_def slots arena count;
     M.lookup_def slots key;
     match slots with
-    | [] -> ()
     | None :: tail -> lookup_valid tail arena count key id (); ()
     | Some (stored, _) :: tail ->
       K.exact stored key;
@@ -190,8 +189,7 @@ let rec (indexed_frame @ total) :
       M.lookup_congruent slots key stored;
       M.put_get slots key index stored;
       indexed_frame slots arena (count - 1) index key ();
-      ()
-    | _ -> ());
+      ());
   ())
   [@@decreases if count > 0 then count else 0]
 
@@ -227,8 +225,7 @@ let rec (indexed_same @ total) :
       | Some (Some key) ->
         M.same_get before after key;
         indexed_same before after arena (count - 1) ();
-        ()
-      | _ -> ());
+        ());
     ())
   [@@decreases if count > 0 then count else 0]
 end

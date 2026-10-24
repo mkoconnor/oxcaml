@@ -17,8 +17,7 @@ let rec (seek @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ i
     if boundary = 0 then () else (
       L.drop_def before address; L.drop_def after address;
       match before, after with
-      | B.Byte (_, left), B.Byte (_, right) -> seek left right (boundary - 1) (address - 1) ()
-      | _ -> ()))
+      | B.Byte (_, left), B.Byte (_, right) -> seek left right (boundary - 1) (address - 1) ()))
 let rec (preserve @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ immutable ->
     (heap : Heap.heap) @ immutable -> (boundary : W.limb) ->
     {u : unit | above heap boundary && Image.related before heap && not (L.drop before boundary === None) && L.drop before boundary === L.drop after boundary} ->

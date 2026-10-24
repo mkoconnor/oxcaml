@@ -62,7 +62,7 @@ let (correct @ total) : (program : I.program) @ immutable -> (globals : X.global
       | Some I.Tail_call | Some (I.Keep (G.Call _)) ->
         (match a.F.temporaries with
         | F.Value (closure, _, _) -> (match M.decode heap closure with
-          | Some value -> Invoke.correct program memory heap closure a.F.accumulator value () | None -> ())
+          | Some value -> Invoke.correct program memory heap closure a.F.accumulator value ())
         | _ -> ())
       | Some (I.Keep (G.List_branch _)) ->
         M.decode_def heap a.F.accumulator; M.decode_value_def (M.view heap) a.F.accumulator;

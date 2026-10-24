@@ -35,7 +35,7 @@ let (try_increment @ portable) (a : L.t) =
     let h = ghost_ (P.own (borrow_ t)) in
     let p = ghost_ (L.location cell) in
     let empty = ghost_ (P.Heap.empty ()) in
-    let old = ghost_ (match P.Heap.at before p with Some v -> v | None -> None) in
+    let old = ghost_ (match P.Heap.at before p with Some v -> v) in
     let vacant = ghost_ None in
     ghost_ (P.Heap.put_law empty p old vacant);
     ghost_ (P.Heap.put_law empty p vacant written);

@@ -32,8 +32,7 @@ let (cons_correct @ total) : (table : K.table) @ immutable -> (heap : M.heap) @ 
       M.decode_object_def (M.view heap) object_;
       let wire = Image.fetch memory heap address object_ () in
       Image.schema_def object_; Wire.corresponds_def object_ wire;
-      (match object_ with M.Cons (a, b) -> M.decode_def heap a; M.decode_def heap b | _ -> ())
-    | _ -> ())
+      (match object_ with M.Cons (a, b) -> M.decode_def heap a; M.decode_def heap b))
 let rec (capture_size @ total) : (context : D.context) @ immutable -> (view : M.view) @ immutable ->
     (captures : M.cells) @ immutable -> (env : R.V.value) @ immutable ->
     {u : unit | M.decode_environment view captures === Some env && H.environment context env} ->
@@ -41,7 +40,7 @@ let rec (capture_size @ total) : (context : D.context) @ immutable -> (view : M.
   M.decode_environment_def view captures; H.environment_def context env; M.length_def captures; F.locals_size_def context;
   match context, captures with
   | D.Binding (_, rest), M.Cell (_, tail) ->
-    (match M.decode_environment view tail with None -> () | Some remaining -> capture_size rest view tail remaining ())
+    (match M.decode_environment view tail with Some remaining -> capture_size rest view tail remaining ())
   | _ -> ())
 type closure = {code : D.index; captures : M.cells}
 let[@def] (read_closure @ total) (table : K.table @ immutable) (memory : B.bytes @ immutable) (reference : C.value @ immutable) = match reference with
@@ -73,6 +72,4 @@ let (closure_correct @ total) : (table : K.table) @ immutable -> (heap : M.heap)
       | M.Closure (_, captures), Wire.Closure (number, _), Some entry ->
         capture_size entry.K.captured (M.view heap) captures env ();
         Header.load memory address (M.length captures) number captures (); Header.code_def memory address;
-        Lookup.correct table code number ()
-      | _ -> ())
-    | _ -> ())
+        Lookup.correct table code number ()))

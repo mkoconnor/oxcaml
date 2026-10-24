@@ -47,8 +47,7 @@ let rec (agrees_at @ total) :
   R.lookup_expr_def subst index;
   (match bindings, subst with
    | _ :: ids, _ :: exprs ->
-     if index > 0 then agrees_at origins ids exprs (index - 1) id ()
-   | _ -> ());
+     if index > 0 then agrees_at origins ids exprs (index - 1) id ());
   ())
 
 let (bounds @ total) : (state : V.t) @ immutable ->
@@ -167,7 +166,6 @@ let (witness @ total) : (state : V.t) @ immutable ->
     match Scan.find_layer state.nodes state.semantic.union.parents
       state.semantic.union.count pat first second third
       (M.root state.semantic.union.parents root) state.semantic.union.count with
-    | None -> (-1)
     | Some id ->
       O.class_at state.nodes state.semantic.union.parents state.semantic.union.count id ();
       id)
@@ -218,7 +216,6 @@ let rec (derive @ total) : (state : V.t) @ immutable ->
         | _ -> [], [], [] in
       let id = witness state pat first second third root () in
       match Q.node graph id with
-      | None -> (E.Refl (S.origin origins root))
       | Some node ->
         node_facts state id node ();
         N.origin_def origins node;

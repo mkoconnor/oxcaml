@@ -98,5 +98,5 @@ let (no_entry_type @ total) : (term : D.term) @ immutable -> (run : inference) @
     let impossible : ((delta : (Copy_spec.node Pref.t @ immutable total -> Copy_spec.ty @ immutable total)) @ total ->
       {u : unit | match run.inferred with None -> false | Some ty -> target === Level_mgu_spec.substitute delta ty} ->
       {u : unit | false}) @ total = fun delta instance ->
-        match run.inferred with None -> () | Some ty -> entry_instance delta ty () in
+        match run.inferred with Some ty -> entry_instance delta ty () in
     V.principal_evidence run.input run.inferred run.evidence target typing () false impossible)

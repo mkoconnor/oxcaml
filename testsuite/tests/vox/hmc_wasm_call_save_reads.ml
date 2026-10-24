@@ -58,8 +58,7 @@ let (correct @ total) : (signature : G.signature) @ immutable -> (activation : F
         (match w1 with Q.Word (_, w2) -> Cross.reads_def memory base 16 w2;
           (match w2 with Q.Word (_, w3) -> Cross.reads_def memory base 24 w3;
             (match w3 with Q.Word (_, w4) -> Cross.reads_def memory base 32 w4;
-              (match w4 with Q.Word (_, w5) -> Cross.reads_def memory base 40 w5; Cross.reads_def memory base 48 Q.End
-              | _ -> ()) | _ -> ()) | _ -> ()) | _ -> ()) | _ -> ());
+              (match w4 with Q.Word (_, w5) -> Cross.reads_def memory base 40 w5; Cross.reads_def memory base 48 Q.End)))));
     ghost_ (Index.represents_def (D.S (Codec.locals_size signature.G.locals)) (1 + env_count);
       Index.represents_def (D.S (D.S (Codec.locals_size signature.G.locals))) (2 + env_count);
       Index.represents_def (D.S (D.S (D.S (Codec.locals_size signature.G.locals)))) (3 + env_count);

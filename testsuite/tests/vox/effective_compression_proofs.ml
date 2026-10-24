@@ -56,7 +56,7 @@ let (redirect_source @ total) : (h : node Pref.heap) @ immutable ->
        | Arrow _ | List _ -> ());
       match old.memo with Empty_memo | Forward _ -> ()
       | Memo (stamp, _) -> ());
-    (match H.at h p with None -> () | Some old -> match old.memo with Empty_memo | Forward _ -> ()
+    (match H.at h p with Some old -> match old.memo with Empty_memo | Forward _ -> ()
       | Memo (stamp, _) -> ());
     ())
 

@@ -21,8 +21,7 @@ let (zero_frames @ total) : (capacity : D.index) @ immutable -> (state : M.state
   | M.Running (_, stack) ->
     M.depth_def stack;
     (match stack with
-    | M.Empty -> stack_cells_def stack; Hm_abstraction_proofs.add_zero capacity; B.reflexive capacity
-    | M.Saved _ -> ())
+    | M.Empty -> stack_cells_def stack; Hm_abstraction_proofs.add_zero capacity; B.reflexive capacity)
   | _ -> B.le_def D.Z capacity)
 let (constant_slots @ total) : (p : I.program) @ immutable -> (input : Hmc_word64.t) @ immutable -> (fuel : D.index) @ immutable ->
     {u : unit | T.no_calls p.I.code} ->

@@ -276,7 +276,6 @@ let rec (failure_refutes @ total) :
     let ok = false in
     unified_def h p q ok after d;
     match d with
-    | Same | Constants | Bind_left _ | Bind_right _ -> refine_ ()
     | Occurs_left search ->
       search_bound h rho model p q search (refine_ ()); refine_ ()
     | Occurs_right search ->

@@ -65,7 +65,7 @@ let rec (from_records @ total) : (table : M.table) @ immutable -> (catalog : T.c
     let next = D.Binding (D.Forall (D.Z, arg), tail) in depth_def tail; depth_def next;
     from_records table catalog locals s ds (); from_records table catalog locals a da ();
     from_records table catalog next b db ()
-  | _ -> (match code with C.Global (_, _, id) -> M.lookup_present table id () | _ -> ()))
+  | _ -> (match code with _ -> ()))
 
 let (fetch @ total) : (p : C.program) @ immutable ->
     (id : {i : D.index | D.present (M.size (C.manifest p.C.definitions)) i}) @ immutable ->

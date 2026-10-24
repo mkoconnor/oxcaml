@@ -60,7 +60,6 @@ let (evaluate @ total) : (p : P.program) @ immutable ->
       | Evaluate (env, _, _) -> W.source_def table env; W.valid_def table env; W.environment_def env
       | Return v -> W.source_def table v; W.valid_def table v);
       H.source_continuation_def table kont; H.target_continuation_def kont; H.continuation_valid_def table kont
-    | Done v -> W.source_def table v; W.valid_def table v
     | Stuck -> ());
   out
 

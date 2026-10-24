@@ -29,5 +29,4 @@ let rec (correct @ total) : (values : Heap.cells) @ immutable -> (plan : Plan.pl
         Range.payload_def source; Range.payload_def target; Range.tag_def (source + 1); Range.tag_def (target + 1);
         Cross.matches_def payload (Range.tag source + 8) (Range.tag target + 8) (Q.Word (V.payload value, Words.words rest)) tail;
         Cross.reads_def memory base (Range.tag source + 8) (Q.Word (V.payload value, Words.words rest));
-        correct rest more tail (source + 1) (target + 1) (count - 1) memory base ()
-      | _ -> ()))
+        correct rest more tail (source + 1) (target + 1) (count - 1) memory base ()))

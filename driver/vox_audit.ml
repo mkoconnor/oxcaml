@@ -376,7 +376,7 @@ let probability_kernel =
      ("e1b716ff567bb92eaba50525b197ef26",
       Some "dd1646be8f149200e01185d6d052759a"));
     ("Vox_sequence",
-     ("77f104870a4db3843489bd4ad549a332",
+     ("f4e8dd9d8a727bbf2e393c8181d8b429",
       Some "045bb8d6852673dc002bc02585879d00"));
     ("Vox_real",
      ("438145b8e8a0eb5c005ce6d03a8009f1",

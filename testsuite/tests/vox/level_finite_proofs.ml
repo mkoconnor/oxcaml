@@ -16,7 +16,6 @@ let rec (search_finite @ total) :
     let after = H.put h p (redirect h p q) in
     let v = redirect h p q in observe_write h p v x;
     match trace with
-    | Hit | Left _ -> let t = Free x in t
     | Leaf ->
       if observe h x === Some Var then (
         let t = Free x in tree_root_def t; finite_def after t; t)
@@ -166,7 +165,6 @@ let (edge_smaller @ total) :
   finite_def h a; tree_root_def a;
   let ra = tree_root a in let rb = tree_root b in edge_def h ra rb; size_def a;
   match a with
-  | Free _ | Constant_tree _ | Word_tree _ -> ()
   | Alias_tree (_, child) | List_tree (_, child) -> finite_unique h child b (); ()
   | Branch (_, left, right) ->
     size_positive left; size_positive right;
@@ -192,7 +190,6 @@ let rec (walk_bound @ total) :
     | Step (next, rest) ->
       edge_def h p next;
       (match tp with
-       | Free _ | Constant_tree _ | Word_tree _ -> ()
        | Alias_tree (_, child) | List_tree (_, child) -> finite_def h child; ()
        | Branch (_, a, b) -> finite_def h a; finite_def h b; ());
       let tn = trees next in

@@ -121,8 +121,7 @@ let fixture (base : B.u32) enough =
       | Hmc_heap_allocate.Exhausted -> ()
       | Hmc_heap_allocate.Allocated _ ->
         (match T.run (Loop.cost prepared old_pc 0 cost) (Loop.configuration prepared 0 exit_label state) with
-        | T.Running actual -> if actual <> Loop.configuration prepared 0 exit_label result.Guarded.state then failwith "Cons loop iteration state"
-        | _ -> failwith "Cons loop iteration stopped"));
+        | T.Running actual -> if actual <> Loop.configuration prepared 0 exit_label result.Guarded.state then failwith "Cons loop iteration state"));
       let code = T.Block (Loop.emit prepared 0, T.Empty) in
       (match T.run (Hmc_wasm_allocation_exit_fixture.fuel 10000) {T.code; labels = T.No_labels; state} with
       | T.Finished actual -> if enough || actual <> result.Guarded.state then failwith "Cons loop exhaustion state"

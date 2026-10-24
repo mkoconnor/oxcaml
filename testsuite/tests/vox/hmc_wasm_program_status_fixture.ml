@@ -51,5 +51,4 @@ let fixture success (failure : B.u32) =
     if after.T.code <> T.Empty || after.T.labels <> T.No_labels || after.T.state <> final
       || L.get after.T.state.X.machine.E.locals 0 <> Some (S.I32 (if success then 0 else failure))
       || after.T.state.X.memory <> before.X.memory then failwith "proved status scope"
-  | _ -> failwith "status scope did not return"
 let fixtures () = fixture true 2; fixture false 2; fixture true 3; fixture false 3

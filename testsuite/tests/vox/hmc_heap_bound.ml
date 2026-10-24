@@ -33,7 +33,7 @@ let (cells @ total) : (program : I.program) @ immutable -> (state : S.state) @ i
     Height.le_def D.Z (Cap.capacity blocks);
     match state with S.Done _ | S.Stuck -> () | S.Running (a, _) ->
       H.at_label_def table blocks a;
-      match G.lookup blocks a.S.pc with None -> () | Some block ->
+      match G.lookup blocks a.S.pc with Some block ->
         Cap.lookup blocks a.S.pc block ();
         le_agrees (F.size block.G.signature) (Cap.capacity blocks);
         H.activation_def table block.G.signature a;
@@ -142,8 +142,7 @@ let rec (product_monotone @ total) : (a : D.index) @ immutable -> (b : D.index) 
   Height.le_def a b; product_def a width; product_def b width;
   match a, b with
   | D.Z, _ -> Height.le_def D.Z (product b width)
-  | D.S a, D.S b -> product_monotone a b width (); Height.add_monotone width (product a width) (product b width) ()
-  | _ -> ())
+  | D.S a, D.S b -> product_monotone a b width (); Height.add_monotone width (product a width) (product b width) ())
 
 let (initial_depth @ total) : (program : I.program) @ immutable -> (input : Hmc_word64.t) @ immutable ->
     {u : unit | depth (U.initial program input) === D.Z} @ ghost = fun program input -> ghost_ (

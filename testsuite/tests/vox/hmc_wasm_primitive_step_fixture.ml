@@ -56,16 +56,14 @@ let fixture (base : B.u32) operation left right =
       (match Wasm_control.run (Hmc_wasm_dispatch_loop.cost table 7 0 lowered)
           (Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels state) with
       | Wasm_control.Running actual ->
-        if actual <> Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels expected_state then failwith "primitive dispatcher iteration"
-      | _ -> failwith "primitive dispatcher stopped");
+        if actual <> Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels expected_state then failwith "primitive dispatcher iteration");
       if not (Codec.shape next_signature next_activation) then failwith "primitive successor shape" else
       let expected_cells = Codec.encode next_signature next_activation result.Hmc_wasm_primitive_invariant.padding () in
       ghost_ (Block.emit_def lowered 0);
       let code : {code : Wasm_code.t | X.run code state === X.Done {X.memory = result.Hmc_wasm_primitive_invariant.memory; machine = state.X.machine}} @ immutable =
         Block.emit lowered 0 in
       (match X.run code state with
-      | X.Done actual -> if actual.X.memory <> result.Hmc_wasm_primitive_invariant.memory || actual.X.machine <> state.X.machine then failwith "primitive full execution"
-      | _ -> failwith "primitive full trap");
+      | X.Done actual -> if actual.X.memory <> result.Hmc_wasm_primitive_invariant.memory || actual.X.machine <> state.X.machine then failwith "primitive full execution");
       {R.memory; base; first = Header.number 37; second = Header.number 99; code;
         expected = Hmc_wasm_range_fixture.fields 0 (Heap.Cell (V.Word (Header.number fragment.Lower.pc), expected_cells))}
   | _ -> failwith "primitive transition"

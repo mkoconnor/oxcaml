@@ -62,10 +62,10 @@ let (correct @ total) : (head : V.value) @ immutable -> (tail : V.value) @ immut
       word_slot_def state.X.machine.E.locals slots.tail_tag; word_slot_def state.X.machine.E.locals slots.tail_payload;
       L.can_set_def state.X.machine.E.locals slots.head_tag (S.I64 (V.tag head)); L.can_set_def state.X.machine.E.locals slots.head_payload (S.I64 (V.payload head));
       L.can_set_def state.X.machine.E.locals slots.tail_tag (S.I64 (V.tag tail)); L.can_set_def state.X.machine.E.locals slots.tail_payload (S.I64 (V.payload tail));
-      (match L.get state.X.machine.E.locals slots.head_tag with Some old -> S.same_type_def old (S.I64 (V.tag head)) | _ -> ());
-      (match L.get state.X.machine.E.locals slots.head_payload with Some old -> S.same_type_def old (S.I64 (V.payload head)) | _ -> ());
-      (match L.get state.X.machine.E.locals slots.tail_tag with Some old -> S.same_type_def old (S.I64 (V.tag tail)) | _ -> ());
-      (match L.get state.X.machine.E.locals slots.tail_payload with Some old -> S.same_type_def old (S.I64 (V.payload tail)) | _ -> ());
+      (match L.get state.X.machine.E.locals slots.head_tag with Some old -> S.same_type_def old (S.I64 (V.tag head)));
+      (match L.get state.X.machine.E.locals slots.head_payload with Some old -> S.same_type_def old (S.I64 (V.payload head)));
+      (match L.get state.X.machine.E.locals slots.tail_tag with Some old -> S.same_type_def old (S.I64 (V.tag tail)));
+      (match L.get state.X.machine.E.locals slots.tail_payload with Some old -> S.same_type_def old (S.I64 (V.payload tail)));
       reads_def head_tag head_payload slots; Hmc_wasm_list_memory.sixteen_def (); Hmc_wasm_list_memory.twenty_four_def ();
       Values.ready_def plan state.X.memory base state.X.machine.E.locals;
       Values.ready_def (Read.Read (head_payload, slots.head_payload, Read.Read (16, slots.tail_tag, Read.Read (24, slots.tail_payload, Read.End)))) state.X.memory base state.X.machine.E.locals;

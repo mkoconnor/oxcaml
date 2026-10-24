@@ -64,8 +64,7 @@ let fixture (base : B.u32) enough =
       Lift.correct capture_code allocation_code T.No_labels state captured ();
       Fuel.correct (C.length capture_code) (Conditional.cost heap_base limit 1 2 3 4 5 6) {T.code; labels = T.No_labels; state});
     (match T.run cost {T.code; labels = T.No_labels; state} with
-    | T.Finished actual -> if actual <> result.Conditional.state then failwith "source operands allocation execution"
-    | _ -> failwith "source operands allocation incomplete");
+    | T.Finished actual -> if actual <> result.Conditional.state then failwith "source operands allocation execution");
     let cursor : B.u32 = if enough then heap_base + 32 else heap_base in
     let prefix = [I.I32_const base; I.Local_set 0; I.I32_const heap_base; I.Local_set 1; I.I32_const limit; I.Local_set 2;
       I.I64_const (Header.number 999); I.Local_set 3; I.I64_const (Header.number 999); I.Local_set 4;

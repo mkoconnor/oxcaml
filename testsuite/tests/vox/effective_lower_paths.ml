@@ -15,7 +15,6 @@ let rec (bounded_path @ total) : (h : node Pref.heap) @ immutable -> (heads : E.
     contains_def tree x; bound_root_def tree; let root = bound_root tree in
     if root === x then (let p = Stop in reaches_def h root x p; refine_ p)
     else match tree with
-    | Tip _ -> let p = Stop in reaches_def h root x p; refine_ p
     | Through (_, child) ->
       let next = bound_root child in edge_def h root next;
       let refine_ rest = bounded_path h heads bound child x (refine_ ()) in

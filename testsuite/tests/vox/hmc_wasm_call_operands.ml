@@ -50,7 +50,7 @@ let (correct @ total) : (signature : G.signature) @ immutable -> (activation : F
     let middle = {X.memory = state.X.memory; machine = {E.locals = captured; stack = state.X.machine.E.stack}} in
     ghost_ (V.payload_def (V.Closure_pointer closure); Header.number_def closure;
       L.can_set_def captured object_local (S.I32 closure);
-      (match L.get captured object_local with Some old -> S.same_type_def old (S.I32 closure) | _ -> ()));
+      (match L.get captured object_local with Some old -> S.same_type_def old (S.I32 closure)));
     let out = Pointer.correct slots.Capture.head_payload object_local middle closure () in
     ghost_ (Capture.separate_def slots object_local;
       L.other_local captured object_local (S.I32 closure) out slots.Capture.head_tag ();

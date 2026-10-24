@@ -38,7 +38,6 @@ let (correct @ total) : (first : Heap.cells) @ immutable -> (second : Heap.cells
     D.add_def (D.S destination) (Heap.length first);
     Hmc_u32_index_sum.correct destination (Heap.length first) destination_position first_count (destination_position + first_count) ();
     match Patch.write (D.add (D.S destination) (Heap.length first)) second before_cells with
-    | None -> ()
     | Some middle_cells ->
       let middle_frame = Wire.encode_cells middle_cells tail in
       let middle = Splice.replace before base before_frame middle_frame () in

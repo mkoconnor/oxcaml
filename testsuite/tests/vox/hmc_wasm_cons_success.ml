@@ -39,8 +39,7 @@ let rec (prefix_transitive @ total) : (a : B.bytes) @ immutable -> (b : B.bytes)
     {u : unit | P.equal_prefix base a c} @ ghost = fun a b c base premise -> ghost_ (
     P.equal_prefix_def base a b; P.equal_prefix_def base b c; P.equal_prefix_def base a c;
     if base = 0 then () else match a, b, c with
-    | B.Byte (_, x), B.Byte (_, y), B.Byte (_, z) -> prefix_transitive x y z (base - 1) ()
-    | _ -> ())
+    | B.Byte (_, x), B.Byte (_, y), B.Byte (_, z) -> prefix_transitive x y z (base - 1) ())
 type result = {allocated : B.bytes; allocation : A.allocation; state : X.state; frame : Invariant.result; tail : B.bytes}
 let (correct @ total) : (signature : G.signature) @ immutable -> (next_signature : G.signature) @ immutable ->
     (activation : Frame.activation) @ immutable -> (next_activation : Frame.activation) @ immutable -> (frames : State.frames) @ immutable ->

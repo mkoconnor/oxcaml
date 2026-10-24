@@ -39,8 +39,7 @@ let rec (at @ total) : (graph : Q.graph) @ immutable ->
      if R.occurs index a then at graph a bindings index () else at graph b bindings index ()
    | R.Int_if (c, a, b) | R.Bool_if (c, a, b) ->
      if R.occurs index c then at graph c bindings index ()
-     else if R.occurs index a then at graph a bindings index () else at graph b bindings index ()
-   | _ -> ());
+     else if R.occurs index a then at graph a bindings index () else at graph b bindings index ());
   ())
 
 let rec (transfer @ total) : (graph : Q.graph) @ immutable ->
@@ -85,7 +84,6 @@ let rec (matched @ total) : (state : V.t) @ immutable ->
       Intro.third_def graph pat bindings;
       let id = P.witness state pat first second third root () in
       (match Q.node graph id with
-       | None -> ()
        | Some node ->
          Q.layer_def graph pat first second third node;
          match pat, node with
@@ -101,6 +99,5 @@ let rec (matched @ total) : (state : V.t) @ immutable ->
            Q.matches_def graph b bindings y;
            matched state c bindings z ();
            matched state a bindings x ();
-           matched state b bindings y ()
-         | _ -> ());
+           matched state b bindings y ());
       ())

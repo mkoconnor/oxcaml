@@ -33,7 +33,7 @@ type numbers : immutable_data = int list
 let () =
   let a, b, q = fifo 10 20 in
   Format.printf "FIFO: %d %d; empty=%b@." a b
-    (match contents q with [] -> true | _ -> false);
+    (match contents q with [] -> true);
   let a, b, _ = fifo {key = 1; weight = 10} {key = 2; weight = 20} in
   (() : {u : unit | a.key = 1 && b.key = 2});
   Format.printf "records: %d %d@." a.weight b.weight;
@@ -42,4 +42,4 @@ let () =
   let a, b, _ = fifo first second in
   (() : {u : unit | a === first && b === second});
   Format.printf "lists: %b@."
-    (match a, b with [1; 2], [3] -> true | _ -> false)
+    (match a, b with [1; 2], [3] -> true)

@@ -96,7 +96,6 @@ let (solve_complete @ total) : (n : int) -> (formula : Vox_sat_spec.formula) ->
   fun n formula ->
   ghost_ (Vox_sat_spec.classify_input_def n formula);
   match Vox_cdcl_total_proof.solve_complete n formula with
-  | Error Vox_cdcl_total_proof.Invalid_fuel -> Error Invalid_fuel
   | Error (Vox_cdcl_total_proof.Invalid_input error) -> Error (Invalid_input
     error)
   | Ok report -> Ok (convert_report (ghost_ n) (ghost_ formula) report)

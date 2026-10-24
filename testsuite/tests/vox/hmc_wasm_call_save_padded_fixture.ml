@@ -71,7 +71,6 @@ let fixture (base : B.u32) padding_length env saved rest =
             let result = Padded.correct fragment tail padding padding_count padding_length 9 current accumulator remaining (3 + env_count) count state base destination 1024 0 1 () in
             if result.Hmc_wasm_frame_pad_finish.memory <> expected then failwith "save decoded memory")
         | _ -> failwith "save size encoding")
-      | _ -> failwith "save operand shape"
     in
     if X.run (Padded.emit fragment padding 0 1) state <> X.Done {X.memory = expected; machine = state.X.machine} then failwith "padded save execution";
     {memory; expected; code = Padded.emit fragment padding 0 1;

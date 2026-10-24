@@ -107,7 +107,6 @@ let fixture (base : B.u32) padding_length env saved rest =
                 code, stop)
             | _ -> failwith "stack frame decode")))
         | _ -> failwith "save size encoding")
-      | _ -> failwith "save operand shape"
     in
     {memory; expected; code;
       prefix = [I.I32_const base; I.Local_set 0; I.I32_const destination; I.Local_set 1]; cursor}))

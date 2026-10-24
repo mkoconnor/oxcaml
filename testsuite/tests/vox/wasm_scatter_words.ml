@@ -52,6 +52,4 @@ let rec (correct @ total) : (old : Q.words) @ immutable -> (values : Q.words) @ 
           source before middle source_base base before_frame middle_frame suffix (width - 8) ();
         Splice.shared before middle after base ();
         Wasm_sequence_update.at prefix rest middle after middle_frame after_frame suffix old_word value base target_offset (base + target_offset) ();
-        Copy.apply_def plan source source_base base
-      | _ -> ())
-    | _ -> ())
+        Copy.apply_def plan source source_base base))

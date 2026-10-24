@@ -155,5 +155,5 @@ let (redirect_low @ total) : (h : node Pref.heap) @ immutable ->
     below_def h root bound; below_def after next bound;
     at_level_def after next; at_level_def h root;
     at_level_def h source; at_level_def h target;
-    (match at_level h source with Generic -> () | Finite n -> below_def h target n; ());
+    (match at_level h source with Finite n -> below_def h target n; ());
     d)

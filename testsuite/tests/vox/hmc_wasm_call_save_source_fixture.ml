@@ -78,7 +78,6 @@ let fixture (base : B.u32) padding_length env saved rest =
             | _ -> failwith "source frame decode")
           | _ -> failwith "source frame bytes")
         | _ -> failwith "save size encoding")
-      | _ -> failwith "save operand shape"
     in
     if X.run (Padded.emit fragment padding 0 1) state <> X.Done {X.memory = expected; machine = state.X.machine} then failwith "padded save execution";
     {memory; expected; code = Padded.emit fragment padding 0 1;

@@ -63,10 +63,10 @@ let rec (roundtrip @ total) : (bodies : bodies) @ immutable -> (tail : B.bytes) 
     count_def bodies; encoded_def bodies bytes tail; decode_entries_def fuel number bytes;
     match bodies with Empty -> () | Body (_, rest) ->
       progress bytes;
-      match Body.decode bytes with None -> () | Some (_, suffix) ->
+      match Body.decode bytes with Some (_, suffix) ->
         Stream.transitive (C.Succ (Stream.length suffix)) (Stream.length bytes) fuel ();
         Budget.le_def (C.Succ (Stream.length suffix)) fuel;
-        match fuel with C.Zero -> () | C.Succ fuel -> roundtrip rest tail (number - 1) fuel suffix ())
+        match fuel with C.Succ fuel -> roundtrip rest tail (number - 1) fuel suffix ())
 let (encode @ total) : (bodies : bodies) @ immutable -> (tail : B.bytes) @ immutable -> {u : unit | structured bodies} ->
     {out : B.bytes option | match out with None -> not (encodable bodies) | Some bytes -> encodable bodies && decode bytes === Some (bodies, tail)} @ immutable =
   fun bodies tail premise -> ghost_ (encodable_def bodies); match count bodies with None -> None | Some number ->

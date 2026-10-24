@@ -28,8 +28,7 @@ let (correct @ total) : (table : Hmc_closure_ir.table) @ immutable -> (heap : He
     let read = Read.correct table heap state.X.memory address id captures count () in
     ghost_ (L.can_set_def state.X.machine.E.locals code_local (S.I32 read.Read.code);
       match L.get state.X.machine.E.locals code_local with
-      | Some old -> S.same_type_def old (S.I32 read.Read.code)
-      | _ -> ());
+      | Some old -> S.same_type_def old (S.I32 read.Read.code));
     let locals = Load.correct (Read.offset ()) object_local code_local state address read.Read.code () in
     ghost_ (emit_def object_local code_local);
     {code = read.Read.code; locals}

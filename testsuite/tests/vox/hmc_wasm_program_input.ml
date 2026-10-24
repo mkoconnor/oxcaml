@@ -85,8 +85,7 @@ let (heap @ total) : (program : I.program) @ immutable -> (base : W.limb) -> (li
         H.decode_environment_def (H.view heap) activation.F.env;
         H.decode_environment_def (H.view heap) updated.F.env
       | H.Empty -> H.decode_environment_def (H.view heap) activation.F.env);
-      Hmc_frame_reachable.initial program input
-    | _ -> ())
+      Hmc_frame_reachable.initial program input)
 
 (* From [Hmc_memory_current_shape]: the valid heap machine's activation has the
    shape of its block's signature. *)
@@ -101,9 +100,9 @@ let (current_shape @ total) : (program : I.program) @ immutable -> (globals : X.
   match model.X.state with
   | Q.Running (a, _) ->
     F.decode_def model.X.heap a;
-    (match F.decode model.X.heap a with None -> () | Some source_a ->
+    (match F.decode model.X.heap a with Some source_a ->
       Hmc_frame_shape.at_label_def program.I.origin.Hmc_cfg_program.origin.Hmc_closure_program.table program.I.origin.Hmc_cfg_program.blocks source_a;
-      match G.lookup program.I.origin.Hmc_cfg_program.blocks a.F.pc with None -> () | Some block ->
+      match G.lookup program.I.origin.Hmc_cfg_program.blocks a.F.pc with Some block ->
         Hmc_frame_codec.shaped program.I.origin.Hmc_cfg_program.origin.Hmc_closure_program.table block.G.signature source_a ();
         Hmc_pointer_frame_shape.shape model.X.heap block.G.signature a source_a ())
   | _ -> ())
@@ -237,8 +236,7 @@ let (install @ total) : (program : I.program) @ immutable -> (layout : Init.layo
     Codec.decode_def signature activation.F.pc state.State.cells;
     let encoded = Codec.encode signature updated state.State.padding () in
     (match state.State.cells with
-    | H.Cell (_, H.Cell (_, rest)) -> Codec.decode_environment_def signature.G.locals rest
-    | _ -> ());
+    | H.Cell (_, H.Cell (_, rest)) -> Codec.decode_environment_def signature.G.locals rest);
     (match state.State.cells with
     | H.Cell (current, H.Cell (accumulator, H.Cell (first, rest))) ->
       let cells = H.Cell (current, H.Cell (accumulator, H.Cell (V.Word input, rest))) in

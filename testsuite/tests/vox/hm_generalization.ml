@@ -70,11 +70,10 @@ let rec (open_found @ total) : (p : Copy_spec.node Pref.t) @ immutable -> (varia
     find_def p variables; arguments_def variables;
     D.open_index_def (arguments variables) index;
     match variables with
-    | Empty -> ()
     | Variable (q, rest) ->
       let same = Pref.equal p q in
       if same then () else (match find p rest with
-      | None -> () | Some inner -> open_found p rest inner ()))
+      | Some inner -> open_found p rest inner ()))
 let rec (open_shifted @ total) : (variables : variables) @ immutable -> (index : D.index) @ immutable ->
     {u : unit | D.open_index (arguments variables) (D.add (count variables) index) === D.Parameter index} @ ghost =
   fun variables index -> ghost_ (
@@ -109,14 +108,13 @@ let rec (suffix_trans @ total) : (a : variables) @ immutable -> (b : variables) 
     {u : unit | suffix a b && suffix b c} -> {u : unit | suffix a c} @ ghost =
   fun a b c premise -> ghost_ (
     suffix_def a c; suffix_def b c;
-    if b === c then () else match c with Empty -> () | Variable (_, rest) -> suffix_trans a b rest ())
+    if b === c then () else match c with Variable (_, rest) -> suffix_trans a b rest ())
 
 let rec (suffix_find @ total) : (p : Copy_spec.node Pref.t) @ immutable -> (before : variables) @ immutable -> (after : variables) @ immutable ->
     {u : unit | suffix before after && not (find p before === None)} -> {u : unit | not (find p after === None)} @ ghost =
   fun p before after premise -> ghost_ (
     suffix_def before after; find_def p after;
     if before === after then () else match after with
-    | Empty -> ()
     | Variable (q, rest) -> let same = Pref.equal p q in
       if same then () else suffix_find p before rest ())
 

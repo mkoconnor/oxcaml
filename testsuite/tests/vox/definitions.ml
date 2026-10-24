@@ -385,16 +385,9 @@ let[@def] partial_let (values : int list) =
 Line 2, characters 2-32:
 2 |   let head :: _ = values in head;;
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Warning 8 [partial-match]: this pattern-matching is not exhaustive.
-  Here is an example of a case that is not matched: "[]"
-
-Line 2, characters 2-32:
-2 |   let head :: _ = values in head;;
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Error: The expression is "partial"
-       but is expected to be "total"
-         because it is used inside the function at lines 1-2, characters 22-32
-         which is expected to be "total".
+Error: This pattern-matching in total code is not exhaustive, and the refinements in scope do not exclude the missing cases.
+       Here is an example of a case that is not matched:
+         "[]"
 |}]
 
 let tuple_let_predicate (pair : int * int) :

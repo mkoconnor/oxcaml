@@ -34,11 +34,10 @@ let rec (found @ total) : (variables : G.variables) @ immutable ->
     G.find_def p variables; arguments_def variables replacement;
     D.open_index_def (arguments variables replacement) index;
     match variables with
-    | G.Empty -> ()
     | G.Variable (q, rest) ->
       let same = Pref.equal p q in
       if same then () else match G.find p rest with
-      | None -> () | Some inner -> found rest replacement p inner ())
+      | Some inner -> found rest replacement p inner ())
 
 let rec (shifted @ total) : (variables : G.variables) @ immutable ->
     (replacement : (Ty.node Pref.t @ immutable total -> D.mono @ immutable total)) @ total ->

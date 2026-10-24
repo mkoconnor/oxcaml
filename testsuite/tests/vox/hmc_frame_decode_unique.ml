@@ -20,14 +20,11 @@ let rec (temporaries @ total) : (schema : G.temporaries) @ immutable -> (left : 
     | G.Empty_temporaries -> ()
     | G.Environment (context, rest) -> (match Codec.decode_environment context left, Codec.decode_environment context right with
       | Some (env, a), Some (_, b) -> (match Codec.decode_temporaries rest a with
-        | None -> () | Some (remaining, _) -> temporaries rest a b remaining tail (); environment context left right env a ())
-      | _ -> ())
+        | Some (remaining, _) -> temporaries rest a b remaining tail (); environment context left right env a ()))
     | G.Value (context, _, rest) -> (match left, right with
       | Heap.Cell (_, a), Heap.Cell (_, b) -> (match Codec.decode_environment context a, Codec.decode_environment context b with
         | Some (env, c), Some (_, d) -> (match Codec.decode_temporaries rest c with
-          | None -> () | Some (remaining, _) -> temporaries rest c d remaining tail (); environment context a b env c ())
-        | _ -> ())
-      | _ -> ()))
+          | Some (remaining, _) -> temporaries rest c d remaining tail (); environment context a b env c ()))))
 let (frame @ total) : (signature : G.signature) @ immutable -> (pc : D.index) @ immutable ->
     (left : Heap.cells) @ immutable -> (right : Heap.cells) @ immutable -> (activation : Frame.activation) @ immutable -> (padding : Heap.cells) @ immutable ->
     {u : unit | Codec.decode signature pc left === Some (activation, padding) && Codec.decode signature pc right === Some (activation, padding)} ->
@@ -38,6 +35,4 @@ let (frame @ total) : (signature : G.signature) @ immutable -> (pc : D.index) @ 
       (match Codec.decode_environment signature.G.locals a, Codec.decode_environment signature.G.locals b with
       | Some (_, c), Some (_, d) ->
         temporaries signature.G.temporaries c d activation.Frame.temporaries padding ();
-        environment signature.G.locals a b activation.Frame.env c ()
-      | _ -> ())
-    | _ -> ())
+        environment signature.G.locals a b activation.Frame.env c ()))

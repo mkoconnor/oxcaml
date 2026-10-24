@@ -2688,17 +2688,14 @@ let (preserves @ total) :
     else begin
       valid_def program;
       (match stabilize 2049 program.code (empty_live program.code) with
-       | None -> ()
        | Some live ->
          let entry = match live with [] -> [] | row :: _ -> row in
          (match color (graph program.code live) (range physical) 0
                   (zeros program.registers) with
-          | None -> ()
           | Some colors ->
             length_def live;
             nth_def live 0;
             (match live with
-             | [] -> ()
              | _ :: _ ->
                initial_related program physical live colors entry input_slots args;
                advance_related fuel program.code live colors program.registers
@@ -2736,11 +2733,9 @@ let (allocation_domain @ total) :
     | None -> ()
     | Some _ ->
       (match stabilize 2049 program.code (empty_live program.code) with
-       | None -> ()
        | Some live ->
          (match color (graph program.code live) (range physical) 0
                   (zeros program.registers) with
-          | None -> ()
           | Some colors ->
             rename_length colors program.code;
             rename_valid colors program.registers physical

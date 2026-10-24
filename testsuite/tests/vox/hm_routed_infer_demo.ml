@@ -332,8 +332,7 @@ let verified_fixture sample expected =
       let _correct : {u : unit |
         V.Spec.represents (Pref.own out.#ownership) p ty out.#evidence
         && V.Spec.has_type e ty out.#evidence} = () in ()
-    | None, None -> ()
-    | _ -> let _impossible : {u : unit | false} = () in ());
+    | None, None -> ());
   ()
 
 let verified_typable :
@@ -355,7 +354,7 @@ let verified_typable :
       fun _delta _factor -> () in
     V.principal e (borrow_ out) target.Ghost.ghost typing.Ghost.ghost ()
       claim use);
-  match out.#root with Some _ -> true | None -> false
+  match out.#root with Some _ -> true
 
 let () =
   verified_fixture Id_id true;

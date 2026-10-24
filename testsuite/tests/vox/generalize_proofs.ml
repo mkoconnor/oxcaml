@@ -32,7 +32,7 @@ let rec (closed_observe @ total) : (h : node Pref.heap) @ immutable -> (cut : in
   match pool with
   | Empty -> ()
   | Entry (p, rest) -> source_ok_def h p;
-    match H.at h p with None -> () | Some old ->
+    match H.at h p with Some old ->
       needs_close_def cut old.level;
       if not (needs_close cut old.level) then (
         closed_observe h cut rest x (); closed_at_def h after cut rest x;
@@ -63,13 +63,13 @@ let (closed_boundary @ total) : (h : node Pref.heap) @ immutable -> (cut : int) 
   fun h cut pool x premise -> ghost_ (
     let after = closed_heap h cut pool in closed_observe h cut pool x (); closed_at_def h after cut pool x;
     below_def h x cut; below_def after x cut; at_level_def h x; at_level_def after x;
-    (match H.at h x with None -> () | Some v -> close_level_def cut v.level; ()); ())
+    (match H.at h x with Some v -> close_level_def cut v.level; ()); ())
 let (closed_source @ total) : (h : node Pref.heap) @ immutable -> (cut : int) -> (pool : pool) @ immutable ->
     (x : node Pref.t) @ immutable -> {u : unit | pool_scoped h pool && source_ok h x} ->
     {u : unit | source_ok (closed_heap h cut pool) x} @ ghost = fun h cut pool x premise -> ghost_ (
   let after = closed_heap h cut pool in closed_observe h cut pool x (); closed_at_def h after cut pool x;
   source_ok_def h x; source_ok_def after x;
-  (match H.at h x with None -> () | Some v ->
+  (match H.at h x with Some v ->
     (match v.memo with Empty_memo | Forward _ -> () | Memo (stamp, _) ->
       closed_observe h cut pool stamp (); closed_at_def h after cut pool stamp; ());
     (match v.desc with Var | Bool | Word -> () | Link q | List q ->
@@ -82,9 +82,9 @@ let rec (environment_bound @ total) : (h : node Pref.heap) @ immutable ->
     {u : unit | below h p cut && reaches h p q path} -> {u : unit | below h q cut} @ ghost = fun h order cut p q path premise -> ghost_ (
   reaches_def h p q path; match path with Stop -> ()
   | Step (x, rest) -> order p; ordered_def h p; below_def h p cut; at_level_def h p; edge_def h p x;
-    (match H.at h p with None -> () | Some v -> match v.level with Generic -> () | Finite n ->
+    (match H.at h p with Some v -> match v.level with Finite n ->
       children_below_def h v.desc n;
-      (match v.desc with Var | Bool | Word -> () | Link a | List a -> below_def h a n; at_level_def h a; ()
+      (match v.desc with Link a | List a -> below_def h a n; at_level_def h a; ()
       | Arrow (a, b) -> below_def h a n; at_level_def h a; below_def h b n; at_level_def h b; ()); ());
     below_def h x cut; at_level_def h x;
     environment_bound h order cut x q rest (); ())
@@ -117,7 +117,7 @@ let (closed_ordered @ total) : (h : node Pref.heap) @ immutable -> (cut : int) -
         | Arrow (a, b) -> closed_below h cut pool a n (); closed_below h cut pool b n (); ()); ()))
 let (ordered_scope @ total) : (h : node Pref.heap) @ immutable -> (x : node Pref.t) @ immutable ->
     {u : unit | source_ok h x && ordered h x} -> {u : unit | finite_scope h x} @ ghost = fun h x premise -> ghost_ (
-  finite_scope_def h x; source_ok_def h x; ordered_def h x; match H.at h x with None -> () | Some v -> match v.level with Generic ->
+  finite_scope_def h x; source_ok_def h x; ordered_def h x; match H.at h x with Some v -> match v.level with Generic ->
     active_def h x; at_level_def h x; ()
   | Finite n -> children_below_def h v.desc n;
     (match v.desc with Var | Bool | Word -> () | Link q | List q -> below_def h q n; active_def h q; ()

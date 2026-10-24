@@ -49,7 +49,7 @@ let (unified_active @ total) : (h : node Pref.heap) @ immutable -> (p : node Pre
     unified_frame h p q ok after d x ();
     unified_scratch h p q ok after d x (); M.scratch_frame_def h after x;
     active_def h x; active_def after x; at_level_def h x; at_level_def after x;
-    (match H.at h x, H.at after x with Some a, Some b -> decreases_def a.level b.level; () | _ -> ()); ())
+    (match H.at h x, H.at after x with Some a, Some b -> decreases_def a.level b.level; ()); ())
 
 let rec (unified_scope @ total) : (h : node Pref.heap) @ immutable ->
     (scope : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || finite_scope h x})) @ total ->

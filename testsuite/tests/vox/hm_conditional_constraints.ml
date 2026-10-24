@@ -90,9 +90,7 @@ let (variable_invert @ total) : (n : D.index) @ immutable -> (g : D.context) @ i
     match d with D.Variable args ->
       let s = D.Forall (D.Z, a) in D.arity_def s; D.length_def args;
       (match args with D.No_arguments ->
-        D.open_scheme_def s args; Hm_type_proofs.open_empty a; ()
-      | _ -> ())
-    | _ -> ())
+        D.open_scheme_def s args; Hm_type_proofs.open_empty a; ()))
 
 let (variable_construct @ total) : (n : D.index) @ immutable -> (g : D.context) @ immutable ->
     (i : D.index) @ immutable -> (a : D.mono) @ immutable ->
@@ -182,14 +180,7 @@ let (selector_invert @ total) : (n : D.index) @ immutable -> (g : D.context) @ i
                 variable_invert n g3 one a elem dy ();
                 D.typed_def n g3 tail list dt;
                 (match dt with D.List_cons (_, dn, _) ->
-                  D.lookup_def g3 z; variable_invert n g3 z b elem dn ()
-                | _ -> ())
-              | _ -> ())
-            | _ -> ())
-          | _ -> ())
-        | _ -> ())
-      | _ -> ())
-    | _ -> ())
+                  D.lookup_def g3 z; variable_invert n g3 z b elem dn ())))))))
 
 let (invert @ total) : (n : D.index) @ immutable -> (g : D.context) @ immutable ->
     (c : D.term) @ immutable -> (yes : D.term) @ immutable -> (no : D.term) @ immutable ->

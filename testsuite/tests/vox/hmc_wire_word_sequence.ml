@@ -17,14 +17,12 @@ let rec (decode @ total) : (count : D.index) @ immutable -> (bytes : B.bytes) @ 
     match count, cells with
     | D.Z, _ -> Q.decode_def Q.End bytes
     | D.S n, Heap.Cell (value, rest) -> (match V.decode bytes with
-      | None -> ()
       | Some (_, after) ->
         let middle = Hmc_wasm_wire_words.parts bytes value after () in
         decode n after rest tail ();
         Q.decode_def (words cells) bytes;
         Q.decode_def (Q.Word (V.payload value, words rest)) middle;
-        W.equal_def (V.tag value) (V.tag value); W.equal_def (V.payload value) (V.payload value))
-    | _ -> ())
+        W.equal_def (V.tag value) (V.tag value); W.equal_def (V.payload value) (V.payload value)))
 let rec (recover @ total) : (cells : Heap.cells) @ immutable -> (bytes : B.bytes) @ immutable -> (tail : B.bytes) @ immutable ->
     {u : unit | Q.decode (words cells) bytes === Some tail} ->
     {u : unit | Wire.decode_cells (Heap.length cells) bytes === Some (cells, tail)} @ ghost = fun cells bytes tail premise -> ghost_ (
@@ -33,12 +31,10 @@ let rec (recover @ total) : (cells : Heap.cells) @ immutable -> (bytes : B.bytes
     match cells with
     | Heap.Empty -> ()
     | Heap.Cell (value, rest) -> (match C.decode bytes with
-      | None -> ()
       | Some (tag, middle) ->
         Q.decode_def (Q.Word (V.payload value, words rest)) middle;
         W.equal_def (V.tag value) tag;
         (match C.decode middle with
-        | None -> ()
         | Some (payload, after) ->
           W.equal_def (V.payload value) payload;
           recover rest after tail ();

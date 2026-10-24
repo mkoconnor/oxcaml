@@ -73,7 +73,6 @@ let rec (preserve @ total) : (larger : table) @ immutable -> (smaller : table) @
   fun larger smaller refs premise -> ghost_ (
     extends_def larger smaller;
     if larger === smaller then () else match larger with
-    | Nil -> ()
     | Add (entry, rest) ->
       preserve rest smaller refs ();
       let rec (step @ total) : (refs : references) @ immutable ->
@@ -94,7 +93,7 @@ let rec (transitive @ total) : (a : table) @ immutable -> (b : table) @ immutabl
     (c : table) @ immutable -> {u : unit | extends a b && extends b c} ->
     {u : unit | extends a c} @ ghost = fun a b c premise -> ghost_ (
   extends_def a b; extends_def a c;
-  if a === b then () else match a with Nil -> () | Add (_, rest) -> transitive rest b c ())
+  if a === b then () else match a with Add (_, rest) -> transitive rest b c ())
 
 type result = {table : table; references : references}
 let rec (flatten @ total) : (tree : E.t) @ immutable -> (initial : table) @ immutable ->
@@ -169,7 +168,7 @@ let rec (lookup_closed @ total) : (table : table) @ immutable -> (id : D.index) 
         entry.body.B.origin.Hmc_instance.definition.Hmc_templates.source entry.body.B.derivation
         (resolve table entry.dependencies)} @ ghost = fun table id entry premise -> ghost_ (
   valid_def table; lookup_def table id;
-  match table with Nil -> () | Add (last, rest) ->
+  match table with Add (last, rest) ->
     if Hm_elaboration_check.index_equal id (size rest) then (
       extends_def rest rest; extends_def table rest;
       preserve table rest entry.dependencies ()) else (
@@ -182,7 +181,7 @@ let rec (lookup_anchored @ total) : (catalog : Hmc_templates.catalog) @ immutabl
     {u : unit | C.all catalog (bodies table) && lookup table id === Some entry} ->
     {u : unit | C.anchored catalog entry.body.B.origin} @ ghost = fun catalog table id entry premise -> ghost_ (
       bodies_def table; C.all_def catalog (bodies table); lookup_def table id;
-      match table with Nil -> () | Add (_, rest) ->
+      match table with Add (_, rest) ->
         if Hm_elaboration_check.index_equal id (size rest) then () else lookup_anchored catalog rest id entry ())
 
 let (duplicate_key @ total) : (program : program) @ immutable ->

@@ -29,7 +29,6 @@ let (write @ total) : (index : B.u32) -> (value : S.value) @ immutable -> (state
     S.step_def instruction execution.X.machine.E.stack;
     GE.run_def tail pushed; GE.step_def (I.Global_set index) pushed;
     match G.set state.GE.globals index value with
-    | None -> ()
     | Some globals -> GE.run_def C.Empty {GE.globals; execution});
   code
 let (read @ total) : (index : B.u32) -> (destination : B.u32) ->
@@ -54,7 +53,6 @@ let (read @ total) : (index : B.u32) -> (destination : B.u32) ->
     X.step_def (I.Local_set destination) pushed.GE.execution;
     E.step_def (I.Local_set destination) pushed.GE.execution.X.machine;
     match L.set execution.X.machine.E.locals destination value with
-    | None -> ()
     | Some locals -> GE.run_def C.Empty {GE.globals = state.GE.globals;
         execution = {X.memory = execution.X.memory; machine = {E.locals; stack = execution.X.machine.E.stack}}});
   code

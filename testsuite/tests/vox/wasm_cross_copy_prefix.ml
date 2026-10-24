@@ -39,12 +39,10 @@ let rec (complete_region @ total) : (plan : Plan.plan) @ immutable -> (before : 
       | Plan.End -> Region.reflexive before low ()
       | Plan.Copy (source, destination, rest) -> match M.load before source_base source M.W64 with
         | Some (S.I64 word) -> (match Copy.apply rest before source_base target_base with
-          | None -> ()
           | Some middle ->
             complete_region rest before source_base target_base middle low high ();
             Region.store_region middle after target_base destination word low high ();
-            Region.prefix_transitive low before middle after ())
-        | _ -> ())
+            Region.prefix_transitive low before middle after ()))
 
 let rec (partial_region @ total) : (plan : Plan.plan) @ immutable -> (before : B.bytes) @ immutable ->
     (source_base : B.u32) -> (target_base : B.u32) -> (current : B.bytes) @ immutable ->
@@ -57,8 +55,7 @@ let rec (partial_region @ total) : (plan : Plan.plan) @ immutable -> (before : B
       if current === before then Region.reflexive before low ()
       else if Copy.apply plan before source_base target_base === Some current then
         complete_region plan before source_base target_base current low high ()
-      else match plan with Plan.End -> ()
-      | Plan.Copy (_, _, rest) -> partial_region rest before source_base target_base current low high ())
+      else match plan with Plan.Copy (_, _, rest) -> partial_region rest before source_base target_base current low high ())
 
 let rec (prefix @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.u32) -> (target_local : B.u32) ->
     (state : X.state) @ immutable -> (source_base : B.u32) -> (target_base : B.u32) ->
@@ -104,7 +101,6 @@ let rec (prefix @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.u
                 X.run_def (Prefix.take fuel2 read) reading;
                 X.step_def (I.I64_load (3, source)) reading; X.read_def M.W64 source reading;
                 (match Copy.apply rest state.X.memory source_base target_base with
-                | None -> ()
                 | Some memory ->
                   let restored = {X.memory; machine = captured.X.machine} in
                   Copy.correct rest source_local target_local captured source_base target_base memory ();
@@ -113,8 +109,7 @@ let rec (prefix @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.u
                   | None ->
                     prefix rest source_local target_local captured source_base target_base memory fuel3 ();
                     (match X.run (Prefix.take fuel3 child) captured with
-                    | X.Done current -> partial_def plan state.X.memory source_base target_base current.X.memory
-                    | _ -> ())
+                    | X.Done current -> partial_def plan state.X.memory source_base target_base current.X.memory)
                   | Some fuel4 ->
                     Prefix.take_def fuel4 write;
                     match fuel4 with
@@ -126,8 +121,7 @@ let rec (prefix @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.u
                       X.run_def write restored; X.step_def (I.I64_store (3, destination)) restored;
                       X.write_def M.W64 destination restored; X.compatible_def (S.I64 word) M.W64; M.width_def (S.I64 word);
                       X.run_def C.Empty {X.memory = expected; machine = state.X.machine};
-                      partial_def plan state.X.memory source_base target_base expected)
-              | _ -> ())
+                      partial_def plan state.X.memory source_base target_base expected))
 
 let (region @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.u32) -> (target_local : B.u32) ->
     (state : X.state) @ immutable -> (source_base : B.u32) -> (target_base : B.u32) ->
@@ -145,8 +139,7 @@ let (region @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.u32) 
       | _ -> false} @ ghost = fun plan source_local target_local state source_base target_base expected low high fuel premise -> ghost_ (
         prefix plan source_local target_local state source_base target_base expected fuel ();
         match X.run (Prefix.take fuel (Copy.emit plan source_local target_local)) state with
-        | X.Done current -> partial_region plan state.X.memory source_base target_base current.X.memory low high ()
-        | _ -> ())
+        | X.Done current -> partial_region plan state.X.memory source_base target_base current.X.memory low high ())
 
 module Access = Wasm_memory_region
 
@@ -175,7 +168,6 @@ let rec (accesses @ total) : (plan : Plan.plan) @ immutable -> (source_local : B
     | Plan.End -> ()
     | Plan.Copy (source, destination, rest) -> match M.load state.X.memory source_base source M.W64 with
       | Some (S.I64 word) -> (match Copy.apply rest state.X.memory source_base target_base with
-        | None -> ()
         | Some memory ->
           let locals = state.X.machine.E.locals in let stack = state.X.machine.E.stack in
           let addressed = {X.memory = state.X.memory; machine = {E.locals; stack = S.Push (S.I32 target_base, stack)}} in
@@ -201,8 +193,7 @@ let rec (accesses @ total) : (plan : Plan.plan) @ immutable -> (source_local : B
           X.step_def (I.I64_store (3, destination)) restored; X.write_def M.W64 destination restored;
           X.compatible_def (S.I64 word) M.W64;
           Access.trace_def C.Empty {X.memory = expected; machine = state.X.machine} bounds;
-          Access.append child write captured restored bounds ())
-      | _ -> ())
+          Access.append child write captured restored bounds ()))
 
 let (prefix_accesses @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.u32) -> (target_local : B.u32) ->
     (state : X.state) @ immutable -> (source_base : B.u32) -> (target_base : B.u32) ->
@@ -251,14 +242,10 @@ let rec (reflect @ total) : (plan : Plan.plan) @ immutable -> (source_local : B.
           X.run_def write middle; X.step_def (I.I64_store (3, destination)) middle;
           X.write_def M.W64 destination middle; X.compatible_def (S.I64 word) M.W64; M.width_def (S.I64 word);
           (match M.store middle.X.memory target_base destination (S.I64 word) with
-          | None -> ()
-          | Some memory -> X.run_def C.Empty {X.memory; machine = state.X.machine})
-        | _ -> ())
+          | Some memory -> X.run_def C.Empty {X.memory; machine = state.X.machine}))
       | _ ->
         M.load_def state.X.memory source_base source M.W64;
         match M.address source_base source M.W64 with
-        | None -> ()
         | Some address -> match Bytes.load state.X.memory address (M.count M.W64) with
-          | None -> ()
           | Some bytes -> M.decode_def M.W64 bytes)
 

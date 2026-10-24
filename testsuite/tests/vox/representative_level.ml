@@ -31,7 +31,7 @@ let rec (unique @ total) : (h : node Pref.heap) @ immutable ->
       resolves_def h p left path; resolves_def h p right other;
       match path with
       | Here -> terminal_def h p;
-        (match other with Here -> () | Via _ -> ()); ()
+        (match other with Here -> ()); ()
       | Via (q, rest) ->
         (match other with
         | Here -> terminal_def h p; ()
@@ -137,7 +137,7 @@ let rec (resolved_below @ total) : (h : node Pref.heap) @ immutable ->
       | Here -> ()
       | Via (q, rest) ->
         order p; ordered_def h p; below_def h p bound; at_level_def h p; observe_def h p;
-        (match H.at h p with None -> () | Some v -> match v.level with Generic -> () | Finite n ->
+        (match H.at h p with Some v -> match v.level with Finite n ->
           children_below_def h v.desc n; below_def h q n; below_def h q bound; ());
         resolved_below h order q root rest bound (); ())
 

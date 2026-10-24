@@ -15,10 +15,9 @@ let rec (target_below_at @ total) : (saved : node Pref.heap) @ immutable ->
   let after = heap saved epoch depth final in 
   copy_depth saved epoch depth d (refine_ ()); bounds p; finite_node_def saved p; below_def saved p depth; history_at saved epoch depth final p (refine_ ());
   at_level_def saved p; below_def after q depth; at_level_def after q;
-  match H.at saved p with None -> refine_ () | Some v ->
+  match H.at saved p with Some v ->
   match v.level with Finite _ -> refine_ () | Generic ->
-    match d with Start | Clean -> refine_ ()
-    | Fresh (rest, x, _, old, desc) ->
+    match d with Fresh (rest, x, _, old, desc) ->
       if p === x then (
         history_at saved epoch depth rest p (refine_ ()); ready_def saved rest old.desc desc;
         copied_fresh saved epoch depth d final p q (refine_ ()); refine_ ())
@@ -29,7 +28,7 @@ let rec (target_below_at @ total) : (saved : node Pref.heap) @ immutable ->
     | Alias (rest, x, _, old) ->
       extends_def rest d; extends_def rest rest; extension_trans rest d final (refine_ ());
       if p === x then (match old.desc with Link child ->
-        target_below_at saved depth bounds epoch rest final child q (refine_ ()); refine_ () | _ -> refine_ ())
+        target_below_at saved depth bounds epoch rest final child q (refine_ ()); refine_ ())
       else (target_for_def saved rest p q;
         target_below_at saved depth bounds epoch rest final p q (refine_ ()); refine_ ()))
 

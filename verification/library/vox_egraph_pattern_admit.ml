@@ -62,7 +62,6 @@ let rec admit :
     match pat with
     | R.Var index ->
       (match Q.binding bindings index with
-       | None -> #{value = None; state}
        | Some id ->
          let allocated = let view = borrow_ state in view.owner.count in
          if 0 <= id && id < allocated then (

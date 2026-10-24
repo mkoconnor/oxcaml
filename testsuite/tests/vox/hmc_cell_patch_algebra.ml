@@ -49,5 +49,4 @@ let rec (block @ total) : (index : D.index) @ immutable -> (values : Heap.cells)
       Seg.take_def index cells; Seg.drop_def index cells; Seg.append_def prefix (Seg.append values tail);
       (match index, cells, prefix with
       | D.Z, _, _ -> overlay values cells tail ()
-      | D.S n, Heap.Cell (_, more), Heap.Cell (_, rest) -> block n values more rest body tail ()
-      | _ -> ()))
+      | D.S n, Heap.Cell (_, more), Heap.Cell (_, rest) -> block n values more rest body tail ()))

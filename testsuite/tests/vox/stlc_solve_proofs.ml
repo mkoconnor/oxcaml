@@ -12,13 +12,11 @@ let rec (solved_frame @ total) : (h : node Pref.heap) @ immutable -> (eqs : equa
   match d with
   | Done -> ()
   | Unified ud -> (match eqs with
-    | Equal (p, q) -> unified_frame h p q ok after ud x (); ()
-    | _ -> ())
+    | Equal (p, q) -> unified_frame h p q ok after ud x (); ())
   | Sequence (middle, left_ok, left, right) -> (match eqs with
     | And (a, b) ->
       solved_frame h a left_ok middle left x ();
-      if left_ok then (solved_frame middle b ok after right x (); ()) else ()
-    | _ -> ()))
+      if left_ok then (solved_frame middle b ok after right x (); ()) else ()))
 
 let rec (solved_finite_at @ total) : (h : node Pref.heap) @ immutable ->
     (trees : ((x : node Pref.t) @ immutable -> {t : tree | Unifier_finite_spec.root t === x &&
@@ -32,16 +30,14 @@ let rec (solved_finite_at @ total) : (h : node Pref.heap) @ immutable ->
     match d with
     | Done -> trees x
     | Unified ud -> (match eqs with
-      | Equal (p, q) -> unified_finite_at h trees p q ok after ud x ()
-      | _ -> Free x)
+      | Equal (p, q) -> unified_finite_at h trees p q ok after ud x ())
     | Sequence (middle, left_ok, left, right) -> (match eqs with
       | And (a, b) ->
         let middle_trees : (x : node Pref.t) @ immutable -> {t : tree | Unifier_finite_spec.root t === x &&
             (if H.mem middle x then finite middle t else H.at middle x === None)} @ immutable total = fun x ->
           solved_finite_at h trees a left_ok middle left x () in
         if left_ok then solved_finite_at middle middle_trees b ok after right x ()
-        else middle_trees x
-      | _ -> Free x))
+        else middle_trees x))
 
 let rec (solved_backward_at @ total) : (h : node Pref.heap) @ immutable ->
     (rho : (node Pref.t @ immutable total -> ty @ immutable total)) @ total ->
@@ -53,15 +49,13 @@ let rec (solved_backward_at @ total) : (h : node Pref.heap) @ immutable ->
   match d with
   | Done -> model x; ()
   | Unified ud -> (match eqs with
-    | Equal (p, q) -> success_backward_at h rho model p q after ud x ()
-    | _ -> ())
+    | Equal (p, q) -> success_backward_at h rho model p q after ud x ())
   | Sequence (middle, left_ok, left, right) -> (match eqs with
     | And (a, b) ->
       let mid : (x : node Pref.t) @ immutable -> {u : unit | equation middle rho x}
           @ total = fun x -> 
         solved_backward_at h rho model a middle left x () in
-      solved_backward_at middle rho mid b after right x ()
-    | _ -> ()))
+      solved_backward_at middle rho mid b after right x ()))
 
 let rec (solved_forward_at @ total) : (h : node Pref.heap) @ immutable ->
     (rho : (node Pref.t @ immutable total -> ty @ immutable total)) @ total ->
@@ -73,16 +67,14 @@ let rec (solved_forward_at @ total) : (h : node Pref.heap) @ immutable ->
   match d with
   | Done -> model x; ()
   | Unified ud -> (match eqs with
-    | Equal (p, q) -> success_forward_at h rho p q after ud model x (); ()
-    | _ -> ())
+    | Equal (p, q) -> success_forward_at h rho p q after ud model x (); ())
   | Sequence (middle, left_ok, left, right) -> (match eqs with
     | And (a, b) ->
       let mid : (x : node Pref.t) @ immutable -> {u : unit | equation middle rho x}
           @ total = fun x -> 
         solved_forward_at middle rho b after right model x () in
       solved_forward_at middle rho b after right model x ();
-      solved_forward_at h rho a middle left mid x (); ()
-    | _ -> ()))
+      solved_forward_at h rho a middle left mid x (); ()))
 
 let rec (solved_refutes @ total) : (h : node Pref.heap) @ immutable ->
     (rho : (node Pref.t @ immutable total -> ty @ immutable total)) @ total ->
@@ -92,15 +84,12 @@ let rec (solved_refutes @ total) : (h : node Pref.heap) @ immutable ->
   fun h rho model eqs after d premise -> ghost_ (
     let refine_ premise = premise in solved_def h eqs false after d; satisfies_def rho eqs;
     match d with
-    | Done -> ()
     | Unified ud -> (match eqs with
-      | Equal (p, q) -> failure_refutes h rho model p q after ud ()
-      | _ -> ())
+      | Equal (p, q) -> failure_refutes h rho model p q after ud ())
     | Sequence (middle, left_ok, left, right) -> (match eqs with
       | And (a, b) -> if left_ok then (
         let mid : (x : node Pref.t) @ immutable -> {u : unit | equation middle rho x}
             @ total = fun x -> 
           solved_backward_at h rho model a middle left x () in
         solved_refutes middle rho mid b after right ())
-        else solved_refutes h rho model a middle left ()
-      | _ -> ()))
+        else solved_refutes h rho model a middle left ()))

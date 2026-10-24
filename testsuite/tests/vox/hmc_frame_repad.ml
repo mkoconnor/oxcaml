@@ -28,7 +28,7 @@ let rec (add @ total) : (first : D.index) @ immutable -> (second : D.index) @ im
     D.add_def first second; Seg.drop_def first cells;
     splice_def first cells after; splice_def (D.add first second) cells tail;
     match first, cells with
-    | D.S n, Heap.Cell (_, rest) -> (match splice n rest after with None -> () | Some remaining -> add n second rest middle tail after remaining ())
+    | D.S n, Heap.Cell (_, rest) -> (match splice n rest after with Some remaining -> add n second rest middle tail after remaining ())
     | _ -> ())
 let rec (environment @ total) : (context : D.context) @ immutable -> (cells : Heap.cells) @ immutable ->
     (env : Heap.cells) @ immutable -> (old_tail : Heap.cells) @ immutable -> (tail : Heap.cells) @ immutable ->

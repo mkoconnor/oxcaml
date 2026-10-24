@@ -63,9 +63,9 @@ let rec (rank_step @ total) : (bound : D.index) @ immutable -> (owner : D.index)
     {u : unit | D.present (D.S bound) owner && D.present owner next} ->
     {u : unit | D.present bound next} @ ghost = fun bound owner next premise -> ghost_ (
     D.present_def (D.S bound) owner; D.present_def owner next;
-    match owner with D.Z -> () | D.S owner ->
+    match owner with D.S owner ->
       D.present_def bound owner;
-      (match bound with D.Z -> () | D.S bound ->
+      (match bound with D.S bound ->
         D.present_def (D.S bound) next;
         match next with D.Z -> () | D.S next -> rank_step bound owner next ()))
 

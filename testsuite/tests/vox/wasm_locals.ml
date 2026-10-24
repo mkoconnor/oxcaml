@@ -62,5 +62,4 @@ let rec (other_local @ total) : (before : S.stack) @ immutable -> (index : B.u32
     replaced_def before index value after; get_def before other; get_def after other;
     match before, after with
     | S.Push (_, rest), S.Push (_, tail) ->
-      if index <> 0 && other <> 0 then other_local rest (index - 1) value tail (other - 1) () else ()
-    | _ -> ())
+      if index <> 0 && other <> 0 then other_local rest (index - 1) value tail (other - 1) () else ())

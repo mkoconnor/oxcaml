@@ -70,7 +70,6 @@ let rec (run_forest @ total) : (h : node Pref.heap) @ immutable ->
     match e with
     | RShared _ -> trees x
     | RVar (i, p, epoch, d, certificate) -> (match lookup env i with
-      | None -> let _impossible : {u : unit | false} = () in trees x
       | Some original ->
         let raw : (y : node Pref.t) @ immutable total ->
             {r : Representative_level.representative | not (H.mem h y) || resolves h y r.root r.path} @ immutable total =
@@ -116,7 +115,6 @@ let rec (run_forest @ total) : (h : node Pref.heap) @ immutable ->
       (if H.mem middle x then finite middle t else observe middle x === None)} @ immutable) @ total = fun x ->
       run_forest h1 (refine_ ts1) depth pool1 env1 body middle body_pool x () in
       (match result body with None -> ts2 x | Some b -> match out with
-      | None -> let _impossible : {u : unit | false} = () in trees x
       | Some p -> let desc = Arrow (arg, b) in
         let ts3 = allocated_forest middle (refine_ ts2) depth p desc () in ts3 x)
     | RApp_right (left, right, middle, left_pool) | RCons_right (left, right, middle, left_pool) ->
@@ -131,9 +129,7 @@ let rec (run_forest @ total) : (h : node Pref.heap) @ immutable ->
     let ts2 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&
       (if H.mem h2 x then finite h2 t else observe h2 x === None)} @ immutable) @ total = fun x ->
       run_forest h1 (refine_ ts1) depth pool1 env right h2 pool2 x () in
-      (match result left with None -> let _impossible : {u : unit | false} = () in trees x
-      | Some f -> match result right with None -> let _impossible : {u : unit | false} = () in trees x
-      | Some a -> let desc = List f in let h3 = H.put h2 p (cell desc depth) in
+      (match result left with Some f -> match result right with Some a -> let desc = List f in let h3 = H.put h2 p (cell desc depth) in
         let ts3 = allocated_forest h2 (refine_ ts2) depth p desc () in
         Effective_unifier_finite.unified_finite_at h3 (refine_ ts3) a p ok after d x ())
     | RApp (left, right, h1, pool1, h2, pool2, p, arrow, ok, d) ->
@@ -143,9 +139,7 @@ let rec (run_forest @ total) : (h : node Pref.heap) @ immutable ->
     let ts2 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&
       (if H.mem h2 x then finite h2 t else observe h2 x === None)} @ immutable) @ total = fun x ->
       run_forest h1 (refine_ ts1) depth pool1 env right h2 pool2 x () in
-      (match result left with None -> let _impossible : {u : unit | false} = () in trees x
-      | Some f -> match result right with None -> let _impossible : {u : unit | false} = () in trees x
-      | Some a -> let var : desc = Var in let h3 = H.put h2 p (cell var depth) in
+      (match result left with Some f -> match result right with Some a -> let var : desc = Var in let h3 = H.put h2 p (cell var depth) in
         let ts3 = allocated_forest h2 (refine_ ts2) depth p var () in
         let desc = Arrow (a, p) in let h4 = H.put h3 arrow (cell desc depth) in
         let ts4 = allocated_forest h3 (refine_ ts3) depth arrow desc () in
@@ -163,7 +157,6 @@ let rec (run_forest @ total) : (h : node Pref.heap) @ immutable ->
       (if H.mem middle x then finite middle t else observe middle x === None)} @ immutable) @ total = fun x ->
       run_forest h3 (refine_ ts3) depth pool3 env3 body middle body_pool x () in
       (match result body with None -> ts4 x | Some b -> match finish with
-      | Aborted -> let _impossible : {u : unit | false} = () in trees x
       | Unified (ok, d) -> Effective_unifier_finite.unified_finite_at middle (refine_ ts4) b res ok after d x ())
     | RLet (rhs, body, middle, child_pool) ->
       let empty : pool = Empty in let child_depth = depth + 1 in
@@ -175,8 +168,7 @@ let rec (run_forest @ total) : (h : node Pref.heap) @ immutable ->
       (if H.mem closed x then finite closed t else observe closed x === None)} @ immutable) @ total = fun x ->
       representative_closed_forest middle (refine_ ts1) depth child_pool x () in
       let transferred = Representative_pool_spec.transfer_rep closed child_pool pool in
-      (match result rhs with None -> let _impossible : {u : unit | false} = () in trees x
-      | Some p -> let env1 = Bind (p, env) in
+      (match result rhs with Some p -> let env1 = Bind (p, env) in
         run_forest closed (refine_ ts2) depth transferred env1 body after final_pool x ()))
 
 let (closed_forest @ total) : (e : execution) @ immutable -> (after : node Pref.heap) @ immutable ->

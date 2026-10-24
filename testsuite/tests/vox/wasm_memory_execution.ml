@@ -71,5 +71,4 @@ let rec (lift @ total) : (code : C.t) @ immutable -> (state : state) @ immutable
     | C.Next (instruction, rest) ->
       non_memory_def instruction; step_def instruction state;
       (match E.step instruction state.machine with
-      | E.Done machine -> lift rest {machine; memory = state.memory} next ()
-      | _ -> ()))
+      | E.Done machine -> lift rest {machine; memory = state.memory} next ()))

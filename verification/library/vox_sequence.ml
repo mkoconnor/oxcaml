@@ -647,11 +647,9 @@ let rec (extensional @ total) : ('a : immutable_data).
   match left with
   | [] ->
     (match right with
-     | [] -> ()
-     | _ :: _ -> ())
+     | [] -> ())
   | x :: xs ->
     match right with
-    | [] -> ()
     | y :: ys ->
       extensional xs ys (fun index ->
         let next = Bigint.add index 1Z in

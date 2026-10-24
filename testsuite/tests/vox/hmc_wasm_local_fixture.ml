@@ -79,7 +79,6 @@ let fixture (base : B.u32) second first_value first_type second_value second_typ
       expected = [8, word 11; 24, word 64; 32, V.tag value; 40, V.payload value;
         48, V.tag first_value; 56, V.payload first_value; 64, V.tag second_value; 72, V.payload second_value;
         88, word 999; 104, word 888; 120, word 128]}
-  | _ -> failwith "compiler frame encoding"
 let fixtures () =
   let instruction = G.Load (G.Local D.Z, D.Word64, D.Variable D.No_arguments, Hmc_wasm_control_fixture.index 13) in
   if Lower.lower instruction 12 <> None then failwith "local successor overflow accepted";

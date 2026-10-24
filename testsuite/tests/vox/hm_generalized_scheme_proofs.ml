@@ -146,8 +146,7 @@ let rec (canonical_context @ total) : (h : node Pref.heap) @ immutable -> (cut :
     let refine_ premise = premise in Hm_environment_spec.env_at_def h cut env schemas;
     P.context_def rho schemas; F.template_context_def rho schemas;
     match schemas with Hm_environment_spec.No_templates -> ()
-    | Hm_environment_spec.Template_binding (schema, rest) -> match env with Hm_environment_spec.Empty -> ()
-      | Hm_environment_spec.Bind (_, tail) ->
+    | Hm_environment_spec.Template_binding (schema, rest) -> match env with Hm_environment_spec.Bind (_, tail) ->
         let names = F.template_names schema in
         let generic : ((p : node Pref.t) @ immutable ->
           {u : unit | A.position names p === None || at_level h p === Generic}) @ total = fun p ->

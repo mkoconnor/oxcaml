@@ -25,8 +25,7 @@ let rec (cached_search @ total) : (h : node Pref.heap) @ immutable ->
   fun h needle d x premise -> ghost_ (
     marks_valid_def h needle d;
     marked_def d x; let s = cached d x in cached_def d x;
-    match d with No_marks -> s
-    | Marked (rest, p, _, _) ->
+    match d with Marked (rest, p, _, _) ->
       if x === p then s else
       let s = cached_search h needle rest x () in s)
 

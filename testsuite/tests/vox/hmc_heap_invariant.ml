@@ -30,10 +30,9 @@ let (request_valid @ total) : (program : I.program) @ immutable -> (heap : M.hea
   | Q.Done _ | Q.Stuck -> ()
   | Q.Running (a, _) ->
     F.decode_def heap a; F.decode_temporaries_def heap a.F.temporaries;
-    (match F.decode heap a with None -> () | Some source_a ->
+    (match F.decode heap a with Some source_a ->
       H.at_label_def table blocks source_a;
       match G.lookup blocks a.F.pc with
-      | None -> ()
       | Some block ->
         H.activation_def table block.G.signature source_a;
         H.temporaries_def table block.G.signature.G.temporaries source_a.S.temporaries;
@@ -57,9 +56,7 @@ let (request_valid @ total) : (program : I.program) @ immutable -> (heap : M.hea
             M.decode_def heap head; M.decode_def heap a.F.accumulator;
             (match M.decode heap head, M.decode heap a.F.accumulator with
             | Some h, Some t -> H.value_def table h; H.value_def table t;
-              H.value_def table (R.V.Cons (h, t)); H.valid_def table (R.V.Cons (h, t)); H.first_class_def (R.V.Cons (h, t))
-            | _ -> ())
-          | _ -> ())
+              H.value_def table (R.V.Cons (h, t)); H.valid_def table (R.V.Cons (h, t)); H.first_class_def (R.V.Cons (h, t))))
         | _ -> ()))
 let[@def] (valid @ total) (program : I.program @ immutable) (globals : X.globals @ immutable)
     (limit : Hmc_word64.limb) (configuration : X.configuration @ immutable) (abstract : S.state @ immutable) = ghost_ (

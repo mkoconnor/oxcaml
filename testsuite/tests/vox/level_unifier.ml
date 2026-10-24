@@ -92,9 +92,6 @@ let bind_searched :
     let refine_ old = Pref.read p (borrow_ t) in let refine_ t = t in
     ghost_ (active_def h p; at_level_def h p);
     match old.level with
-    | Generic ->
-      let proof = ghost_ (let u = () in (refine_ u : {u : unit | false})) in
-      let refine_ proof = proof in assert false
     | Finite bound ->
       let t : {t : node Pref.token | Pref.own t === h && bound >= 0 && active h q} = refine_ t in
       let refine_ lowered = Level_lower.lower h scope bound q t in
@@ -303,9 +300,6 @@ let rec unify :
         let d = ghost_ Clash in
         ghost_ (unified_def h r s ok h d);
         #{ok; state = t; derivation = d}
-      | Link _, _ | _, Link _ ->
-        let proof = ghost_ (let u = () in (refine_ u : {u : unit | false})) in
-        let refine_ proof = proof in assert false
     in refine_ result in
   let refine_ result = result in
   let ok = result.#ok in

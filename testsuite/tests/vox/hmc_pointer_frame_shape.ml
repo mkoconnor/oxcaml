@@ -28,7 +28,7 @@ let rec (environment @ total) : (heap : M.heap) @ immutable -> (context : D.cont
   M.decode_environment_def (M.view heap) cells; H.environment_def context values; C.environment_def context cells;
   match context, cells with
   | D.Binding (_, rest), M.Cell (_, tail) ->
-    (match M.decode_environment (M.view heap) tail with None -> () | Some values -> environment heap rest tail values ())
+    (match M.decode_environment (M.view heap) tail with Some values -> environment heap rest tail values ())
   | _ -> ())
 let rec (temporaries @ total) : (heap : M.heap) @ immutable -> (schema : G.temporaries) @ immutable ->
     (runtime : F.temporaries) @ immutable -> (values : S.temporaries) @ immutable ->
@@ -39,8 +39,7 @@ let rec (temporaries @ total) : (heap : M.heap) @ immutable -> (schema : G.tempo
   | G.Environment (context, rest), F.Environment (env, tail)
   | G.Value (context, _, rest), F.Value (_, env, tail) ->
     (match M.decode_environment (M.view heap) env, F.decode_temporaries heap tail with
-    | Some values, Some remaining -> environment heap context env values (); temporaries heap rest tail remaining ()
-    | _ -> ())
+    | Some values, Some remaining -> environment heap context env values (); temporaries heap rest tail remaining ())
   | _ -> ())
 let (shape @ total) : (heap : M.heap) @ immutable -> (signature : G.signature) @ immutable ->
     (runtime : F.activation) @ immutable -> (values : S.activation) @ immutable ->

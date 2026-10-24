@@ -57,13 +57,11 @@ let fixture (base : B.u32) kind =
       (match Wasm_control.run (Hmc_wasm_dispatch_loop.cost table 7 0 lowered)
           (Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels state) with
       | Wasm_control.Running actual ->
-        if actual <> Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels expected_state then failwith "source dispatcher iteration"
-      | _ -> failwith "source dispatcher stopped");
+        if actual <> Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels expected_state then failwith "source dispatcher iteration");
       ghost_ (Block.emit_def lowered 0);
       let code : {code : Wasm_code.t | X.run code state === X.Done {X.memory = result.Hmc_wasm_relayout_saved_invariant.memory; machine = state.X.machine}} @ immutable = Block.emit lowered 0 in
       (match X.run code state with
-      | X.Done actual -> if actual.X.memory <> result.Hmc_wasm_relayout_saved_invariant.memory || actual.X.machine <> state.X.machine then failwith "source step representation"
-      | _ -> failwith "source step execution");
+      | X.Done actual -> if actual.X.memory <> result.Hmc_wasm_relayout_saved_invariant.memory || actual.X.machine <> state.X.machine then failwith "source step representation");
       let expected_cells = Heap.Cell (V.Word (Header.number fragment.Lower.pc), result.Hmc_wasm_relayout_saved_invariant.cells) in
       {R.memory; base; first = word 37; second = word 99; code; expected = Hmc_wasm_range_fixture.fields 0 expected_cells}
     | _ -> failwith "source transition")

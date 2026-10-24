@@ -14,8 +14,7 @@ let rec (environment @ total) : (context : D.context) @ immutable -> (cells : H.
     match context, cells with
     | D.Empty_context, _ -> ()
     | D.Binding (_, rest), H.Cell (_, remaining) ->
-      (match Codec.decode_environment rest remaining with None -> () | Some (more, tail) -> environment rest remaining more tail suffix ())
-    | _ -> ())
+      (match Codec.decode_environment rest remaining with Some (more, tail) -> environment rest remaining more tail suffix ()))
 let rec (temporaries @ total) : (schema : G.temporaries) @ immutable -> (cells : H.cells) @ immutable ->
     (runtime : F.temporaries) @ immutable -> (tail : H.cells) @ immutable -> (suffix : H.cells) @ immutable ->
     {u : unit | Codec.decode_temporaries schema cells === Some (runtime, tail)} ->
@@ -25,15 +24,15 @@ let rec (temporaries @ total) : (schema : G.temporaries) @ immutable -> (cells :
     match schema with
     | G.Empty_temporaries -> ()
     | G.Environment (context, rest) ->
-      (match Codec.decode_environment context cells with None -> () | Some (env, after) ->
+      (match Codec.decode_environment context cells with Some (env, after) ->
         environment context cells env after suffix ();
-        (match Codec.decode_temporaries rest after with None -> () | Some (remaining, tail) -> temporaries rest after remaining tail suffix ()))
+        (match Codec.decode_temporaries rest after with Some (remaining, tail) -> temporaries rest after remaining tail suffix ()))
     | G.Value (context, _, rest) ->
       Seg.append_def cells suffix;
-      (match cells with H.Empty -> () | H.Cell (_, more) ->
-        (match Codec.decode_environment context more with None -> () | Some (env, after) ->
+      (match cells with H.Cell (_, more) ->
+        (match Codec.decode_environment context more with Some (env, after) ->
           environment context more env after suffix ();
-          (match Codec.decode_temporaries rest after with None -> () | Some (remaining, tail) -> temporaries rest after remaining tail suffix ()))))
+          (match Codec.decode_temporaries rest after with Some (remaining, tail) -> temporaries rest after remaining tail suffix ()))))
 let (correct @ total) : (signature : G.signature) @ immutable -> (pc : D.index) @ immutable -> (cells : H.cells) @ immutable ->
     (activation : F.activation) @ immutable -> (tail : H.cells) @ immutable -> (suffix : H.cells) @ immutable ->
     {u : unit | Codec.decode signature pc cells === Some (activation, tail)} ->
@@ -44,8 +43,7 @@ let (correct @ total) : (signature : G.signature) @ immutable -> (pc : D.index) 
     match cells with
     | H.Cell (_, (H.Cell (_, body) as more)) ->
       Seg.append_def more suffix;
-      (match Codec.decode_environment signature.G.locals body with None -> () | Some (env, after) ->
+      (match Codec.decode_environment signature.G.locals body with Some (env, after) ->
         environment signature.G.locals body env after suffix ();
-        (match Codec.decode_temporaries signature.G.temporaries after with None -> () | Some (runtime, tail) ->
-          temporaries signature.G.temporaries after runtime tail suffix ()))
-    | _ -> ())
+        (match Codec.decode_temporaries signature.G.temporaries after with Some (runtime, tail) ->
+          temporaries signature.G.temporaries after runtime tail suffix ())))

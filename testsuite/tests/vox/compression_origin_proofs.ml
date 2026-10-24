@@ -12,7 +12,7 @@ let rec (suffix @ total) : (h : node Pref.heap) @ immutable ->
     {out : path | reaches h r x out} @ immutable ghost = fun h p r d x path premise -> ghost_ (
     resolves_def h p r d; match d with Here -> path
     | Via (q, rest) -> reaches_def h p x path; observe_def h p;
-      match path with Stop -> path | Step (next, tail) -> edge_def h p next;
+      match path with Step (next, tail) -> edge_def h p next;
         let out = suffix h q r rest x tail () in out)
 
 let rec (shortcut_path @ total) : (h : node Pref.heap) @ immutable ->

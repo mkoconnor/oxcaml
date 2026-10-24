@@ -83,7 +83,6 @@ module Make (Key : Vox_table_map.Key) = struct
         Key.hash_equal key query;
         let (_ : {u : unit | Key.hash key = Key.hash query}) = () in
         match S.at view.routes index with
-        | None -> ()
         | Some (rank, lane) ->
           let (_ : {u : unit | I.route model index (Some (key, value))
             (rank, lane)}) = () in
@@ -135,7 +134,6 @@ module Make (Key : Vox_table_map.Key) = struct
             R.route_at view.model view.model.slots view.routes 0Z index
               (Some (key, value));
             (match S.at view.routes index with
-             | None -> ()
              | Some ((rank, lane) as path) ->
                I.route_def view.model index (Some (key, value)) path;
                I.route_position_def view.model.capacity (Key.hash key) index

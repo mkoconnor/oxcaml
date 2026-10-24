@@ -55,8 +55,7 @@ let make : (base : B.u32) -> (signature : G.signature) @ immutable -> (activatio
             | word :: rest ->
               if Wasm_locals.get after.X.machine.E.locals i <> Some (S.I64 word) then failwith "snapshot source value";
               if i < 4294967295 then check (i + 1) rest else failwith "fixture local limit" in
-          check 1 expected
-        | _ -> failwith "frame snapshot execution");
+          check 1 expected);
         {memory; base; code; expected}
     else failwith "base alias")
   else failwith "fixture memory address"

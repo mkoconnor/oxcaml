@@ -10,7 +10,7 @@ let (jump @ total) : (next : D.index) @ immutable -> (pc : W.limb) -> (fragment 
     {u : unit | Lower.emit fragment base_local === Hmc_wasm_pc_update.emit pc base_local} @ ghost =
   fun next pc fragment base_local premise -> ghost_ (
     Lower.corresponds_def (G.Jump next) fragment; Lower.emit_def fragment base_local;
-    match fragment with Lower.Jump number -> Index.unique next number pc () | _ -> ())
+    match fragment with Lower.Jump number -> Index.unique next number pc ())
 let (branch @ total) : (yes : D.index) @ immutable -> (no : D.index) @ immutable ->
     (yes_pc : W.limb) -> (no_pc : W.limb) -> (fragment : Lower.fragment) @ immutable -> (base_local : B.u32) ->
     {u : unit | Lower.corresponds (G.Branch (yes, no)) fragment
@@ -18,7 +18,7 @@ let (branch @ total) : (yes : D.index) @ immutable -> (no : D.index) @ immutable
     {u : unit | Lower.emit fragment base_local === Hmc_wasm_branch.emit yes_pc no_pc base_local} @ ghost =
   fun yes no yes_pc no_pc fragment base_local premise -> ghost_ (
     Lower.corresponds_def (G.Branch (yes, no)) fragment; Lower.emit_def fragment base_local;
-    match fragment with Lower.Branch (a, b) -> Index.unique yes a yes_pc (); Index.unique no b no_pc () | _ -> ())
+    match fragment with Lower.Branch (a, b) -> Index.unique yes a yes_pc (); Index.unique no b no_pc ())
 let (literal @ total) : (atom : G.atom) @ immutable -> (ty : D.mono) @ immutable -> (derivation : D.typing) @ immutable ->
     (next : D.index) @ immutable -> (value : V.value) @ immutable -> (pc : W.limb) ->
     (fragment : Lower.fragment) @ immutable -> (base_local : B.u32) ->
@@ -28,7 +28,7 @@ let (literal @ total) : (atom : G.atom) @ immutable -> (ty : D.mono) @ immutable
   fun atom ty derivation next value pc fragment base_local premise -> ghost_ (
     Hmc_wasm_literal_load.literal_def atom;
     Lower.corresponds_def (G.Load (atom, ty, derivation, next)) fragment; Lower.emit_def fragment base_local;
-    match fragment with Lower.Literal (_, number) -> Index.unique next number pc () | _ -> ())
+    match fragment with Lower.Literal (_, number) -> Index.unique next number pc ())
 let (local @ total) : (index : D.index) @ immutable -> (ty : D.mono) @ immutable -> (derivation : D.typing) @ immutable ->
     (next : D.index) @ immutable -> (number : Lower.slot) -> (pc : W.limb) ->
     (fragment : Lower.fragment) @ immutable -> (base_local : B.u32) ->
@@ -38,4 +38,4 @@ let (local @ total) : (index : D.index) @ immutable -> (ty : D.mono) @ immutable
   fun index ty derivation next number pc fragment base_local premise -> ghost_ (
     Hmc_wasm_literal_load.literal_def (G.Local index);
     Lower.corresponds_def (G.Load (G.Local index, ty, derivation, next)) fragment; Lower.emit_def fragment base_local;
-    match fragment with Lower.Local (a, b) -> Index.unique index a number (); Index.unique next b pc () | _ -> ())
+    match fragment with Lower.Local (a, b) -> Index.unique index a number (); Index.unique next b pc ())

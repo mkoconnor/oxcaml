@@ -53,7 +53,7 @@ let (redirect @ total) : (h : node Pref.heap) @ immutable ->
     let v = Level_unifier_spec.redirect h source target in let after = H.put h source v in
     progress_def h root after next; at_level_def h root; at_level_def after next;
     at_level_def h source; at_level_def h target;
-    (match at_level h source with Generic -> () | Finite n -> below_def h target n; ());
+    (match at_level h source with Finite n -> below_def h target n; ());
     let a = at_level h root in let b = at_level after next in decreases_def a b;
     let out = {R.root = next; path = next_path} in out)
 
@@ -75,8 +75,7 @@ let rec (unified_head @ total) : (h : node Pref.heap) @ immutable ->
         active_def h q;
         let out = redirect h q p x root path () in out
       | U.Same | U.Constants | U.Occurs_left _ | U.Occurs_right _ | U.Clash ->
-        progress_refl h root; let out = {R.root; path} in out
-      | _ -> let out = {R.root; path} in out)
+        progress_refl h root; let out = {R.root; path} in out)
     | Swap rest -> let out = unified_head h q p ok after rest x root path () in out
     | List_children (r, s, rest) | Resolve (r, s, _, _, rest) -> let out = unified_head h r s ok after rest x root path () in out
     | Children (a, b, c, e, middle, left_ok, left, right) ->

@@ -17,12 +17,10 @@ let rec (template_unique @ total) : (saved : node Pref.heap) @ immutable ->
     head_desc_def a; head_desc_def b; head_generic_def a; head_generic_def b;
     match a with
     | List_template (_, a) -> (match b with List_template (_, b) ->
-      template_unique saved rho choices a b (); () | _ -> ())
+      template_unique saved rho choices a b (); ())
     | Product (_, a1, a2) -> (match b with Product (_, b1, b2) ->
-      template_unique saved rho choices a1 b1 (); template_unique saved rho choices a2 b2 (); ()
-      | _ -> ())
-    | Indirect (_, a) -> (match b with Indirect (_, b) -> template_unique saved rho choices a b (); ()
-      | _ -> ())
+      template_unique saved rho choices a1 b1 (); template_unique saved rho choices a2 b2 (); ())
+    | Indirect (_, a) -> (match b with Indirect (_, b) -> template_unique saved rho choices a b (); ())
     | _ -> ())
 
 let (forest_eval @ total) : (saved : node Pref.heap) @ immutable ->

@@ -34,17 +34,14 @@ let (loop @ total) : (program : I.program) @ immutable -> (globals : Machine.glo
       | E.Stopped (last, result) ->
         Result.correct_def program globals lowered context last result;
         match result with
-        | Result.Continued _ -> ()
         | Result.Returned final ->
           Result.finished_def last final.Result.registers;
           (match Result.finished last final.Result.registers with
-          | Calls.Finished after -> Prefix.finished prefix out.E.fuel (State.module_ program lowered context) (State.loop context before) after ()
-          | _ -> ())
+          | Calls.Finished after -> Prefix.finished prefix out.E.fuel (State.module_ program lowered context) (State.loop context before) after ())
         | Result.Exhausted final ->
           Result.finished_def last final.Resource.state.State.registers;
           (match Result.finished last final.Resource.state.State.registers with
-          | Calls.Finished after -> Prefix.finished prefix out.E.fuel (State.module_ program lowered context) (State.loop context before) after ()
-          | _ -> ()));
+          | Calls.Finished after -> Prefix.finished prefix out.E.fuel (State.module_ program lowered context) (State.loop context before) after ()));
     out
 let (entry @ total) : (program : I.program) @ immutable -> (globals : Machine.globals) @ immutable ->
     (lowered : Lower.program) @ immutable -> (context : State.context) @ immutable -> (before : State.running) @ immutable ->

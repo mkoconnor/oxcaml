@@ -95,18 +95,16 @@ let rec (typing_action @ total) : (s : substitution) @ immutable ->
      | Variable args -> (match e with Bound i ->
        arguments_well_formed s n m mapping args ();
        P.lookup_action s g i; P.length_action s args;
-       (match lookup g i with None -> () | Some scheme ->
+       (match lookup g i with Some scheme ->
          P.scheme_open s scheme args ();
          arity_def scheme; act_scheme_def s scheme;
-         let changed = act_scheme s scheme in arity_def changed)
-       | _ -> ())
+         let changed = act_scheme s scheme in arity_def changed))
      | Constant -> act_def s Boolean
      | Word_constant -> act_def s Word64
      | Empty_list a -> type_wf s n m mapping a (); act_def s (List_type a)
      | List_cons (a, head, tail) -> (match e with
        | Cons (h, r) -> typing_action s n m mapping g h a head ();
-         typing_action s n m mapping g r t tail (); act_def s (List_type a)
-       | _ -> ())
+         typing_action s n m mapping g r t tail (); act_def s (List_type a))
      | List_case (a, scrutinee, empty, nonempty) -> (match e with
        | CaseList (v, l, r) ->
          type_wf s n m mapping a ();
@@ -117,37 +115,31 @@ let rec (typing_action @ total) : (s : substitution) @ immutable ->
          typing_action s n m mapping bg r t nonempty ();
          act_context_def s bg; act_context_def s tg;
          act_scheme_def s head; act_scheme_def s tail; lift_def Z s;
-         act_def s (List_type a)
-       | _ -> ())
+         act_def s (List_type a))
      | Conditional (condition, yes, no) -> (match e with
        | If (c, a, b) -> typing_action s n m mapping g c Boolean condition ();
          typing_action s n m mapping g a t yes (); typing_action s n m mapping g b t no ();
-         act_def s Boolean
-       | _ -> ())
+         act_def s Boolean)
      | Word_primitive (left, right) -> (match e with
        | Primitive (op, a, b) -> typing_action s n m mapping g a Word64 left ();
          typing_action s n m mapping g b Word64 right (); act_def s Word64;
          operation_type_def op;
-         (match op with Add | Subtract -> () | Equal_word | Unsigned_less -> act_def s Boolean)
-       | _ -> ())
+         (match op with Add | Subtract -> () | Equal_word | Unsigned_less -> act_def s Boolean))
      | Abstraction (a, body) -> (match e, t with
        | Lambda e, Function (_, b) ->
          let scheme = Forall (Z, a) in let bg = Binding (scheme, g) in
          typing_action s n m mapping bg e b body ();
-         act_context_def s bg; act_scheme_def s scheme; lift_def Z s
-       | _ -> ())
+         act_context_def s bg; act_scheme_def s scheme; lift_def Z s)
      | Application (a, left, right) -> (match e with
        | Apply (f, x) -> typing_action s n m mapping g f (Function (a, t)) left ();
-         typing_action s n m mapping g x a right (); act_def s (Function (a, t))
-       | _ -> ())
+         typing_action s n m mapping g x a right (); act_def s (Function (a, t)))
      | Recursion (a, b, body) -> (match e with
        | Recursive e ->
          let self = Forall (Z, t) in let arg = Forall (Z, a) in
          let sg = Binding (self, g) in let bg = Binding (arg, sg) in
          typing_action s n m mapping bg e b body ();
          act_context_def s bg; act_context_def s sg;
-         act_scheme_def s self; act_scheme_def s arg; lift_def Z s
-       | _ -> ())
+         act_scheme_def s self; act_scheme_def s arg; lift_def Z s)
      | Let_binding (scheme, rhs, body) -> (match e, scheme with
        | Let (r, b), Forall (k, a) ->
          scheme_well_formed s n m mapping scheme ();
@@ -159,7 +151,6 @@ let rec (typing_action @ total) : (s : substitution) @ immutable ->
          typing_action up source target lifted rg r a rhs ();
          P.context_lift_weaken k s g;
          let bg = Binding (scheme, g) in typing_action s n m mapping bg b t body ();
-         act_context_def s bg; act_scheme_def s scheme
-       | _ -> ()));
+         act_context_def s bg; act_scheme_def s scheme));
     ())
 

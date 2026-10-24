@@ -11,9 +11,9 @@ let (below_child @ total) : (h : node Pref.heap) @ immutable -> (cut : int) ->
     {u : unit | below h q cut} @ ghost = fun h cut p q premise -> ghost_ (
     ordered_def h p; below_def h p cut;
     at_level_def h p; Level_finite_spec.edge_def h p q; Level_unifier_spec.observe_def h p;
-    match H.at h p with None -> () | Some v -> match v.level with
-    | Generic -> () | Finite n -> children_below_def h v.desc n;
-      (match v.desc with Var | Bool | Word -> () | Link a | List a -> below_def h a n; at_level_def h a; ()
+    match H.at h p with Some v -> match v.level with
+    | Finite n -> children_below_def h v.desc n;
+      (match v.desc with Link a | List a -> below_def h a n; at_level_def h a; ()
       | Arrow (a, b) -> below_def h a n; below_def h b n; at_level_def h a; at_level_def h b; ());
       below_def h q cut; at_level_def h q; ())
 
@@ -195,8 +195,7 @@ let rec (environment_avoids @ total) : (h : node Pref.heap) @ immutable -> (cut 
     template_context_def rho schemas; let names = generalized_names h cut rhs in
     let context = template_context rho schemas in A.context_avoids_def names context;
     match schemas with Hm_environment_spec.No_templates -> ()
-    | Hm_environment_spec.Template_binding (schema, rest) -> match env with Hm_environment_spec.Empty -> ()
-      | Hm_environment_spec.Bind (_, tail) ->
+    | Hm_environment_spec.Template_binding (schema, rest) -> match env with Hm_environment_spec.Bind (_, tail) ->
         template_avoids h cut depth order trees rho values rhs schema ();
         let binders = template_names schema in let mono = D.embed (interpret rho variable_choice schema) in
         let z = D.Z in abstract_avoids names binders z mono ();

@@ -53,11 +53,11 @@ let rec (unique @ total) : (h : node Pref.heap) @ immutable ->
     match a with
     | Product (_, a1, a2) -> (match b with Product (_, b1, b2) ->
       unique h heads rho choices a1 b1 ();
-      unique h heads rho choices a2 b2 (); () | _ -> ())
+      unique h heads rho choices a2 b2 (); ())
     | List_template (_, child) -> (match b with List_template (_, other) ->
-      unique h heads rho choices child other (); () | _ -> ())
+      unique h heads rho choices child other (); ())
     | Indirect (_, child) -> (match b with Indirect (_, other) ->
-      unique h heads rho choices child other (); () | _ -> ())
+      unique h heads rho choices child other (); ())
     | _ -> ())
 
 let[@def] rec (boundary_bound @ total) (h : node Pref.heap @ immutable)

@@ -147,7 +147,7 @@ let consume_local_exception () =
   let raw = E in
   let value : { x : exn | same_exception x E } = assume_ raw in
   let refine_ result = value in
-  match result with E -> true | _ -> false;;
+  match result with E -> true;;
 [%%expect{|
 val consume_local_module : unit -> int = <fun>
 val consume_local_exception : unit -> bool = <fun>

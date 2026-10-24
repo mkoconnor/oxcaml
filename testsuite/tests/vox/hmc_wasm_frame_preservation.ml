@@ -14,8 +14,7 @@ let rec (same_length @ total) : (before : B.bytes) @ immutable -> (after : B.byt
     {u : unit | V.length before === V.length after} @ ghost = fun before after stop tail premise -> ghost_ (
     L.drop_def before stop; L.drop_def after stop; V.length_def before; V.length_def after;
     if stop = 0 then () else match before, after with
-    | B.Byte (_, rest), B.Byte (_, more) -> same_length rest more (stop - 1) tail ()
-    | _ -> ())
+    | B.Byte (_, rest), B.Byte (_, more) -> same_length rest more (stop - 1) tail ())
 let (suffix @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (stop : B.u32) ->
     (bytes : B.bytes) @ immutable -> (cells : H.cells) @ immutable -> (tail : B.bytes) @ immutable -> (count : B.u32) ->
     {u : unit | Index.represents (H.length cells) count && stop = base + 16 * count

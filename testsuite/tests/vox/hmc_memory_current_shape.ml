@@ -19,9 +19,9 @@ let (current @ total) : (program : I.program) @ immutable -> (globals : X.global
   match model.X.state with
   | Q.Running (a, _) ->
     F.decode_def model.X.heap a;
-    (match F.decode model.X.heap a with None -> () | Some source_a ->
+    (match F.decode model.X.heap a with Some source_a ->
       Shape.at_label_def program.I.origin.C.origin.P.table program.I.origin.C.blocks source_a;
-      match G.lookup program.I.origin.C.blocks a.F.pc with None -> () | Some block ->
+      match G.lookup program.I.origin.C.blocks a.F.pc with Some block ->
         Hmc_frame_codec.shaped program.I.origin.C.origin.P.table block.G.signature source_a ();
         Hmc_pointer_frame_shape.shape model.X.heap block.G.signature a source_a ())
   | _ -> ())

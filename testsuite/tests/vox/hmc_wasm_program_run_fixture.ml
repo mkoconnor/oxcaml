@@ -41,7 +41,7 @@ let rec overwrite memory at bytes = match memory, bytes with
   | _, B.End -> memory
   | B.End, _ -> failwith "initial image overflow"
   | B.Byte (head, rest), _ -> if at > 0 then B.Byte (head, overwrite rest (at - 1) bytes)
-    else match bytes with B.End -> memory | B.Byte (byte, tail) -> B.Byte (byte, overwrite rest 0 tail)
+    else match bytes with B.Byte (byte, tail) -> B.Byte (byte, overwrite rest 0 tail)
 let number (index : D.index @ immutable) : B.u32 = match Index.encode 10000 index with Some n -> n | None -> failwith "fixture index overflow"
 let rec heap_image memory = function
   | Heap.Empty_heap _ -> memory
@@ -129,7 +129,6 @@ let rec check_targets : (program : Lower.program) @ immutable -> (length : D.ind
         ghost_ (Assembly.dispatch_target program length count config dispatcher label fragment ());
         let module_ = Assembly.assemble program length count config dispatcher in
         match F.element module_.F.table label with
-        | None -> failwith "element missing"
         | Some index -> if F.lookup module_.F.functions index <> Some (Assembly.function_ program fragment config) then
             failwith "function table correspondence");
       check_targets program length count config dispatcher rest ())
@@ -238,8 +237,7 @@ let build term (input : B.u32) (heap_limit : B.u32) (stack_frames : B.u32) =
             | Some value -> V.tag value, V.payload value in
           if Wasm_locals.get actual.GE.globals.WG.values 6 <> Some (S.I64 expected_tag)
             || Wasm_locals.get actual.GE.globals.WG.values 7 <> Some (S.I64 expected_payload) then failwith "program result disagrees with source";
-          {module_; memory; expected_memory = actual.GE.execution.X.memory; globals = wasm_globals; main = count; expected_status; expected_tag; expected_payload})
-      | _ -> failwith "initial source state"))
+          {module_; memory; expected_memory = actual.GE.execution.X.memory; globals = wasm_globals; main = count; expected_status; expected_tag; expected_payload})))
     | _ -> failwith "whole program lowering"
 let fixtures () =
   let word n = D.Word (Header.number n) in

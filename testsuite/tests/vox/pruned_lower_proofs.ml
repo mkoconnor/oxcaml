@@ -13,7 +13,7 @@ let rec (bounded_tree @ total) : (h : node Pref.heap) @ immutable ->
     finite_def h t; tree_root_def t;
     let p = tree_root t in order p;
     ordered_def h p; below_def h p bound; at_level_def h p; observe_def h p;
-    let level = match at_level h p with Generic -> 0 | Finite n -> n in
+    let level = match at_level h p with Finite n -> n in
     let b = match t with
     | Free p | Constant_tree p | Word_tree p -> Tip p
     | Alias_tree (p, child) ->

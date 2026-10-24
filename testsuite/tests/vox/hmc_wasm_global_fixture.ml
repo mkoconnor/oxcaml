@@ -59,16 +59,14 @@ let rec collect (program : Program.program) globals configuration (base : B.u32)
           (match Wasm_control.run (Hmc_wasm_dispatch_loop.cost table old_pc 0 lowered)
               (Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels state) with
           | Wasm_control.Running actual ->
-            if actual <> Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels expected_state then failwith "global dispatcher iteration"
-          | _ -> failwith "global dispatcher stopped");
+            if actual <> Hmc_wasm_dispatch_loop.configuration table 0 Wasm_control.No_labels expected_state then failwith "global dispatcher iteration");
           if not (Codec.shape next_signature result.Hmc_wasm_global_invariant.activation) then failwith "global successor shape" else
           let expected_cells = Codec.encode next_signature result.Hmc_wasm_global_invariant.activation padding () in
           ghost_ (Hmc_frame_decode_unique.frame next_signature next result.Hmc_wasm_global_invariant.cells expected_cells result.Hmc_wasm_global_invariant.activation padding ();
             Block.emit_def lowered 0);
           let code : {code : Wasm_code.t | X.run code state === X.Done {X.memory = result.Hmc_wasm_global_invariant.memory; machine = state.X.machine}} @ immutable = Block.emit lowered 0 in
           (match X.run code state with
-          | X.Done actual -> if actual.X.memory <> result.Hmc_wasm_global_invariant.memory then failwith "global Wasm execution"
-          | _ -> failwith "global Wasm trap");
+          | X.Done actual -> if actual.X.memory <> result.Hmc_wasm_global_invariant.memory then failwith "global Wasm execution");
           let fixture = {R.memory; base; first = Header.number 37; second = Header.number 99; code;
             expected = Hmc_wasm_range_fixture.fields 0 (Heap.Cell (V.Word (Header.number fragment.Lower.pc), expected_cells))} in
           fixture :: rest ()

@@ -15,7 +15,7 @@ let rec (capture_size @ total) : (context : D.context) @ immutable -> (view : H.
   H.decode_environment_def view captures; Hmc_frame_shape.environment_def context env; H.length_def captures; Hmc_frame_codec.locals_size_def context;
   match context, captures with
   | D.Binding (_, rest), H.Cell (_, tail) ->
-    (match H.decode_environment view tail with None -> () | Some remaining -> capture_size rest view tail remaining ())
+    (match H.decode_environment view tail with Some remaining -> capture_size rest view tail remaining ())
   | _ -> ())
 let[@def] (not_stuck @ total) (state : S.state @ immutable) =
   match state with S.Stuck -> false | _ -> true
@@ -31,7 +31,6 @@ let (returning_step @ total) : (program : I.program) @ immutable -> (fuel : D.in
     U.advance_def program fuel (S.Running (activation, frames));
     not_stuck_def (U.step program (S.Running (activation, frames)));
     match fuel with
-    | D.Z -> ()
     | D.S rest -> stuck_advance program rest)
 let (branch @ total) : (program : I.program) @ immutable -> (heap : H.heap) @ immutable ->
     (activation : F.activation) @ immutable -> (frames : Q.frames) @ immutable -> (abstract : S.state) @ immutable ->
@@ -64,8 +63,7 @@ let (primitive @ total) : (program : I.program) @ immutable -> (heap : H.heap) @
       H.decode_def heap activation.F.accumulator; H.decode_value_def (H.view heap) activation.F.accumulator;
       U.step_def program abstract; not_stuck_def (U.step program abstract);
       match activation.F.temporaries with
-      | F.Value (head, _, _) -> H.decode_def heap head; H.decode_value_def (H.view heap) head
-      | _ -> ());
+      | F.Value (head, _, _) -> H.decode_def heap head; H.decode_value_def (H.view heap) head);
     match activation.F.temporaries, activation.F.accumulator with
     | F.Value (V.Word left, env, rest), V.Word right -> {left; right; env; rest}
     | _ -> unreachable_ ()
@@ -92,8 +90,7 @@ let (list @ total) : (program : I.program) @ immutable -> (heap : H.heap) @ immu
       ghost_ (match H.lookup (H.view heap) address with
         | Some value ->
           let object_ = Hmc_heap_preservation.fetch program.I.origin.Hmc_cfg_program.origin.Hmc_closure_program.table heap address value () in
-          H.decode_object_def (H.view heap) object_
-        | None -> ());
+          H.decode_object_def (H.view heap) object_);
       (match Hmc_heap_preservation.lookup_object heap address with
       | Some (H.Cons (head, tail)) -> {address; head; tail}
       | _ -> unreachable_ ())
@@ -126,8 +123,7 @@ let (call @ total) : (program : I.program) @ immutable -> (heap : H.heap) @ immu
       F.decode_temporaries_def heap activation.F.temporaries;
       call_instruction_def instruction; U.step_def program abstract; not_stuck_def (U.step program abstract);
       match activation.F.temporaries with
-      | F.Value (head, _, _) -> H.decode_def heap head; H.decode_value_def (H.view heap) head
-      | _ -> ());
+      | F.Value (head, _, _) -> H.decode_def heap head; H.decode_value_def (H.view heap) head);
     match activation.F.temporaries with
     | F.Value (V.Closure_pointer address, env, rest) ->
       ghost_ (match H.lookup (H.view heap) address with
@@ -136,8 +132,7 @@ let (call @ total) : (program : I.program) @ immutable -> (heap : H.heap) @ immu
           let object_ = P.fetch table heap address value () in
           P.lookup_valid table heap address value ();
           Hmc_frame_shape.value_def table value; Hmc_frame_shape.valid_def table value;
-          H.decode_object_def (H.view heap) object_
-        | None -> ());
+          H.decode_object_def (H.view heap) object_);
       (match P.lookup_object heap address with
       | Some (H.Closure (id, captured)) ->
         (match K.lookup program.I.origin.C.origin.Hmc_closure_program.table id, C.lookup program.I.origin.C.functions id with
@@ -146,8 +141,7 @@ let (call @ total) : (program : I.program) @ immutable -> (heap : H.heap) @ immu
             | Some values ->
               Hmc_pointer_frame_shape.environment heap entry.K.captured captured values ();
               capture_size entry.K.captured (H.view heap) captured values ();
-              Hmc_pointer_frame_shape.locals_size entry.K.captured
-            | None -> ());
+              Hmc_pointer_frame_shape.locals_size entry.K.captured);
           {address; id; captured; env; rest; entry; code}
         | _ -> unreachable_ ())
       | _ -> unreachable_ ())

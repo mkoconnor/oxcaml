@@ -99,7 +99,6 @@ let rec (present_available @ total) : (state : V.t) @ immutable ->
      | R.Var index ->
        MB.has_def graph bindings index;
        (match Q.binding bindings index with
-        | None -> ()
         | Some id ->
           P.view_def state;
           O.observe_def state.nodes state.semantic.union.parents state.semantic.union.count;

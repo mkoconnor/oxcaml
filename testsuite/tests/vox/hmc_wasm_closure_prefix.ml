@@ -55,5 +55,4 @@ let (correct @ total) : (table : K.table) @ immutable -> (heap : Heap.heap) @ im
     match X.run (Prefix.take fuel (Lower.emit fragment frame_local heap_local)) state with
     | X.Done current ->
       Image.preserve table state.X.memory current.X.memory heap heap_base ();
-      Bounds.same_length state.X.memory current.X.memory limit ()
-    | _ -> ())
+      Bounds.same_length state.X.memory current.X.memory limit ())

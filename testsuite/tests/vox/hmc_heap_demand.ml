@@ -18,7 +18,7 @@ let rec (environment @ total) : (heap : M.heap) @ immutable -> (cells : M.cells)
     {u : unit | M.length cells === environment_size env} @ ghost = fun heap cells env premise -> ghost_ (
   M.decode_environment_def (M.view heap) cells; M.length_def cells; environment_size_def env;
   match cells with M.Empty -> () | M.Cell (_, rest) ->
-    match M.decode_environment (M.view heap) rest with None -> () | Some tail -> environment heap rest tail ())
+    match M.decode_environment (M.view heap) rest with Some tail -> environment heap rest tail ())
 let[@def] (cells @ total) (program : I.program @ immutable) (state : S.state @ immutable) = match state with
   | S.Running (a, _) -> (match I.lookup program.I.code a.S.pc with
     | Some (I.Keep (G.Load (G.Closure _, _, _, _))) -> D.S (environment_size a.S.env)
@@ -35,7 +35,7 @@ let (request @ total) : (program : I.program) @ immutable -> (heap : M.heap) @ i
     | Q.Done _ | Q.Stuck -> ()
     | Q.Running (a, _) ->
       F.decode_def heap a; F.decode_temporaries_def heap a.F.temporaries;
-      (match M.decode_environment (M.view heap) a.F.env with None -> () | Some env -> environment heap a.F.env env ());
+      (match M.decode_environment (M.view heap) a.F.env with Some env -> environment heap a.F.env env ());
       (match I.lookup program.I.code a.F.pc with Some (I.Keep op) -> A.request_def op a | _ -> ());
       match B.request program state with None -> () | Some object_ -> M.slots_def object_)
 let[@def] (stack @ total) (program : I.program @ immutable) (state : S.state @ immutable) = match state with

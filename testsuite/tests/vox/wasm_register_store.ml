@@ -13,7 +13,7 @@ let (global @ total) : (globals : G.t) @ immutable -> (index : B.u32) -> (value 
     {u : unit | G.can_set globals index value} ->
     {u : unit | G.set globals index value === Some {G.values = Replace.replace globals.G.values index value; permissions = globals.G.permissions}} @ ghost =
   fun globals index value premise -> ghost_ (
-    match G.set globals index value with None -> () | Some after -> Replace.unique globals.G.values index value after.G.values ())
+    match G.set globals index value with Some after -> Replace.unique globals.G.values index value after.G.values ())
 let (correct @ total) : (global_index : B.u32) -> (local : B.u32) -> (value : S.value) @ immutable -> (state : GE.state) @ immutable ->
     {u : unit | L.get state.GE.execution.X.machine.E.locals local === Some value && G.can_set state.GE.globals global_index value} ->
     {u : unit | GE.run (Transfer.store_code global_index local) state === GE.Done

@@ -64,9 +64,6 @@ let rec (core @ total stateful)
     let #{Probability.index; cost} =
       Probability.uniform_cost size allocations cost in
     match Spec.pick values (Bigint.of_int index) with
-    | None ->
-      ghost_ (P.sorted_short values; P.permutation_refl values);
-      values
     | Some {Spec.pivot; rest} ->
       ghost_ (
         Average.allocations_at values values (Bigint.of_int index);

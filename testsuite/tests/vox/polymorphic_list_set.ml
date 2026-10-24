@@ -197,7 +197,6 @@ module Make (Element : Polymorphic_set_intf.Ordered) = struct
       | Nil -> ()
       | Cons (left_head, left_tail) ->
         match right with
-        | Nil -> ()
         | Cons (right_head, right_tail) ->
           equivalent_congruent element left_head right_head;
           equal_repr_lookup element left_tail right_tail;

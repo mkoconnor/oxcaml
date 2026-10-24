@@ -84,5 +84,4 @@ let (saved_environment @ total) : (signature : G.signature) @ immutable -> (inst
     | G.Bind _ ->
       Seg.append_def (Heap.Cell (accumulator, Seg.append saved (Seg.append saved old))) padding;
       associate saved (Seg.append saved old) padding; associate saved old padding
-    | G.Restore _ -> associate saved old padding
-    | _ -> ())
+    | G.Restore _ -> associate saved old padding)

@@ -18,7 +18,7 @@ let rec (lookup @ total) : (heap : M.heap) @ immutable -> (env : M.cells) @ immu
   M.decode_environment_def (M.view heap) env; B.lookup_def env index; R.lookup_def abstract index;
   match env, index with
   | M.Cell (head, _), D.Z -> M.decode_def heap head
-  | M.Cell (_, rest), D.S i -> (match M.decode_environment (M.view heap) rest with None -> () | Some next -> lookup heap rest next i ())
+  | M.Cell (_, rest), D.S i -> (match M.decode_environment (M.view heap) rest with Some next -> lookup heap rest next i ())
   | _ -> ())
 let (load @ total) : (heap : M.heap) @ immutable -> (globals : P.globals) @ immutable ->
     (env : M.cells) @ immutable -> (abstract : R.V.value) @ immutable -> (atom : G.atom) @ immutable ->
@@ -29,7 +29,7 @@ let (load @ total) : (heap : M.heap) @ immutable -> (globals : P.globals) @ immu
   B.load_def env atom; S.load_def globals abstract atom;
   match atom with
   | G.Local index -> lookup heap env abstract index ()
-  | _ -> (match B.load env atom with None -> () | Some value -> M.decode_def heap value; M.decode_value_def (M.view heap) value))
+  | _ -> (match B.load env atom with Some value -> M.decode_def heap value; M.decode_value_def (M.view heap) value))
 let (primitive @ total) : (heap : M.heap) @ immutable -> (op : D.word_operation) @ immutable ->
     (left : Hmc_word64.t) @ immutable -> (right : Hmc_word64.t) @ immutable ->
     {u : unit | M.decode heap (B.primitive op left right) === Some (R.primitive op left right)} @ ghost = fun heap op left right -> ghost_ (
@@ -48,7 +48,7 @@ let (step @ total) : (program : I.program) @ immutable -> (heap : M.heap) @ immu
     M.decode_def heap a.F.accumulator; M.decode_value_def (M.view heap) a.F.accumulator;
     (match op with
     | G.Load (atom, _, _, _) ->
-      (match M.decode_environment (M.view heap) a.F.env with None -> () | Some env ->
+      (match M.decode_environment (M.view heap) a.F.env with Some env ->
         load heap program.I.origin.C.origin.P.globals a.F.env env atom ())
     | G.Bind _ -> (match a.F.temporaries with F.Environment (env, _) ->
       M.decode_environment_def (M.view heap) (M.Cell (a.F.accumulator, env)) | _ -> ())

@@ -15,7 +15,7 @@ let rec (growth @ total) : (table : K.table) @ immutable -> (larger : M.heap) @ 
     P.extends_def larger smaller;
     if larger === smaller then () else (
       M.valid_def table larger; M.used_def larger;
-      match larger with M.Empty_heap _ -> () | M.Allocate (a, rest) ->
+      match larger with M.Allocate (a, rest) ->
         growth table rest smaller (); M.slots_def a.M.object_;
         E.ordered (M.slots a.M.object_) a.M.address a.M.stop ()))
 let rec (synchronize @ total) : (table : K.table) @ immutable -> (capacity : W.limb) -> (memory : B.bytes) @ immutable ->

@@ -33,10 +33,7 @@ let (running @ total) : (program : I.program) @ immutable ->
     (match F.decode state.State.heap state.State.activation, Q.decode_frames state.State.heap state.State.frames with
     | Some a, Some frames ->
       T.bounded_def D.Z frames;
-      (match state.State.frames with Q.Halt -> () | Q.Frame (a, rest) ->
-        match F.decode state.State.heap a, Q.decode_frames state.State.heap rest with
-        | Some _, Some _ -> () | _ -> ())
-    | _ -> ());
+      (match state.State.frames with Q.Halt -> ()));
     Stack.related_def program.I.origin.Hmc_cfg_program.blocks lowered.Lower.width state.State.memory
       context.State.stack_base state.State.registers.Registers.top state.State.frames)
 

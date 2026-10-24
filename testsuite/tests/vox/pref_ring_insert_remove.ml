@@ -344,7 +344,7 @@ let insert_remove_demo : (s : node) @ immutable -> (a : node) @ immutable -> (b
     let borrowed = borrow_ detached in
     let borrowed : {t : node option Pref.token | H.mem (Pref.own t) p} = borrowed in
     let actual = Pref.read p borrowed in actual in
-  assert (match actual with Some n -> n == a | None -> false);
+  assert (match actual with Some n -> n == a);
   let t = Pref.join detached rest in
   let _t = t in
   ()

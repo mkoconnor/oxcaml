@@ -83,7 +83,6 @@ let prepare : (program : I.program) @ immutable -> (globals : Machine.globals) @
               Index.represents_def (D.S (Cap.capacity blocks)) (lowered.Lower.capacity + 1);
               let _ = Bounds.suffix heap_memory 8192 stack_limit () in Bounds.covers_def heap_memory stack_limit);
             (match Hmc_wasm_reservation.reserve (Hmc_memory_saved_frame.slots blocks) (lowered.Lower.capacity + 1) 0 lowered.Lower.width () with
-            | None -> failwith "shared stack width"
             | Some _ ->
             (match Hmc_memory_stack_image.materialize blocks 1000 lowered.Lower.width heap_memory 1024 stack_limit frames () with
             | None -> failwith "shared stack image"
@@ -735,8 +734,7 @@ let binary_prefixes () =
                 if word <> input || Hmc_source_semantics.advance source_fuel
                     (Hmc_source_semantics.initial (D.Apply (source, D.Word input)))
                     <> Hmc_source_semantics.Done (Hm_interpreter_typing.Word word) then failwith "binary source reflection"
-              | _ -> failwith "binary result stack")
-          | _ -> failwith "binary unsafe prefix") [0; 1; 5; 31; 511])
+              | _ -> failwith "binary result stack")) [0; 1; 5; 31; 511])
           [Hmc_wasm_header_update.number 0; Hmc_wasm_header_update.number 42;
            {Hmc_word64.lo = 4294967295; hi = 4294967295}]
     | _ -> failwith "binary fixture initialization"

@@ -61,7 +61,7 @@ let rec (resolution_below @ total) : (h : node Pref.heap) @ immutable ->
   fun h order p r path bound premise -> ghost_ (
     resolves_def h p r path; match path with Here -> ()
     | Via (q, rest) -> order p; ordered_def h p; below_def h p bound; at_level_def h p; observe_def h p;
-      (match H.at h p with None -> () | Some v -> match v.level with Generic -> () | Finite n ->
+      (match H.at h p with Some v -> match v.level with Finite n ->
         children_below_def h v.desc n; below_def h q n; at_level_def h q; ());
       below_def h q bound; let () = resolution_below h order q r rest bound () in ())
 
@@ -72,7 +72,7 @@ let rec (ordered @ total) : (h : node Pref.heap) @ immutable -> (after : node Pr
     rewritten_def h after d; match d with Done -> order x; ()
     | Write (p, _, r, path, rest) -> let middle = H.put h p (redirect h p r) in
       ordered_def h p; active_def h p; at_level_def h p;
-      (match at_level h p with Generic -> () | Finite n -> below_def h p n; resolution_below h order p r path n (); ());
+      (match at_level h p with Finite n -> below_def h p n; resolution_below h order p r path n (); ());
       let next : ((y : node Pref.t) @ immutable -> {u : unit | Level_spec.ordered middle y}) @ total = fun y ->
         order y; let () = Level_unifier_metadata.redirect_ordered h p r y () in () in
       let () = ordered middle after rest next x () in ())

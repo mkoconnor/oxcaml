@@ -12,7 +12,6 @@ let rec (search_finite @ total) :
     let flag = false in searched_def h p x flag trace;
     let after = H.put h p (Link q) in
     match trace with
-    | Hit | Left _ -> Free x
     | Leaf ->
       if H.at h x === Some Var then (
         let t = Free x in root_def t; finite_def after t; t)
@@ -106,14 +105,12 @@ let rec (finite_unique @ total) :
   match a with
   | Alias (_, child) ->
     (match b with
-     | Alias (_, other) -> finite_unique h child other (); ()
-     | _ -> ())
+     | Alias (_, other) -> finite_unique h child other (); ())
   | Branch (_, left, right) ->
     (match b with
      | Branch (_, other_left, other_right) ->
        finite_unique h left other_left ();
-       finite_unique h right other_right (); ()
-     | _ -> ())
+       finite_unique h right other_right (); ())
   | Free _ | Boolean _ -> ())
 
 let (edge_smaller @ total) :
@@ -124,7 +121,6 @@ let (edge_smaller @ total) :
   finite_def h a; root_def a;
   let ra = root a in let rb = root b in edge_def h ra rb; size_def a;
   match a with
-  | Free _ | Boolean _ -> ()
   | Alias (_, child) -> finite_unique h child b (); ()
   | Branch (_, left, right) ->
     size_positive left; size_positive right;
@@ -151,7 +147,6 @@ let rec (walk_bound @ total) :
     | Step (next, rest) ->
       edge_def h p next;
       (match tp with
-       | Free _ | Boolean _ -> ()
        | Alias (_, child) -> finite_def h child; ()
        | Branch (_, a, b) -> finite_def h a; finite_def h b; ());
       let refine_ tn = trees next in

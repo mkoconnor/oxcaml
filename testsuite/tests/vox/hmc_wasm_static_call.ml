@@ -128,5 +128,4 @@ let rec (padding @ total) : (context : V.context) @ immutable -> (writes : Mixed
       Memory.mixed_source_def context (Mixed.Constant a);
       Memory.mixed_sources_def context (Mixed.Write (offset, Mixed.Constant b, tail));
       Memory.mixed_source_def context (Mixed.Constant b);
-      padding context tail (position + 1) rest ()
-    | _ -> ())
+      padding context tail (position + 1) rest ())

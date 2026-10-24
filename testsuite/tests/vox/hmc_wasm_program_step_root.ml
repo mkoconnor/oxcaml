@@ -35,8 +35,7 @@ let (select_return @ total) : (globals : Machine.globals) @ immutable -> (signat
       | Straight.Relayout layout -> Hmc_wasm_relayout_geometry.matches_def signature G.Return capacity max_pc
           layout.Hmc_wasm_relayout.copies layout.Hmc_wasm_relayout.pc layout.Hmc_wasm_relayout.required
       | Straight.Primitive primitive -> Hmc_wasm_primitive_lower.matches_def signature G.Return capacity max_pc primitive
-      | Straight.Global global -> Hmc_wasm_global_lower.corresponds_def globals G.Return global)
-    | _ -> ())
+      | Straight.Global global -> Hmc_wasm_global_lower.corresponds_def globals G.Return global))
   | _ -> ())
 let (step @ total) : (program : I.program) @ immutable -> (globals : Machine.globals) @ immutable ->
     (lowered : Lower.program) @ immutable -> (context : State.context) @ immutable -> (before : State.running) @ immutable ->

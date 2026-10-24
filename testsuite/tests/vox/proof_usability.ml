@@ -84,7 +84,7 @@ Line 1, characters 36-49:
 
 let string_pattern (s : {s : string | s === "hello"}) :
     {b : bool | b} =
-  match s with "hello" -> true | _ -> false;;
+  match s with "hello" -> true;;
 [%%expect{|
 val string_pattern : {s : string | s === "hello"} -> {b : bool | b} = <fun>
 |}]

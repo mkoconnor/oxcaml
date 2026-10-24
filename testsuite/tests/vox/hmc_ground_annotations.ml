@@ -58,8 +58,7 @@ let rec (typing_ground @ total) : (g : D.context) @ immutable -> (term : D.term)
     | D.Lambda body, D.Abstraction (a, db) ->
       (match ty with D.Function (_, b) ->
         D.mono_wf_def D.Z ty; mono_ground a ();
-        typing_ground (D.Binding (D.Forall (D.Z, a), g)) body b db ()
-      | _ -> ())
+        typing_ground (D.Binding (D.Forall (D.Z, a), g)) body b db ())
     | D.Apply (f, x), D.Application (a, df, dx) ->
       D.typed_def D.Z g x a dx; mono_ground a ();
       typing_ground g f (D.Function (a, ty)) df (); typing_ground g x a dx ()
@@ -70,5 +69,4 @@ let rec (typing_ground @ total) : (g : D.context) @ immutable -> (term : D.term)
       let scheme = D.Forall (D.Z, a) in
       D.add_def D.Z D.Z; D.scheme_wf_def D.Z scheme; N.scheme_def scheme; mono_ground a ();
       typing_ground (D.weaken_context D.Z g) rhs a dr ();
-      typing_ground (D.Binding (scheme, g)) body ty db ()
-    | _ -> ())
+      typing_ground (D.Binding (scheme, g)) body ty db ())

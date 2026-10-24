@@ -83,8 +83,7 @@ let rec (typed_matches @ total) : (n : D.index) @ immutable -> (g : D.context) @
     D.typed_def n g term t d; matches_def term d;
     match term, d with
     | D.Lambda body, D.Abstraction (a, db) -> (match t with
-      | D.Function (_, b) -> typed_matches n (D.Binding (D.Forall (D.Z, a), g)) body b db ()
-      | _ -> ())
+      | D.Function (_, b) -> typed_matches n (D.Binding (D.Forall (D.Z, a), g)) body b db ())
     | D.Recursive body, D.Recursion (a, b, db) ->
       typed_matches n (D.Binding (D.Forall (D.Z, a), D.Binding (D.Forall (D.Z, t), g))) body b db ()
     | D.Apply (f, x), D.Application (a, df, dx) ->

@@ -121,8 +121,7 @@ module Make (Key : Vox_table_map.Key) = struct
         M.slot_def model index; M.control_def model index;
         (match M.slot model index with
          | Some entry -> cell_at model model.slots 0Z (Bigint.of_int index)
-           entry
-         | None -> ());
+           entry);
         ()
       end else ())
 

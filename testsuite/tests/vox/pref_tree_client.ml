@@ -80,9 +80,7 @@ let () =
      | Branch (_, left, _) ->
        shape_of_def model; shape_of_def left;
        (match left with
-        | Branch (_, _, right) -> shape_of_def right
-        | Empty -> ())
-     | Empty -> ());
+        | Branch (_, _, right) -> shape_of_def right));
     let leaf4 = Fork (4, Tip, Tip) in
     let leaf3 = Fork (3, Tip, Tip) in
     mirror_shape_def (Fork (1, Fork (2, leaf4, Tip), leaf3));

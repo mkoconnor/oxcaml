@@ -12,7 +12,6 @@ let rec (lookup_valid @ total) : (table : K.table) @ immutable -> (heap : M.heap
     {u : unit | address < M.used heap && H.value table value} @ ghost = fun table heap address value premise -> ghost_ (
   M.valid_def table heap; M.view_def heap; M.lookup_def (M.view heap) address; M.used_def heap;
   match heap with
-  | M.Empty_heap _ -> ()
   | M.Allocate (a, rest) ->
     M.slots_def a.M.object_; E.ordered (M.slots a.M.object_) a.M.address a.M.stop ();
     if address = a.M.address then M.object_valid_def table (M.view rest) a.M.object_
@@ -30,7 +29,7 @@ let[@def] rec (extends @ total) (larger : M.heap @ immutable) (smaller : M.heap 
 let rec (transitive @ total) : (a : M.heap) @ immutable -> (b : M.heap) @ immutable -> (c : M.heap) @ immutable ->
     {u : unit | extends a b && extends b c} -> {u : unit | extends a c} @ ghost = fun a b c premise -> ghost_ (
   extends_def a b; extends_def a c;
-  if a === b then () else match a with M.Empty_heap _ -> () | M.Allocate (_, rest) -> transitive rest b c ())
+  if a === b then () else match a with M.Allocate (_, rest) -> transitive rest b c ())
 let rec (lookup_preserve @ total) : (table : K.table) @ immutable -> (larger : M.heap) @ immutable -> (smaller : M.heap) @ immutable ->
     (address : W.limb) -> (value : R.V.value) @ immutable ->
     {u : unit | M.valid table larger && M.valid table smaller && extends larger smaller
@@ -39,7 +38,7 @@ let rec (lookup_preserve @ total) : (table : K.table) @ immutable -> (larger : M
   extends_def larger smaller;
   if larger === smaller then () else (
     M.valid_def table larger; M.view_def larger; M.lookup_def (M.view larger) address;
-    match larger with M.Empty_heap _ -> () | M.Allocate (a, rest) ->
+    match larger with M.Allocate (a, rest) ->
       lookup_preserve table rest smaller address value (); lookup_valid table rest address value ()))
 let (decode_preserve @ total) : (table : K.table) @ immutable -> (larger : M.heap) @ immutable -> (smaller : M.heap) @ immutable ->
     (reference : C.value) @ immutable -> (value : R.V.value) @ immutable ->
@@ -58,8 +57,7 @@ let rec (environment_preserve @ total) : (table : K.table) @ immutable -> (large
     (match M.decode_value (M.view smaller) head, M.decode_environment (M.view smaller) rest with
     | Some value, Some tail ->
       M.decode_def smaller head; M.decode_def larger head; decode_preserve table larger smaller head value ();
-      environment_preserve table larger smaller rest tail ()
-    | _ -> ()))
+      environment_preserve table larger smaller rest tail ()))
 let (object_preserve @ total) : (table : K.table) @ immutable -> (larger : M.heap) @ immutable -> (smaller : M.heap) @ immutable ->
     (object_ : M.object_) @ immutable -> (value : R.V.value) @ immutable ->
     {u : unit | M.valid table larger && M.valid table smaller && extends larger smaller
@@ -71,10 +69,9 @@ let (object_preserve @ total) : (table : K.table) @ immutable -> (larger : M.hea
     (match M.decode_value (M.view smaller) head, M.decode_value (M.view smaller) tail with
     | Some h, Some t ->
       M.decode_def smaller head; M.decode_def smaller tail; M.decode_def larger head; M.decode_def larger tail;
-      decode_preserve table larger smaller head h (); decode_preserve table larger smaller tail t ()
-    | _ -> ())
+      decode_preserve table larger smaller head h (); decode_preserve table larger smaller tail t ())
   | M.Closure (_, captures) -> (match M.decode_environment (M.view smaller) captures with
-    | None -> () | Some env -> environment_preserve table larger smaller captures env ()))
+    | Some env -> environment_preserve table larger smaller captures env ()))
 
 let[@def] rec (lookup_object @ total) (heap : M.heap @ immutable) (address : W.limb) = match heap with
   | M.Empty_heap _ -> None | M.Allocate (a, rest) -> if address = a.M.address then Some a.M.object_ else lookup_object rest address

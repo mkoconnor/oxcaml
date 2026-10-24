@@ -81,8 +81,7 @@ let rec execute : (program : I.program) @ immutable -> (capacity : W.limb) -> (g
           if out.Hmc_memory_machine.state <> next.X.state || out.Hmc_memory_machine.frontier <> M.used next.X.heap
           then failwith "byte machine step differs";
           let memory = out.Hmc_memory_machine.memory in
-          execute program capacity globals limit stack (fuel - 1) next memory (U.step program abstract) ()
-        | _ -> failwith "byte machine outcome differs")
+          execute program capacity globals limit stack (fuel - 1) next memory (U.step program abstract) ())
 let check_run : (program : I.program) @ immutable -> (capacity : W.limb) -> (globals : X.globals) @ immutable ->
     (limit : W.limb) -> (stack : D.index) @ immutable -> (fuel : D.index) @ immutable -> (runtime : X.configuration) @ immutable ->
     (memory : B.bytes) @ immutable -> (abstract : S.state) @ immutable ->

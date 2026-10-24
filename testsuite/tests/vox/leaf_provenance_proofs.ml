@@ -111,8 +111,7 @@ let rec (unified_leaf_origin @ total) : (saved : node Pref.heap) @ immutable ->
       let mid = lower_heap h bound edits in
       Level_unifier_spec.unified_def mid p q ok after rest;
       (match rest with Bind_left _ ->
-        let o = lower_bind_leaf_origin saved h cut prior p q bound edits tree x () in o
-      | _ -> let o = Origin (x, Stop) in o)
+        let o = lower_bind_leaf_origin saved h cut prior p q bound edits tree x () in o)
     | Children (a, b, c, e, mid, left_ok, left, right) ->
       if left_ok then (
         let prior1 : ((x : node Pref.t) @ immutable ->

@@ -116,7 +116,6 @@ let rec (trace_invariant @ total) :
   | [] -> ()
   | x :: tail ->
     match trace with
-    | [] -> ()
     | acc :: rest ->
       trace_invariant r inv preserve tail initial acc rest ();
       preserve x tail acc result ();

@@ -32,7 +32,7 @@ let rec (lookup_context @ total) :
   fun rho env i p premise -> ghost_ (
     let refine_ premise = premise in lookup_def env i; context_def rho env;
     let g = context rho env in D.lookup_def g i;
-    match env with Empty -> () | Bind (_, rest) -> match i with
+    match env with Bind (_, rest) -> match i with
     | D.Z -> () | D.S i -> lookup_context rho rest i p (); ())
 
 let rec (mono_lookup @ total) : (h : node Pref.heap) @ immutable -> (env : env) @ immutable ->
@@ -40,7 +40,7 @@ let rec (mono_lookup @ total) : (h : node Pref.heap) @ immutable -> (env : env) 
     {u : unit | mono_env h env && lookup env i === Some p} -> {u : unit | active h p} @ ghost =
   fun h env i p premise -> ghost_ (
     let refine_ premise = premise in mono_env_def h env; lookup_def env i;
-    match env with Empty -> () | Bind (_, rest) -> match i with
+    match env with Bind (_, rest) -> match i with
     | D.Z -> () | D.S i -> mono_lookup h rest i p (); ())
 
 let rec (allocation_env @ total) : (h : node Pref.heap) @ immutable -> (p : node Pref.t) @ immutable ->
@@ -77,15 +77,12 @@ let rec (run_sound @ total) : (h : node Pref.heap) @ immutable ->
     let_free_def e; result_def e; source_def e; context_wf rho env;
     let g = context rho env in let term = source e in let ty = rho p in let t = D.embed ty in
     let z = D.Z in T.embed_wf z ty; match e with
-    | RApp_left _ | RApp_right _ | RLet_left _ | RLet _ ->
-      D.Constant
     | RShared (i, _) ->
       lookup_context rho env i p ();
       let args = D.No_arguments in let d = D.Variable args in let scheme = D.Forall (z, t) in
       D.typed_def z g term t d; D.length_def args; D.arity_def scheme;
       D.arguments_wf_def z args; D.open_scheme_def scheme args; T.open_empty t; d
-    | RVar (i, _, _, history) -> (match lookup env i with None -> D.Constant
-      | Some original -> mono_lookup h env i original ();
+    | RVar (i, _, _, history) -> (match lookup env i with Some original -> mono_lookup h env i original ();
         active_def h original; at_level_def h original; target_for_def h history original p;
         lookup_context rho env i p ();
         let args = D.No_arguments in let d = D.Variable args in let scheme = D.Forall (z, t) in
@@ -106,8 +103,8 @@ let rec (run_sound @ total) : (h : node Pref.heap) @ immutable ->
       let ts2 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&
       (if H.mem middle x then finite middle t else observe middle x === None)} @ immutable) @ total = fun x ->
         Hm_forest_proofs.run_forest h1 ts1 depth pool1 env1 body middle body_pool x () in
-      (match result body with None -> let d = D.Constant in d | Some b -> match out with
-      | None -> let d = D.Constant in d | Some _ ->
+      (match result body with Some b -> match out with
+      | Some _ ->
       let desc = Arrow (arg, b) in let w = cell desc depth in allocated_def middle depth p desc;
       let mid_model : ((x : node Pref.t) @ immutable -> {u : unit | node_equation middle rho x}) @ total = fun x ->
         let refine_ _t = ts2 x in model x; Hm_model_proofs.allocation_restrict middle p w rho x (); () in
@@ -122,8 +119,8 @@ let rec (run_sound @ total) : (h : node Pref.heap) @ immutable ->
       let ts2 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&
       (if H.mem h2 x then finite h2 t else observe h2 x === None)} @ immutable) @ total = fun x ->
         Hm_forest_proofs.run_forest h1 ts1 depth pool1 env right h2 pool2 x () in
-      (match result left with None -> let d = D.Constant in d | Some f ->
-      match result right with None -> let d = D.Constant in d | Some a ->
+      (match result left with Some f ->
+      match result right with Some a ->
       let var : desc = Var in let v = cell var depth in let h3 = H.put h2 p v in
       let desc = Arrow (a, p) in let w = cell desc depth in let h4 = H.put h3 arrow w in
       allocated_def h2 depth p var; allocated_def h3 depth arrow desc;
@@ -173,8 +170,8 @@ let rec (run_sound @ total) : (h : node Pref.heap) @ immutable ->
       Hm_runtime_proofs.allocation_active h2 self w arg ();
       Hm_runtime_proofs.fresh_active h2 depth self desc ();
       mono_env_def h3 self_env; mono_env_def h3 env3; context_def rho self_env; context_def rho env3;
-      (match result body with None -> let d = D.Constant in d | Some b -> match finish with
-      | Aborted -> let d = D.Constant in d | Unified (_, derivation) ->
+      (match result body with Some b -> match finish with
+      | Unified (_, derivation) ->
       let mid_model : ((x : node Pref.t) @ immutable -> {u : unit | node_equation middle rho x}) @ total = fun x ->
         Optimized_model_proofs.success_forward_at middle rho b res after derivation model x (); () in
       let model3 : ((x : node Pref.t) @ immutable -> {u : unit | node_equation h3 rho x}) @ total = fun x ->

@@ -88,8 +88,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
               table heap address 1 2 frame_stop state 0 base slots transported.Hmc_wasm_frame_transport.bytes transported.Hmc_wasm_frame_transport.tail () in
             let code = Source.emit fragment 0 1 slots in
             (match X.run code state with
-            | X.Done actual -> if actual.X.memory <> result.Full.frame.Finished.memory || actual.X.machine.E.locals <> result.Full.locals then failwith "reached list target state"
-            | _ -> failwith "reached list did not finish");
+            | X.Done actual -> if actual.X.memory <> result.Full.frame.Finished.memory || actual.X.machine.E.locals <> result.Full.locals then failwith "reached list target state");
             let prefix = [I.I32_const base; I.Local_set 0; I.I32_const 999; I.Local_set 1; I.I32_const cursor; I.Local_set 2;
               I.I64_const (Header.number 999); I.Local_set 3; I.I64_const (Header.number 999); I.Local_set 4;
               I.I64_const (Header.number 999); I.Local_set 5; I.I64_const (Header.number 999); I.Local_set 6] in

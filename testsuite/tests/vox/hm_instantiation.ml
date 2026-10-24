@@ -74,8 +74,8 @@ let rec (extend_matching @ total) : (arity : D.index) @ immutable -> (pattern : 
     matching_def arity pattern target before; matching_def arity pattern target after;
     match pattern with
     | D.Parameter index -> (match drop arity index with None -> extended_get before after index target () | Some _ -> ())
-    | D.List_type a -> (match target with D.List_type b -> extend_matching arity a b before after () | _ -> ())
-    | D.Function (a, b) -> (match target with D.Function (x, y) -> extend_matching arity a x before after (); extend_matching arity b y before after () | _ -> ())
+    | D.List_type a -> (match target with D.List_type b -> extend_matching arity a b before after ())
+    | D.Function (a, b) -> (match target with D.Function (x, y) -> extend_matching arity a x before after (); extend_matching arity b y before after ())
     | _ -> ())
 let[@def] rec (match_type @ total) (arity : D.index @ immutable) (pattern : D.mono @ immutable)
     (target : D.mono @ immutable) (slots : assignments @ immutable) =
@@ -138,8 +138,8 @@ let rec (realize @ total) : (arity : D.index) @ immutable -> (pattern : D.mono) 
     matching_def arity pattern target slots; D.open_type_def (arguments slots) pattern;
     match pattern with
     | D.Parameter index -> (match drop arity index with None -> open_get slots index target () | Some rest -> open_dropped slots index rest ())
-    | D.List_type a -> (match target with D.List_type b -> realize arity a b slots () | _ -> ())
-    | D.Function (a, b) -> (match target with D.Function (x, y) -> realize arity a x slots (); realize arity b y slots () | _ -> ())
+    | D.List_type a -> (match target with D.List_type b -> realize arity a b slots ())
+    | D.Function (a, b) -> (match target with D.Function (x, y) -> realize arity a x slots (); realize arity b y slots ())
     | _ -> ())
 
 let[@def] (infer_impl @ total) (scheme : D.scheme @ immutable) (target : D.mono @ immutable) =
@@ -172,8 +172,7 @@ let rec (bind_complete @ total) : (index : D.index) @ immutable -> (ty : D.mono)
         | None -> extends_def (Slot (Some ty, rest)) witness
         | Some previous -> let same = Check.mono_equal previous ty in if same then () else ())
       | D.S i -> bind_complete i ty rest tail ();
-        (match bind i ty rest with None -> () | Some after -> extends_def (Slot (old, after)) witness))
-    | _ -> ())
+        (match bind i ty rest with Some after -> extends_def (Slot (old, after)) witness)))
 
 let rec (match_complete @ total) : (arity : D.index) @ immutable -> (pattern : D.mono) @ immutable ->
     (target : D.mono) @ immutable -> (slots : assignments) @ immutable -> (witness : assignments) @ immutable ->
@@ -183,12 +182,11 @@ let rec (match_complete @ total) : (arity : D.index) @ immutable -> (pattern : D
     matching_def arity pattern target witness; match_type_def arity pattern target slots;
     match pattern with
     | D.Parameter i -> (match drop arity i with None -> bind_complete i target slots witness () | Some j -> let same = Check.mono_equal (D.Parameter j) target in if same then () else ())
-    | D.Free p -> (match target with D.Free q -> let same = Pref.equal p q in if same then () else () | _ -> ())
-    | D.List_type a -> (match target with D.List_type b -> match_complete arity a b slots witness () | _ -> ())
+    | D.Free p -> (match target with D.Free q -> let same = Pref.equal p q in if same then () else ())
+    | D.List_type a -> (match target with D.List_type b -> match_complete arity a b slots witness ())
     | D.Function (a, b) -> (match target with
       | D.Function (x, y) -> match_complete arity a x slots witness ();
-        (match match_type arity a x slots with None -> () | Some middle -> match_complete arity b y middle witness ())
-      | _ -> ())
+        (match match_type arity a x slots with Some middle -> match_complete arity b y middle witness ()))
     | _ -> ())
 
 let[@def] rec (witness @ total) (args : D.arguments @ immutable) = ghost_ (

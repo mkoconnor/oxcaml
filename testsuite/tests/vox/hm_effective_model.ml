@@ -49,7 +49,7 @@ let rec (run_restrict @ total) : (h : node Pref.heap) @ immutable ->
     ran_def h depth pool env e after final_pool;
     let _ = trees x in match e with
     | RShared _ -> model x; ()
-    | RVar (i, p, epoch, d, certificate) -> (match lookup env i with None -> () | Some original ->
+    | RVar (i, p, epoch, d, certificate) -> (match lookup env i with Some original ->
       let claim = node_equation h rho x in
       let use : ((heads : Effective_level.heads) @ total ->
           (witness : ((y : node Pref.t) @ immutable ->
@@ -83,7 +83,7 @@ let rec (run_restrict @ total) : (h : node Pref.heap) @ immutable ->
         Hm_effective_forest.run_forest h trees depth pool env body middle body_pool x () in
       let mid_model : ((x : node Pref.t) @ immutable -> {u : unit | node_equation middle rho x}) @ total = fun x ->
         model x;
-        (match result body with None -> () | Some _ -> match out with None -> () | Some p ->
+        (match result body with None -> () | Some _ -> match out with Some p ->
           let desc = primitive_desc op in let v = cell desc depth in
           allocated_def middle depth p desc; let refine_ _t = ts x in
           allocation_restrict middle p v rho x ()); () in
@@ -99,8 +99,7 @@ let rec (run_restrict @ total) : (h : node Pref.heap) @ immutable ->
       (if H.mem middle x then finite middle t else observe middle x === None)} @ immutable) @ total = fun x ->
         Hm_effective_forest.run_forest h1 ts1 depth pool1 env1 body middle body_pool x () in
       let mid_model : ((x : node Pref.t) @ immutable -> {u : unit | node_equation middle rho x}) @ total = fun x ->
-        (match result body with None -> model x; () | Some b -> match out with None -> ()
-          | Some p -> let desc = Arrow (arg, b) in let w = cell desc depth in
+        (match result body with None -> model x; () | Some b -> match out with Some p -> let desc = Arrow (arg, b) in let w = cell desc depth in
             allocated_def middle depth p desc; let _ = ts2 x in model x;
             allocation_restrict middle p w rho x (); ()); () in
       run_restrict h1 ts1 depth pool1 env1 body middle body_pool rho mid_model x ();
@@ -119,8 +118,7 @@ let rec (run_restrict @ total) : (h : node Pref.heap) @ immutable ->
       let ts2 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&
       (if H.mem h2 x then finite h2 t else observe h2 x === None)} @ immutable) @ total = fun x ->
         Hm_effective_forest.run_forest h1 ts1 depth pool1 env right h2 pool2 x () in
-      (match result left with None -> () | Some f -> match result right with None -> ()
-      | Some a -> let desc = List f in let v = cell desc depth in let h3 = H.put h2 p v in
+      (match result left with Some f -> match result right with Some a -> let desc = List f in let v = cell desc depth in let h3 = H.put h2 p v in
         allocated_def h2 depth p desc;
       let model3 : ((x : node Pref.t) @ immutable -> {u : unit | node_equation h3 rho x}) @ total = fun x ->
         unify_restrict h3 rho a p ok after d model x (); () in
@@ -136,8 +134,7 @@ let rec (run_restrict @ total) : (h : node Pref.heap) @ immutable ->
       let ts2 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&
       (if H.mem h2 x then finite h2 t else observe h2 x === None)} @ immutable) @ total = fun x ->
         Hm_effective_forest.run_forest h1 ts1 depth pool1 env right h2 pool2 x () in
-      (match result left with None -> () | Some f -> match result right with None -> ()
-      | Some a -> let var : desc = Var in let v = cell var depth in let h3 = H.put h2 p v in
+      (match result left with Some f -> match result right with Some a -> let var : desc = Var in let v = cell var depth in let h3 = H.put h2 p v in
         let desc = Arrow (a, p) in let w = cell desc depth in let h4 = H.put h3 arrow w in
         allocated_def h2 depth p var; allocated_def h3 depth arrow desc;
         cell_def var depth; allocatable_def h2 v;
@@ -172,8 +169,7 @@ let rec (run_restrict @ total) : (h : node Pref.heap) @ immutable ->
       let pool3 = Entry (self, Entry (res, Entry (arg, pool))) in
       let env3 = Bind (arg, Bind (self, env)) in
       let mid_model : ((x : node Pref.t) @ immutable -> {u : unit | node_equation middle rho x}) @ total = fun x ->
-        (match result body with None -> model x; () | Some b -> match finish with Aborted -> ()
-        | Unified (ok, d) -> unify_restrict middle rho b res ok after d model x (); ()); () in
+        (match result body with None -> model x; () | Some b -> match finish with Unified (ok, d) -> unify_restrict middle rho b res ok after d model x (); ()); () in
       let model3 : ((x : node Pref.t) @ immutable -> {u : unit | node_equation h3 rho x}) @ total = fun x ->
         run_restrict h3 ts3 depth pool3 env3 body middle body_pool rho mid_model x (); () in
       let model2 : ((x : node Pref.t) @ immutable -> {u : unit | node_equation h2 rho x}) @ total = fun x ->
@@ -186,7 +182,7 @@ let rec (run_restrict @ total) : (h : node Pref.heap) @ immutable ->
       let ts1 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&
       (if H.mem middle x then finite middle t else observe middle x === None)} @ immutable) @ total = fun x ->
         Hm_effective_forest.run_forest h trees child_depth empty env rhs middle child_pool x () in
-      (match result rhs with None -> () | Some p ->
+      (match result rhs with Some p ->
       let closed = Representative_pool_spec.close_heap middle depth child_pool in
       let transferred = Representative_pool_spec.transfer_rep closed child_pool pool in let env1 = Bind (p, env) in
       let ts2 : ((x : node Pref.t) @ immutable -> {t : tree | tree_root t === x &&

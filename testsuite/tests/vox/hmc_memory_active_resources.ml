@@ -46,4 +46,4 @@ let (normal @ total) : (program : I.program) @ immutable -> (globals : X.globals
     H.valid_def program globals heap_limit final (U.advance program fuel abstract);
     Hmc_heap_execute.word_agreement final.X.heap final.X.state word;
     Source.returned_def out word;
-    match out with Runs.Finished concrete -> Machine.related_def program.I.origin.C.blocks width base active concrete final | _ -> ())
+    match out with Runs.Finished concrete -> Machine.related_def program.I.origin.C.blocks width base active concrete final)

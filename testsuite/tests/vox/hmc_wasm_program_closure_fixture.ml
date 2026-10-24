@@ -158,8 +158,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
                 if actual.Calls.current.P.body.T.state.X.memory <> entry.New.state.X.memory
                   || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 (if enough then cursor + fragment.Write.bytes else cursor))
                   || WG.get actual.Calls.current.P.globals 3 <> Some (S.I32 (if enough then 0 else 2))
-                  || actual.Calls.capacity <> call.Calls.capacity || actual.Calls.callers <> Calls.Root then failwith "closure indirect return"
-              | _ -> failwith "closure indirect execution"));
+                  || actual.Calls.capacity <> call.Calls.capacity || actual.Calls.callers <> Calls.Root then failwith "closure indirect return"));
             let expected = match expected_source with
               | Machine.Exhausted Machine.Heap -> memory
               | Machine.Advanced after ->
@@ -174,9 +173,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
                   | None -> failwith "reached closure successor coverage"
                   | Some _ ->
                     ghost_ (Bounds.covers_def next_initial 8192);
-                    Hmc_heap_image.materialize table 1000 next_initial after.Machine.heap 8192 ())
-                | _ -> failwith "reached closure successor")
-              | _ -> failwith "reached closure unexpected exhaustion" in
+                    Hmc_heap_image.materialize table 1000 next_initial after.Machine.heap 8192 ())) in
             if expected <> result.Guarded.state.X.memory then failwith "reached closure independently encoded memory";
             (match Hmc_u32_index.encode 1000 (G.size program.Program.origin.Hmc_cfg_program.blocks) with
             | None -> failwith "closure dispatcher block count"

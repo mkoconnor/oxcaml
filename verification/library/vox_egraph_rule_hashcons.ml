@@ -120,8 +120,7 @@ let (lookup_origin @ total) :
   match I.at nodes id with
   | Some (Some stored) ->
     N.key_exact stored node;
-    ()
-  | _ -> ())
+    ())
 
 type t = {owner : O.t; store : V.t @@ aliased}
 

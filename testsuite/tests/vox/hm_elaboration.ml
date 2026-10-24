@@ -70,11 +70,9 @@ let rec (free_origin @ total) : (p : Copy_spec.node Pref.t) @ immutable -> (scop
     interpret_def scope ty; G.occurs_def p (interpret scope ty);
     match ty with
     | Copy_spec.Variable q -> (match parameter q scope with
-      | Some i -> G.occurs_def p (D.Parameter i)
       | None -> G.occurs_def p (D.Free q); let same = Pref.equal p q in if same then () else ())
     | Copy_spec.List_type a -> free_origin p scope a ()
-    | Copy_spec.Function (a, b) -> if G.occurs p (interpret scope a) then free_origin p scope a () else free_origin p scope b ()
-    | Copy_spec.Boolean | Copy_spec.Word64 -> ())
+    | Copy_spec.Function (a, b) -> if G.occurs p (interpret scope a) then free_origin p scope a () else free_origin p scope b ())
 
 let[@def] rec (scope_avoids @ total) (scope : scope @ immutable) (variables : G.variables @ immutable) = ghost_ (
   match variables with G.Empty -> true | G.Variable (p, rest) -> parameter p scope === None && scope_avoids scope rest)
@@ -104,7 +102,7 @@ let rec (selected_parameter @ total) : (p : Copy_spec.node Pref.t) @ immutable -
     {u : unit | parameter p scope === None} @ ghost =
   fun p scope variables premise -> ghost_ (
     scope_avoids_def scope variables; G.find_def p variables;
-    match variables with G.Empty -> () | G.Variable (q, rest) ->
+    match variables with G.Variable (q, rest) ->
       let same = Pref.equal p q in if same then () else selected_parameter p scope rest ())
 
 let rec (interpret_generalized @ total) : (scope : scope) @ immutable -> (variables : G.variables) @ immutable -> (ty : Copy_spec.ty) @ immutable ->

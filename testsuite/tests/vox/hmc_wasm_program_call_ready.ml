@@ -23,8 +23,7 @@ let rec (capture_capacity @ total) : (table : K.table) @ immutable -> (plans : P
     | K.Add (head, rest), Plans.Add (_, fragment, tail) ->
       if Hm_elaboration_check.index_equal id (K.size rest) then (
         Copy.matches_def head capacity fragment; Copy.position_def head.K.recursive)
-      else capture_capacity rest tail capacity id entry ()
-    | _ -> ())
+      else capture_capacity rest tail capacity id entry ())
 let (entry_block @ total) : (program : I.program) @ immutable -> (id : D.index) @ immutable ->
     (entry : K.entry) @ immutable -> (function_ : C.function_entry) @ immutable ->
     {u : unit | K.lookup program.I.origin.C.origin.Hmc_closure_program.table id === Some entry
@@ -50,8 +49,7 @@ let rec (environment_extent @ total) : (context : D.context) @ immutable -> (cel
     match context, cells with
     | D.Binding (_, rest), H.Cell (_, remaining) ->
       (match Codec.decode_environment rest remaining with
-      | Some (env, suffix) -> environment_extent rest remaining env suffix (count - 1) (env_count - 1) (); Hmc_wasm_program_block.difference_def (count - 1) (env_count - 1)
-      | None -> ())
+      | Some (env, suffix) -> environment_extent rest remaining env suffix (count - 1) (env_count - 1) (); Hmc_wasm_program_block.difference_def (count - 1) (env_count - 1))
     | _ -> ())
 let (operand_address @ total) : (signature : G.signature) @ immutable -> (activation : F.activation) @ immutable ->
     (cells : H.cells) @ immutable -> (padding : H.cells) @ immutable -> (env_count : Hmc_wasm_simple_lower.slot) ->
@@ -73,9 +71,7 @@ let (operand_address @ total) : (signature : G.signature) @ immutable -> (activa
         environment_extent signature.G.locals body env remaining (count - 3) env_count ();
         Hmc_wasm_program_block.difference_def (count - 3) env_count;
         Codec.decode_temporaries_def signature.G.temporaries remaining;
-        H.length_def remaining; Index.represents_def (H.length remaining) (count - 3 - env_count)
-      | None -> ())
-    | _ -> ())
+        H.length_def remaining; Index.represents_def (H.length remaining) (count - 3 - env_count)))
 let rec (size_add @ total) : (left : D.index) @ immutable -> (right : D.index) @ immutable ->
     {u : unit | Geometry.size (D.add left right) = Geometry.size left + Geometry.size right} @ ghost =
   fun left right -> ghost_ (

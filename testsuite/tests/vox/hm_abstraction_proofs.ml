@@ -15,17 +15,15 @@ let rec (position_bound @ total) : (ps : names) @ immutable ->
     {u : unit | present (count ps) i} @ ghost = fun ps p i premise -> ghost_ (
     position_def ps p; count_def ps;
     let n = count ps in present_def n i; match ps with
-    | No_names -> ()
     | Name (q, rest) -> if p === q then () else
-      match position rest p with None -> ()
-      | Some j -> position_bound rest p j (); ())
+      match position rest p with Some j -> position_bound rest p j (); ())
 
 let rec (present_suffix @ total) : (k : index) @ immutable -> (n : index) @ immutable ->
     (i : index) @ immutable -> {u : unit | present k i} ->
     {u : unit | present (add k n) i} @ ghost = fun k n i premise -> ghost_ (
     present_def k i; add_def k n;
     let total = add k n in present_def total i; match k with
-    | Z -> () | S k -> match i with Z -> ()
+    | S k -> match i with Z -> ()
       | S i -> present_suffix k n i (); ())
 
 let (abstract_free_wf @ total) : (ps : names) @ immutable ->
@@ -252,7 +250,6 @@ let rec (abstraction_typed @ total) : (ps : names) @ immutable ->
     abstract_context_wf ps cut base g ();
     match d with
     | Variable args -> (match e with Bound i -> (match lookup g i with
-      | None -> ()
       | Some s ->
         abstract_lookup ps cut g i; abstract_arguments_wf ps cut base args ();
         abstract_arguments_length ps cut args;
@@ -260,13 +257,12 @@ let rec (abstraction_typed @ total) : (ps : names) @ immutable ->
         arity_def s; arity_def changed_s;
         open_scheme_def s args; let changed_args = abstract_arguments ps cut args in
         open_scheme_def changed_s changed_args;
-        (match s with Forall (_, body) -> abstract_open ps cut args body; ()); ())
-      | _ -> ())
+        (match s with Forall (_, body) -> abstract_open ps cut args body; ()); ()))
     | Constant | Word_constant -> ()
     | Empty_list a -> abstract_wf ps cut base a (); ()
     | List_cons (a, head, tail) -> (match e with Cons (h, r) ->
       abstraction_typed ps cut base g h a head ();
-      abstraction_typed ps cut base g r t tail (); () | _ -> ())
+      abstraction_typed ps cut base g r t tail (); ())
     | List_case (a, scrutinee, empty, nonempty) -> (match e with CaseList (s, l, r) ->
       abstract_wf ps cut base a ();
       let list = List_type a in abstract_type_def ps cut list;
@@ -277,36 +273,33 @@ let rec (abstraction_typed @ total) : (ps : names) @ immutable ->
       let tail = Binding (ts, g) in let both = Binding (hs, tail) in
       abstract_scheme_def ps cut hs; abstract_scheme_def ps cut ts;
       abstract_context_def ps cut tail; abstract_context_def ps cut both;
-      abstraction_typed ps cut base both r t nonempty (); () | _ -> ())
+      abstraction_typed ps cut base both r t nonempty (); ())
     | Conditional (condition, yes, no) -> (match e with If (c, a, b) ->
       let bool = Boolean in abstract_type_def ps cut bool;
       abstraction_typed ps cut base g c bool condition ();
       abstraction_typed ps cut base g a t yes ();
-      abstraction_typed ps cut base g b t no (); () | _ -> ())
+      abstraction_typed ps cut base g b t no (); ())
     | Word_primitive (left, right) -> (match e with Primitive (op, a, b) ->
       let word = Word64 in abstract_type_def ps cut word;
       operation_type_def op; (match op with Add | Subtract -> () | Equal_word | Unsigned_less -> ());
       abstraction_typed ps cut base g a word left ();
-      abstraction_typed ps cut base g b word right (); () | _ -> ())
+      abstraction_typed ps cut base g b word right (); ())
     | Abstraction (a, body) -> (match e, t with
       | Lambda e, Function (_, b) ->
         let z = Z in add_def z cut; let arg_scheme = Forall (z, a) in
         let next = Binding (arg_scheme, g) in
         abstract_scheme_def ps cut arg_scheme; abstract_context_def ps cut next;
-        abstraction_typed ps cut base next e b body (); ()
-      | _ -> ())
+        abstraction_typed ps cut base next e b body (); ())
     | Application (a, left, right) -> (match e with Apply (f, x) ->
         let ft = Function (a, t) in abstract_type_def ps cut ft;
         abstraction_typed ps cut base g f ft left ();
-        abstraction_typed ps cut base g x a right (); ()
-      | _ -> ())
+        abstraction_typed ps cut base g x a right (); ())
     | Recursion (a, b, body) -> (match e with Recursive e ->
         let z = Z in add_def z cut; let arg_scheme = Forall (z, a) in let self_scheme = Forall (z, t) in
         let self = Binding (self_scheme, g) in let next = Binding (arg_scheme, self) in
         abstract_scheme_def ps cut arg_scheme; abstract_scheme_def ps cut self_scheme;
         abstract_context_def ps cut self; abstract_context_def ps cut next;
-        abstraction_typed ps cut base next e b body (); ()
-      | _ -> ())
+        abstraction_typed ps cut base next e b body (); ())
     | Let_binding (s, rhs, body) -> (match e, s with Let (r, b), Forall (k, a) ->
         abstract_scheme_def ps cut s; abstract_scheme_wf ps cut base s ();
         abstract_weaken_context ps cut k g;
@@ -314,8 +307,7 @@ let rec (abstraction_typed @ total) : (ps : names) @ immutable ->
         let inside = add (count ps) base in add_assoc k cut base; add_assoc k cut inside;
         abstraction_typed ps next_cut base shifted r a rhs ();
         let next = Binding (s, g) in abstract_context_def ps cut next;
-        abstraction_typed ps cut base next b t body (); ()
-      | _ -> ()))
+        abstraction_typed ps cut base next b t body (); ()))
 
 let rec (abstract_avoids @ total) : (ps : names) @ immutable ->
     (cut : index) @ immutable -> (t : mono) @ immutable -> {u : unit | avoids ps t} ->

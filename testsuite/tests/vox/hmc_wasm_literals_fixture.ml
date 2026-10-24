@@ -39,14 +39,12 @@ let fixture (base : B.u32) atom =
     ghost_ (Hmc_wasm_frame_update.correct (H.length env) 7 11 current old value env state expected tail 0 base before_frame after_frame ());
     let writes = Literal.writes 11 value in
     match Writes.apply writes state.X.memory base with
-    | None -> failwith "literal writes"
     | Some result_memory ->
       ghost_ (Writes.correct writes 0 state base result_memory ());
       let code = Literal.emit 11 value 0 in
       (match X.run code state with
       | X.Done after -> if after.X.memory <> expected || after.X.machine <> state.X.machine
-        then failwith "literal frame encoding"
-      | _ -> failwith "literal execution");
+        then failwith "literal frame encoding");
       {R.memory = memory; base; first = word 37; second = word 99; code;
        expected = [8, word 11; 24, word 64; 32, V.tag value; 40, V.payload value;
          56, word 10; 72, word 20]}

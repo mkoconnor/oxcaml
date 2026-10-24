@@ -105,8 +105,7 @@ let rec (explain @ total) :
           () in
         let _ : {u : unit | E.right proof ===
           origin origins (U.root parents id)} = () in
-        proof
-      | _ -> (E.Refl (origin origins id)))
+        proof)
   [@@decreases if id > 0 then id else 0]
 
 let (same_class_evidence @ total) :

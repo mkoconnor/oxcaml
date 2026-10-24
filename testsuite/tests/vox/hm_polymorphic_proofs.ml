@@ -34,7 +34,7 @@ let (with_variable_model @ total) : (h : node Pref.heap) @ immutable -> (depth :
       {u : unit | tau q === T.eval xi (D.open_scheme sigma args)} -> {u : unit | claim})) @ total -> {u : unit | claim} @ ghost =
   fun h depth pool facts forest env ts g rho model xi realize i sigma args epoch d q premise claim use -> ghost_ (
     let refine_ premise = premise in Hm_environment_proofs.aligned_lookup g ts i ();
-    match template_lookup ts i with None -> () | Some schema ->
+    match template_lookup ts i with Some schema ->
     Hm_environment_proofs.env_lookup h depth env ts i schema ();
     let scope : ((x : node Pref.t) @ immutable -> {u : unit | if H.mem h x then source_ok h x else H.at h x === None}) @ total = fun x ->
       facts x; runtime_at_def h depth pool x; safe_def h x; () in
@@ -140,8 +140,7 @@ let rec (environment_raise @ total) : (h : node Pref.heap) @ immutable -> (lo : 
     (env : env) @ immutable -> (ts : templates) @ immutable -> {u : unit | lo <= hi && env_at h lo env ts} ->
     {u : unit | env_at h hi env ts} @ ghost = fun h lo hi env ts premise -> ghost_ (
     let refine_ premise = premise in env_at_def h lo env ts; env_at_def h hi env ts;
-    match env with Empty -> () | Bind (_, rest) -> match ts with No_templates -> ()
-    | Template_binding (s, tail) -> boundary_raise h lo hi s ();
+    match env with Empty -> () | Bind (_, rest) -> match ts with Template_binding (s, tail) -> boundary_raise h lo hi s ();
       environment_raise h lo hi rest tail (); ())
 
 let rec (aligned_weaken @ total) : (g : D.context) @ immutable -> (ts : templates) @ immutable ->
@@ -150,7 +149,7 @@ let rec (aligned_weaken @ total) : (g : D.context) @ immutable -> (ts : template
     let refine_ premise = premise in aligned_def g ts; D.weaken_context_def k g;
     let shifted = D.weaken_context k g in aligned_def shifted ts;
     match g with D.Empty_context -> () | D.Binding (_, rest) ->
-      match ts with No_templates -> () | Template_binding (_, tail) -> aligned_weaken rest tail k (); ())
+      match ts with Template_binding (_, tail) -> aligned_weaken rest tail k (); ())
 
 let[@def] rec (default_values @ total) (k : D.index @ immutable) = match k with
   | D.Z -> T.No_values | D.S k -> T.Value (Boolean, default_values k)
@@ -216,8 +215,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         {u : unit | Hm_complete_proofs.matches rho1 rhs (T.eval zeta a)} -> {u : unit | claim}) @ total = fun rho1 _model1 _equal1 fit1 ->
         let refine_ fit1 = fit1 in let rhs_value = T.eval zeta a in Hm_complete_proofs.matches_def rho1 rhs rhs_value;
         () in
-      with_run_model h child_depth empty child_facts forest env ts shifted rho model zeta rhs_realize rhs_n rhs after final_pool a dr () claim consume_rhs)
-      | _ -> ())
+      with_run_model h child_depth empty child_facts forest env ts shifted rho model zeta rhs_realize rhs_n rhs after final_pool a dr () claim consume_rhs))
     | RLet (rhs, body, middle, child_pool) -> (match d with D.Let_binding (sigma, dr, db) ->
       (match sigma with D.Forall (k, a) ->
       let child_depth = depth + 1 in let empty : pool = Generalize_spec.Empty in
@@ -244,7 +242,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         (equal1 : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || rho1 x === rho x})) @ total ->
         {u : unit | Hm_complete_proofs.matches rho1 rhs (T.eval zeta a)} -> {u : unit | claim}) @ total = fun rho1 model1 equal1 fit1 ->
         let refine_ fit1 = fit1 in let rhs_value = T.eval zeta a in Hm_complete_proofs.matches_def rho1 rhs rhs_value;
-        match result rhs with None -> () | Some original ->
+        match result rhs with Some original ->
         let closed = closed_heap middle depth child_pool in let transferred = Nested_pool_spec.transfer closed child_pool pool in
         let middle_facts : ((x : node Pref.t) @ immutable -> {u : unit | runtime_at middle child_depth child_pool x}) @ total = fun x ->
           Hm_let_runtime_proofs.run_runtime h child_depth empty child_facts env rhs middle child_pool x (); () in
@@ -339,12 +337,11 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
               equal1 x; equal2 x; () in
             use tau next equal () in
         with_run_model closed depth transferred closed_facts closed_forest next_env next_ts next_g rho1 closed_model xi body_realize n body after final_pool target db () claim consume_body in
-      with_run_model h child_depth empty child_facts forest env ts shifted rho model zeta rhs_realize rhs_n rhs middle child_pool a dr () claim consume_rhs)
-      | _ -> ())
+      with_run_model h child_depth empty child_facts forest env ts shifted rho model zeta rhs_realize rhs_n rhs middle child_pool a dr () claim consume_rhs))
     | RShared (i, q) -> (match d with
-      | D.Variable args -> (match D.lookup g i with None -> () | Some sigma ->
+      | D.Variable args -> (match D.lookup g i with Some sigma ->
         Hm_environment_proofs.aligned_lookup g ts i ();
-        match template_lookup ts i with None -> () | Some schema ->
+        match template_lookup ts i with Some schema ->
         Hm_environment_proofs.env_lookup h depth env ts i schema ();
         Hm_environment_proofs.active_template h schema q ();
         T.eval_arguments_length xi args; T.eval_open_scheme xi sigma args;
@@ -356,10 +353,9 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
           let equal : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || rho x === rho x}) @ total = fun x -> () in
           Hm_complete_proofs.matches_def rho e value;
           use rho (refine_ model) equal () in
-        realize i sigma schema values () claim consume)
-      | _ -> ())
+        realize i sigma schema values () claim consume))
     | RVar (i, q, epoch, history) -> (match d with
-      | D.Variable args -> (match D.lookup g i with None -> () | Some sigma ->
+      | D.Variable args -> (match D.lookup g i with Some sigma ->
         let consume : ((tau : (node Pref.t @ immutable total -> ty @ immutable total)) @ total ->
           (next : ((x : node Pref.t) @ immutable -> {u : unit | equation (copy_heap h epoch depth history) tau x})) @ total ->
           (equal : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || tau x === rho x})) @ total ->
@@ -367,8 +363,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
             let refine_ assigned = assigned in Hm_complete_proofs.matches_def tau e value;
             use tau (refine_ next) equal () in
         let refine_ u = with_variable_model h depth pool facts (refine_ forest) env ts g rho model xi realize
-          i sigma args epoch history q () claim consume in refine_ u)
-      | _ -> ())
+          i sigma args epoch history q () claim consume in refine_ u))
     | RBool p -> (match d with D.Constant ->
       let desc : desc = Bool in Copy_model_proofs.describes_def rho desc value;
       let nodes = node_model h rho model in
@@ -379,8 +374,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
           let refine_ assigned = assigned in let converted = copy_model after tau next in
           Hm_complete_proofs.matches_def tau e value;
           use tau converted equal () in
-      Hm_complete_proofs.with_alloc h depth pool facts rho nodes p desc value after () claim consume
-      | _ -> ())
+      Hm_complete_proofs.with_alloc h depth pool facts rho nodes p desc value after () claim consume)
     | RLam (arg, body, middle, body_pool, out) -> (match d with D.Abstraction (at, db) ->
       (match target with D.Function (a, b) ->
       let av = T.eval xi a in let bv = T.eval xi b in let var : desc = Var in let v = cell var depth in
@@ -425,7 +419,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
           (equal2 : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h1 x) || rho2 x === rho1 x})) @ total ->
           {u : unit | Hm_complete_proofs.matches rho2 body (T.eval xi b)} -> {u : unit | claim}) @ total = fun rho2 model2 equal2 fit ->
           let refine_ fit = fit in Hm_complete_proofs.matches_def rho2 body bv;
-          match result body with None -> () | Some body_root -> match out with None -> () | Some p ->
+          match result body with Some body_root -> match out with Some p ->
           equal2 arg; let desc = Arrow (arg, body_root) in Copy_model_proofs.describes_def rho2 desc value;
           let middle_facts : ((x : node Pref.t) @ immutable -> {u : unit | runtime_at middle depth body_pool x}) @ total = fun x ->
             Hm_let_runtime_proofs.run_runtime h1 depth pool1 (refine_ facts1) env1 body middle body_pool x (); () in
@@ -444,9 +438,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
               use rho3 converted equal () in
           Hm_complete_proofs.with_alloc middle depth body_pool middle_facts rho2 nodes2 p desc value after () claim consume_arrow in
         with_run_model h1 depth pool1 (refine_ facts1) (refine_ forest1) env1 ts1 g1 rho1 model1 xi realize1 n body middle body_pool b db () claim consume_body in
-      Hm_complete_proofs.with_alloc h depth pool facts rho nodes arg var av h1 () claim consume_arg
-      | _ -> ())
-      | _ -> ())
+      Hm_complete_proofs.with_alloc h depth pool facts rho nodes arg var av h1 () claim consume_arg))
     | RApp_left (left, _) -> (match d with D.Application (at, dl, _) ->
       let ft = D.Function (at, target) in
       let consume : ((tau : (node Pref.t @ immutable total -> ty @ immutable total)) @ total ->
@@ -454,8 +446,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         (equal : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || tau x === rho x})) @ total ->
         {u : unit | Hm_complete_proofs.matches tau left (T.eval xi ft)} -> {u : unit | claim}) @ total = fun tau _next _equal fit ->
           let refine_ fit = fit in let fv = T.eval xi ft in Hm_complete_proofs.matches_def tau left fv; () in
-      with_run_model h depth pool facts forest env ts g rho model xi realize n left after final_pool ft dl () claim consume
-      | _ -> ())
+      with_run_model h depth pool facts forest env ts g rho model xi realize n left after final_pool ft dl () claim consume)
     | RApp_right (left, right, h1, pool1) -> (match d with D.Application (at, dl, dr) ->
       let ft = D.Function (at, target) in let fv = T.eval xi ft in let av = T.eval xi at in T.eval_def xi ft;
       run_environment h depth pool facts env ts left h1 pool1 ();
@@ -488,8 +479,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
           let refine_ fit2 = fit2 in Hm_complete_proofs.matches_def rho2 right av;
           () in
         with_run_model h1 depth pool1 facts1 forest1 env ts g rho1 model1 xi realize1 n right after final_pool at dr () claim consume_right in
-      with_run_model h depth pool facts forest env ts g rho model xi realize n left h1 pool1 ft dl () claim consume_left
-      | _ -> ())
+      with_run_model h depth pool facts forest env ts g rho model xi realize n left h1 pool1 ft dl () claim consume_left)
     | RApp (left, right, h1, pool1, h2, pool2, p, arrow, ok, derivation) -> (match d with D.Application (at, dl, dr) ->
       let ft = D.Function (at, target) in let fv = T.eval xi ft in let av = T.eval xi at in T.eval_def xi ft;
       run_environment h depth pool facts env ts left h1 pool1 ();
@@ -520,7 +510,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
           (equal2 : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h1 x) || rho2 x === rho1 x})) @ total ->
           {u : unit | Hm_complete_proofs.matches rho2 right (T.eval xi at)} -> {u : unit | claim}) @ total = fun rho2 model2 equal2 fit2 ->
           let refine_ fit2 = fit2 in Hm_complete_proofs.matches_def rho2 right av;
-          match result left with None -> () | Some f -> match result right with None -> () | Some a ->
+          match result left with Some f -> match result right with Some a ->
           Hm_execution_proofs.run_result h depth pool env left h1 pool1 f ();
           Hm_execution_proofs.run_extends h1 depth pool1 env right h2 pool2 f ();
           Hm_execution_proofs.run_result h1 depth pool1 env right h2 pool2 a (); equal2 f;
@@ -540,8 +530,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
               use rho3 converted equal () in
           Hm_one_let_proofs.with_application_model h2 depth pool2 facts2 rho2 nodes2 f a p arrow ok after derivation value () claim consume_application in
         with_run_model h1 depth pool1 facts1 forest1 env ts g rho1 model1 xi realize1 n right h2 pool2 at dr () claim consume_right in
-      with_run_model h depth pool facts forest env ts g rho model xi realize n left h1 pool1 ft dl () claim consume_left
-      | _ -> ())
+      with_run_model h depth pool facts forest env ts g rho model xi realize n left h1 pool1 ft dl () claim consume_left)
     | RRec (arg, res, self, body, middle, body_pool, finish) -> (match d with D.Recursion (a, b, db) ->
       let av = T.eval xi a in let bv = T.eval xi b in
       let var : desc = Var in let v = cell var depth in let h1 = H.put h arg v in let pool1 = Entry (arg, pool) in
@@ -620,7 +609,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         (equal4 : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h3 x) || tau x === rho3 x})) @ total ->
         {u : unit | Hm_complete_proofs.matches tau body (T.eval xi b)} -> {u : unit | claim}) @ total = fun tau body_model equal4 fit ->
         let refine_ fit = fit in Hm_complete_proofs.matches_def tau body bv;
-        match result body with None -> () | Some root -> match finish with Aborted -> () | Unified (ok, derivation) ->
+        match result body with Some root -> match finish with Unified (ok, derivation) ->
         equal4 res; equal4 self; let body_nodes = node_model middle tau body_model in
         Hm_complete_proofs.unify_complete middle tau body_nodes root res ok after derivation root ();
         let next_nodes : ((x : node Pref.t) @ immutable -> {u : unit | Level_unifier_spec.node_equation after tau x}) @ total = fun x ->
@@ -633,8 +622,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         with_run_model h3 depth pool3 (refine_ facts3) (refine_ forest3) env3 ts3 g3 rho3 model3 xi realize3 n body middle body_pool b db () claim consume_body in
         Hm_complete_proofs.with_alloc h2 depth pool2 (refine_ facts2) rho2 model2 self desc value h3 () claim consume3 in
         Hm_complete_proofs.with_alloc h1 depth pool1 (refine_ facts1) rho1 model1 res var bv h2 () claim consume2 in
-      Hm_complete_proofs.with_alloc h depth pool facts rho nodes arg var av h1 () claim consume1
-      | _ -> ()))
+      Hm_complete_proofs.with_alloc h depth pool facts rho nodes arg var av h1 () claim consume1))
 
 let (with_closed_model @ total) : (e : execution) @ immutable -> (after : node Pref.heap) @ immutable ->
     (pool : pool) @ immutable -> (target : ty) @ immutable -> (d : D.typing) @ immutable ->

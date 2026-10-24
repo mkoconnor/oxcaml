@@ -38,7 +38,6 @@ let (correct @ total) : (first : Heap.cells) @ immutable -> (second : Heap.cells
       source before after base before_frame after_frame before_cells after_cells tail premise -> ghost_ (
     Geometry.two_def plan source_first destination_position (Heap.length first) source_second (destination_position + first_count) (Heap.length second);
     match Geometry.split plan source_first destination_position (Heap.length first) with
-    | None -> ()
     | Some second_plan ->
       Split.split_def plan source_first destination_position (Heap.length first);
       Split.split_def second_plan source_second (destination_position + first_count) (Heap.length second);

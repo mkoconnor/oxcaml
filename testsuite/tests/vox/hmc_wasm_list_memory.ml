@@ -23,9 +23,8 @@ let (cells @ total) : (bytes : B.bytes) @ immutable -> (head : V.value) @ immuta
   fun bytes head tail suffix premise -> ghost_ (
     Wire.decode_def Wire.Cons_schema bytes; two_def (); Wire.decode_cells_def (D.S (D.S D.Z)) bytes;
     match V.decode bytes with
-    | None -> ()
     | Some (_, rest) -> Wire.decode_cells_def (D.S D.Z) rest;
-      (match V.decode rest with None -> () | Some (_, remaining) -> Wire.decode_cells_def D.Z remaining))
+      (match V.decode rest with Some (_, remaining) -> Wire.decode_cells_def D.Z remaining))
 let (read @ total) : (table : Hmc_closure_ir.table) @ immutable -> (heap : Heap.heap) @ immutable ->
     (memory : B.bytes) @ immutable -> (address : B.u32) -> (head : V.value) @ immutable -> (tail : V.value) @ immutable ->
     {u : unit | Heap.valid table heap && Image.related memory heap
@@ -46,9 +45,7 @@ let (read @ total) : (table : Hmc_closure_ir.table) @ immutable -> (heap : Heap.
     Memory.load_def memory address Wire.Cons_schema; Memory.slots_def Wire.Cons_schema;
     L.load_def memory address (Wire.bytes_size (D.S (D.S D.Z)) D.Z);
     match L.drop memory address with
-    | None -> ()
     | Some bytes -> (match L.take (Wire.bytes_size (D.S (D.S D.Z)) D.Z) bytes with
-      | None -> ()
       | Some payload ->
         cells payload head tail B.End ();
         let values = Heap.Cell (head, Heap.Cell (tail, Heap.Empty)) in

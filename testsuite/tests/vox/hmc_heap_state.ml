@@ -30,8 +30,7 @@ let rec (frames_preserve @ total) : (table : K.table) @ immutable -> (larger : M
     | Halt -> S.depth_def abstract
     | Frame (a, rest) -> (match F.decode smaller a, decode_frames smaller rest with
       | Some value, Some tail -> F.preserve table larger smaller a value ();
-        frames_preserve table larger smaller rest tail (); S.depth_def abstract
-      | _ -> ()))
+        frames_preserve table larger smaller rest tail (); S.depth_def abstract))
 let (preserve @ total) : (table : K.table) @ immutable -> (larger : M.heap) @ immutable -> (smaller : M.heap) @ immutable ->
     (state : state) @ immutable -> (abstract : S.state) @ immutable ->
     {u : unit | M.valid table larger && M.valid table smaller && P.extends larger smaller && decode smaller state === Some abstract} ->
@@ -39,7 +38,6 @@ let (preserve @ total) : (table : K.table) @ immutable -> (larger : M.heap) @ im
   decode_def smaller state; decode_def larger state;
   match state with
   | Stuck -> ()
-  | Done value -> (match M.decode smaller value with None -> () | Some value' -> P.decode_preserve table larger smaller value value' ())
+  | Done value -> (match M.decode smaller value with Some value' -> P.decode_preserve table larger smaller value value' ())
   | Running (a, frames) -> (match F.decode smaller a, decode_frames smaller frames with
-    | Some value, Some tail -> F.preserve table larger smaller a value (); frames_preserve table larger smaller frames tail ()
-    | _ -> ()))
+    | Some value, Some tail -> F.preserve table larger smaller a value (); frames_preserve table larger smaller frames tail ()))

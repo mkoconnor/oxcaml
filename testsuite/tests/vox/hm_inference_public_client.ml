@@ -42,7 +42,7 @@ let () =
       {u : unit | claim}) @ total = fun _delta _instance -> () in
     I.principal out target typing () claim use);
   let ty : {ty : M.ty option | not (ty === None)} @ immutable = I.inferred_type out in
-  (match ty with None -> failwith "proved typable identity rejected" | Some ty ->
+  (match ty with Some ty ->
     let _typing = ghost_ (I.sound out ty ()) in ());
   let self = D.Apply (D.Bound D.Z, D.Bound D.Z) in
   let invalid = D.Lambda self in

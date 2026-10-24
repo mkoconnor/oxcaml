@@ -36,6 +36,5 @@ let (lower @ total) : (operation : O.operation) @ immutable ->
       E.run_def compute operands; E.step_def op operands; S.step_def op operands.E.stack;
       E.run_def store computed; E.step_def (I.Local_set destination) computed;
       match L.set state.E.locals destination value with
-      | None -> ()
       | Some locals -> E.run_def C.Empty {E.locals; stack = state.E.stack});
     code

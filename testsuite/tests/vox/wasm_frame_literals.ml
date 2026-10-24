@@ -28,7 +28,6 @@ let rec (correct @ total) : (writes : writes) @ immutable -> (base_local : B.u32
     match writes with
     | End -> X.run_def C.Empty state
     | Write (offset, word, rest) -> (match M.store state.X.memory base offset (S.I64 word) with
-      | None -> ()
       | Some next ->
         Write.correct offset base_local word state base next ();
         correct rest base_local {X.memory = next; machine = state.X.machine} base memory ();

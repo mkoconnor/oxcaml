@@ -36,8 +36,7 @@ let rec (binding_valid @ total) : (state : V.t) @ immutable ->
            state.semantic.union.count id ();
          V.node_ok_data_def state.nodes state.sorts state.semantic.origins id;
          match I.at state.nodes id with
-         | Some (Some node) -> N.sort_def node; C.node_sort_def node
-         | _ -> ())
+         | Some (Some node) -> N.sort_def node; C.node_sort_def node)
        else Q.node_def graph id)
    | _ -> ());
   ())

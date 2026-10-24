@@ -162,8 +162,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
                   if actual.Calls.current.P.body.T.state.X.memory <> entry.New.state.X.memory
                     || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 (if enough then cursor + 32 else cursor))
                     || WG.get actual.Calls.current.P.globals 7 <> Some (S.I32 (if enough then 0 else 2))
-                    || actual.Calls.capacity <> call.Calls.capacity || actual.Calls.callers <> Calls.Root then failwith "Cons indirect return"
-                | _ -> failwith "Cons indirect execution");
+                    || actual.Calls.capacity <> call.Calls.capacity || actual.Calls.callers <> Calls.Root then failwith "Cons indirect return");
                 (match Hmc_u32_index.encode 1000 (G.size program.Program.origin.Hmc_cfg_program.blocks) with
                 | None -> failwith "Cons dispatcher block count"
                 | Some count ->

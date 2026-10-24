@@ -42,17 +42,13 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (byt
       Suffix.suffix memory base bytes (V.Word word) after_header current_address ();
       Wire.decode_cells_def capacity after_header;
       (match capacity with
-      | D.Z -> ()
       | D.S rest -> (match V.decode after_header with
-        | None -> ()
         | Some (current, after_current) ->
           Cell.cell memory current_address after_header current after_current ();
           Suffix.suffix memory current_address after_header current after_current accumulator_address ();
           Wire.decode_cells_def rest after_current;
           (match rest with
-          | D.Z -> ()
           | D.S remaining -> (match V.decode after_current with
-            | None -> ()
             | Some (accumulator, after_accumulator) ->
               Cell.cell memory accumulator_address after_current accumulator after_accumulator ();
               current_tag_def memory base; current_payload_def memory base;
@@ -67,5 +63,4 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (byt
               M.address_def base 32 M.W64; M.address_def base 40 M.W64;
               M.address_def current_address 0 M.W64; M.address_def current_address 8 M.W64;
               M.address_def accumulator_address 0 M.W64; M.address_def accumulator_address 8 M.W64;
-              M.size_def M.W64))))
-    | _ -> ())
+              M.size_def M.W64)))))

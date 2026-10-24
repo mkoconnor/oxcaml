@@ -26,7 +26,7 @@ let rec (lookup @ total) : (blocks : G.table) @ immutable -> (label : D.index) @
     {u : unit | G.lookup blocks label === Some block} ->
     {u : unit | le (F.size block.G.signature) (capacity blocks)} @ ghost = fun blocks label block premise -> ghost_ (
   G.lookup_def blocks label; capacity_def blocks;
-  match blocks with G.Empty -> () | G.Add (head, rest) ->
+  match blocks with G.Add (head, rest) ->
     max_bounds (F.size head.G.signature) (capacity rest);
     if Hm_elaboration_check.index_equal label (G.size rest) then () else (
       lookup rest label block (); transitive (F.size block.G.signature) (capacity rest) (capacity blocks) ()))

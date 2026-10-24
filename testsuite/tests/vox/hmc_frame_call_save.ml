@@ -36,15 +36,12 @@ let (correct @ total) : (before : G.signature) @ immutable -> (context : D.conte
       Seg.drop_def (D.S (D.S (Codec.locals_size before.G.locals))) (H.Cell (accumulator, body));
       Seg.drop_def (D.S (Codec.locals_size before.G.locals)) body;
       (match Codec.decode_environment before.G.locals body with
-      | None -> ()
       | Some (locals, pending) ->
         Seg.environment before.G.locals body locals pending ();
         Codec.decode_temporaries_def before.G.temporaries pending;
         skip (Codec.locals_size before.G.locals) body;
         (match pending with
-        | H.Empty -> ()
         | H.Cell (_, saved) ->
           Seg.drop_def (D.S D.Z) pending; Seg.drop_def D.Z saved;
           signature_def context rest; cells_def activation.F.current activation.F.accumulator remaining;
-          Codec.decode_def (signature context rest) next (cells activation.F.current activation.F.accumulator remaining)))
-    | _ -> ())
+          Codec.decode_def (signature context rest) next (cells activation.F.current activation.F.accumulator remaining))))

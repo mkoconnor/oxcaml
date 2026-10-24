@@ -42,7 +42,6 @@ let rec (compile @ total) : (writes : writes) @ immutable -> (base_local : B.u32
       let first = Lower.store M.W64 offset base_local source state base (S.I64 word) () in
       let after = ghost_ (match X.run first state with X.Done after -> after | _ -> unreachable_ ()) in
       ghost_ (match M.address base offset M.W64 with
-        | None -> ()
         | Some address -> Unique.updated state.X.memory address (M.encode (S.I64 word)) after.X.memory next ());
       let tail = compile rest base_local after base expected () in
       let code = E.append first tail in

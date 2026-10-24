@@ -35,7 +35,6 @@ let rec (bounded_path @ total) : (h : node Pref.heap) @ immutable ->
     contains_def tree x; bound_root_def tree; let root = bound_root tree in
     if root === x then (let p = Stop in reaches_def h root x p; p)
     else match tree with
-    | Tip _ -> let p = Stop in reaches_def h root x p; p
     | Through (_, child) ->
       let next = bound_root child in edge_def h root next;
       let rest = bounded_path h bound child x () in
@@ -240,8 +239,7 @@ let rec (unified_origin @ total) : (saved : node Pref.heap) @ immutable ->
       let mid = lower_heap h bound edits in
       Level_unifier_spec.unified_def mid p q ok after rest;
       (match rest with Bind_left _ ->
-        let o = lower_bind_origin saved h cut prior p q bound edits tree x () in o
-      | _ -> let o = Origin (x, Stop) in o)
+        let o = lower_bind_origin saved h cut prior p q bound edits tree x () in o)
     | Children (a, b, c, e, mid, left_ok, left, right) ->
       if left_ok then (
         let prior1 : ((x : node Pref.t) @ immutable ->
@@ -455,4 +453,4 @@ let (unified_below @ total) : (h : node Pref.heap) @ immutable ->
     below_def h x cut; below_def after x cut;
     at_level_def h x; at_level_def after x;
     (match H.at h x, H.at after x with
-    | Some a, Some b -> decreases_def a.level b.level; () | _ -> ()); ())
+    | Some a, Some b -> decreases_def a.level b.level; ()); ())

@@ -31,7 +31,7 @@ let (step @ total) : (p : I.program) @ immutable -> (state : S.state) @ immutabl
       I.find_valid blocks p.I.sites a.S.pc exit ();
       Hmc_cfg_origin.instruction_def blocks a.S.pc (G.Call (Hmc_tail_sites.entry exit));
       H.at_label_def table blocks a;
-      (match G.lookup blocks a.S.pc with None -> () | Some block ->
+      (match G.lookup blocks a.S.pc with Some block ->
         C.valid_def origin;
         Hmc_cfg_extension.lookup_valid (M.manifest origin.C.origin.P.origin.M.definitions) table blocks a.S.pc block ();
         G.block_valid_def (M.manifest origin.C.origin.P.origin.M.definitions) table blocks block;
@@ -57,7 +57,7 @@ let (initial @ total) : (p : I.program) @ immutable -> (input : Hmc_word64.t) @ 
   H.valid_def table (R.V.Closure (id, R.V.Empty)); H.valid_def table R.V.Empty; H.environment_def D.Empty_context R.V.Empty;
   H.value_def table (R.V.Word input); H.first_class_def (R.V.Word input); H.valid_def table (R.V.Word input);
   U.initial_def p input; S.initial_def origin input;
-  (match K.lookup table id with None -> () | Some callee ->
+  (match K.lookup table id with Some callee ->
     let code = C.lookup_origin origin.C.blocks table origin.C.functions id callee () in
     let _entered = E.enter origin id R.V.Empty (R.V.Word input) callee code () in ());
   H.frames_def table origin.C.blocks S.Halt; H.state_def table origin.C.blocks (U.initial p input))

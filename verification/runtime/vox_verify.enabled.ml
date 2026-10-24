@@ -889,8 +889,11 @@ let install () =
         Location.raise_errorf "Refinement verification budget exhausted"
     in
     Verification.install (fun ~whole_unit ~interface structure ->
-        if not !assume_verified
-        then
+        (* The compilation that verifies the unit proves its total matches
+           exhaustive. *)
+        if !assume_verified
+        then Verification.discharge_required_matches ()
+        else
           (* An entry's first line names its key (see [unit_cache_file]). *)
           let recorded (file, entry) =
             let first = entry ^ "\n" in
@@ -902,7 +905,11 @@ let install () =
             | _ | (exception Sys_error _) -> None
           in
           match unit_cache_file ~whole_unit with
-          | Some cache when Option.is_some (recorded cache) -> (
+          (* A cached result does not record which partial-match warnings
+             the proofs discharged. *)
+          | Some cache
+            when Option.is_some (recorded cache)
+                 && not (Verification.has_deferred_partial_matches ()) -> (
             (* The entry's other lines are the unused proof steps found when
                it was recorded. *)
             match unused_steps_report (), recorded cache with

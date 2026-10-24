@@ -141,22 +141,20 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
     let_free_def e; source_def e; result_def e;
     let z = D.Z in let g = context rho env in let source_term = source e in let typ = D.embed target in
     D.typed_def z g source_term typ d; D.embed_def target; match e with
-    | RLet_left _ | RLet _ -> ()
     | RShared (i, p) -> (match d with
       | D.Variable args ->
         lookup_context rho env i p ();
         let scheme = D.Forall (z, D.embed (rho p)) in D.arity_def scheme; D.length_def args;
-        (match args with D.Argument _ -> () | D.No_arguments ->
+        (match args with D.No_arguments ->
           D.open_scheme_def scheme args; let ot = D.embed (rho p) in T.open_empty ot;
           let original_type = rho p in embed_injective target original_type ();
           let equal : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || rho x === rho x}) @ total = fun x -> () in
-          matches_def rho e target; use rho (refine_ model) equal ())
-      | _ -> ())
+          matches_def rho e target; use rho (refine_ model) equal ()))
     | RVar (i, p, epoch, history) -> (match d with
-      | D.Variable args -> (match lookup env i with None -> () | Some original ->
+      | D.Variable args -> (match lookup env i with Some original ->
         lookup_context rho env i original ();
         let scheme = D.Forall (z, D.embed (rho original)) in D.arity_def scheme;
-        D.length_def args; (match args with D.Argument _ -> () | D.No_arguments ->
+        D.length_def args; (match args with D.No_arguments ->
         D.open_scheme_def scheme args; let ot = D.embed (rho original) in T.open_empty ot;
         let original_type = rho original in embed_injective target original_type ();
         let consume : ((tau : (node Pref.t @ immutable total -> ty @ immutable total)) @ total -> (next : ((x : node Pref.t) @ immutable -> {u : unit | node_equation (copy_heap h epoch depth history) tau x})) @ total ->
@@ -165,18 +163,16 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
             {u : unit | not (target_for h history p q) || tau q === rho p})) @ total -> {u : unit | claim}) @ total = fun tau next equal assigned ->
           assigned original p; matches_def tau e target;
           use tau (refine_ next) equal () in
-        with_copy h depth pool facts rho model epoch history () claim consume))
-      | _ -> ())
+        with_copy h depth pool facts rho model epoch history () claim consume)))
     | RBool p -> (match d with D.Constant ->
       let desc : desc = Bool in Copy_model_proofs.describes_def rho desc target;
       let consume : ((tau : (node Pref.t @ immutable total -> ty @ immutable total)) @ total -> (next : ((x : node Pref.t) @ immutable -> {u : unit | node_equation after tau x})) @ total ->
         (equal : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || tau x === rho x})) @ total -> {u : unit | tau p === target} -> {u : unit | claim}) @ total = fun tau next equal fit ->
         let refine_ fit = fit in 
         matches_def tau e target; use tau next equal () in
-      with_alloc h depth pool facts rho model p desc target after () claim (refine_ consume)
-      | _ -> ())
+      with_alloc h depth pool facts rho model p desc target after () claim (refine_ consume))
     | RLam (arg, body, middle, body_pool, out) -> (match d with D.Abstraction (_, db) ->
-      (match target with Variable _ | Boolean | Word64 | List_type _ -> () | Function (a, b) ->
+      (match target with Function (a, b) ->
       let var : desc = Var in let v = cell var depth in let h1 = H.put h arg v in let pool1 = Entry (arg, pool) in
       let env1 = Bind (arg, env) in
       let facts1 = allocation_facts h depth pool facts arg var () in
@@ -191,7 +187,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         (equal2 : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h1 x) || rho2 x === rho1 x})) @ total -> {u : unit | matches rho2 body b} -> {u : unit | claim}) @ total = fun rho2 model2 equal2 fit ->
         let refine_ fit = fit in 
         matches_def rho2 body b;
-        (match result body with None -> () | Some root -> match out with None -> () | Some p ->
+        (match result body with Some root -> match out with Some p ->
         equal2 arg; active_def h1 arg;
         let desc = Arrow (arg, root) in Copy_model_proofs.describes_def rho2 desc target;
         let facts2 = execution_facts h1 depth pool1 (refine_ facts1) env1 body middle body_pool () in
@@ -205,21 +201,19 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         matches_def tau e target; use tau next equal () in
         with_alloc middle depth body_pool facts2 rho2 model2 p desc target after () claim (refine_ consume3)) in
         with_run_model h1 depth pool1 (refine_ facts1) env1 body middle body_pool rho1 model1 b db () claim consume2 in
-      with_alloc h depth pool facts rho model arg var a h1 () claim (refine_ consume1))
-      | _ -> ())
+      with_alloc h depth pool facts rho model arg var a h1 () claim (refine_ consume1)))
     | RApp_left (left, _) -> (match d with D.Application (at, df, da) ->
       let a = T.eval default_value at in
-      (match source_term with D.Apply (_, argument) -> D.typed_def z g argument at da; () | _ -> ());
+      (match source_term with D.Apply (_, argument) -> D.typed_def z g argument at da; ());
       embed_eval at (); let function_type = Function (a, target) in D.embed_def function_type;
       let consume : ((tau : (node Pref.t @ immutable total -> ty @ immutable total)) @ total -> (next : ((x : node Pref.t) @ immutable -> {u : unit | node_equation after tau x})) @ total ->
         (equal : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || tau x === rho x})) @ total -> {u : unit | matches tau left function_type} -> {u : unit | claim}) @ total = fun tau next equal fit ->
         let refine_ fit = fit in 
         matches_def tau left function_type; () in
-      with_run_model h depth pool facts env left after final_pool rho model function_type df () claim consume
-      | _ -> ())
+      with_run_model h depth pool facts env left after final_pool rho model function_type df () claim consume)
     | RApp_right (left, right, h1, pool1) -> (match d with D.Application (at, df, da) ->
       let a = T.eval default_value at in
-      (match source_term with D.Apply (_, argument) -> D.typed_def z g argument at da; () | _ -> ());
+      (match source_term with D.Apply (_, argument) -> D.typed_def z g argument at da; ());
       embed_eval at (); let function_type = Function (a, target) in D.embed_def function_type;
       let facts1 = execution_facts h depth pool facts env left h1 pool1 () in
       run_env h depth pool env left h1 pool1 env ();
@@ -232,11 +226,10 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         let refine_ fit = fit in 
         matches_def tau right a; () in
         with_run_model h1 depth pool1 facts1 env right after final_pool rho1 model1 a da () claim consume2 in
-      with_run_model h depth pool facts env left h1 pool1 rho model function_type df () claim consume1
-      | _ -> ())
+      with_run_model h depth pool facts env left h1 pool1 rho model function_type df () claim consume1)
     | RApp (left, right, h1, pool1, h2, pool2, p, arrow, ok, derivation) -> (match d with D.Application (at, df, da) ->
       let a = T.eval default_value at in
-      (match source_term with D.Apply (_, argument) -> D.typed_def z g argument at da; () | _ -> ());
+      (match source_term with D.Apply (_, argument) -> D.typed_def z g argument at da; ());
       embed_eval at (); let function_type = Function (a, target) in D.embed_def function_type;
       let facts1 = execution_facts h depth pool facts env left h1 pool1 () in
       run_env h depth pool env left h1 pool1 env ();
@@ -248,7 +241,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         (equal2 : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h1 x) || rho2 x === rho1 x})) @ total -> {u : unit | matches rho2 right a} -> {u : unit | claim}) @ total = fun rho2 model2 equal2 fit ->
         let refine_ fit = fit in 
         matches_def rho1 left function_type; matches_def rho2 right a;
-        (match result left with None -> () | Some f -> match result right with None -> () | Some arg ->
+        (match result left with Some f -> match result right with Some arg ->
         Hm_execution_proofs.run_result h depth pool env left h1 pool1 f ();
         Hm_execution_proofs.run_result h1 depth pool1 env right h2 pool2 arg ();
         Hm_execution_proofs.run_extends h1 depth pool1 env right h2 pool2 f ();
@@ -279,10 +272,9 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         with_alloc h3 depth pool3 (refine_ facts3) rho3 model3 arrow desc function_type h4 () claim (refine_ consume4) in
         with_alloc h2 depth pool2 facts2 rho2 model2 p var target h3 () claim (refine_ consume3)) in
         with_run_model h1 depth pool1 facts1 env right h2 pool2 rho1 model1 a da () claim consume2 in
-      with_run_model h depth pool facts env left h1 pool1 rho model function_type df () claim consume1
-      | _ -> ())
+      with_run_model h depth pool facts env left h1 pool1 rho model function_type df () claim consume1)
     | RRec (arg, res, self, body, middle, body_pool, finish) -> (match d with D.Recursion (_, _, db) ->
-      (match target with Variable _ | Boolean | Word64 | List_type _ -> () | Function (a, b) ->
+      (match target with Function (a, b) ->
       let var : desc = Var in let v = cell var depth in let h1 = H.put h arg v in let pool1 = Entry (arg, pool) in
       let h2 = H.put h1 res v in let pool2 = Entry (res, pool1) in
       let desc = Arrow (arg, res) in let w = cell desc depth in let h3 = H.put h2 self w in
@@ -319,7 +311,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         (equal4 : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h3 x) || tau x === rho3 x})) @ total -> {u : unit | matches tau body b} -> {u : unit | claim}) @ total = fun tau body_model equal4 fit ->
         let refine_ fit = fit in 
         matches_def tau body b;
-        (match result body with None -> () | Some root -> match finish with Aborted -> () | Unified (ok, derivation) ->
+        (match result body with Some root -> match finish with Unified (ok, derivation) ->
         Copy_heap_proofs.put_frame h2 self w res;
         equal4 res; equal4 self;
         unify_complete middle tau body_model root res ok after derivation root ();
@@ -332,8 +324,7 @@ let rec (with_run_model @ total) : (h : node Pref.heap) @ immutable -> (depth : 
         with_run_model h3 depth pool3 (refine_ facts3) env3 body middle body_pool rho3 model3 b db () claim consume4 in
         with_alloc h2 depth pool2 (refine_ facts2) rho2 model2 self desc target h3 () claim (refine_ consume3) in
         with_alloc h1 depth pool1 (refine_ facts1) rho1 model1 res var b h2 () claim (refine_ consume2) in
-      with_alloc h depth pool facts rho model arg var a h1 () claim (refine_ consume1))
-      | _ -> ()))
+      with_alloc h depth pool facts rho model arg var a h1 () claim (refine_ consume1))))
 
 let (with_closed_model @ total) : (e : execution) @ immutable -> (after : node Pref.heap) @ immutable ->
     (pool : pool) @ immutable -> (target : ty) @ immutable -> (d : D.typing) @ immutable ->

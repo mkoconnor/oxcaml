@@ -50,7 +50,6 @@ let make (x : V.t @ unique) : t =
   let h = ghost_ (P.own (borrow_ t)) in
   ghost_ (Spec.location_def c);
   ghost_ (match P.Heap.at h (Spec.location c) with
-    | None -> ()
     | Some v -> Spec.full_def v);
   L.create c t
 

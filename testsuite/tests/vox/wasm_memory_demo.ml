@@ -36,10 +36,8 @@ let () =
           (match prefix with
           | Some (B.Byte (120, B.Byte (86, B.Byte (52, B.Byte (18,
               B.Byte (1, B.Byte (239, B.Byte (205, B.Byte (171, _))))))))) -> ()
-          | _ -> failwith "little endian layout")
-        | _ -> failwith "composed memory lowering"))
-      else failwith "destination type"
-    | _ -> failwith "store lowering")
+          | _ -> failwith "little endian layout")))
+      else failwith "destination type")
   else failwith "unexpected bounds failure";
   if M.store memory 9 0 value <> None then failwith "overrun";
   if M.store memory 1 4294967295 value <> None then failwith "wrapped address";

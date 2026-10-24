@@ -12,8 +12,7 @@ let rec (env_lookup_owned @ total) : (h : node Pref.heap) @ immutable ->
   fun h env i premise -> ghost_ (
     env_owned_def h env; env_depth_def env;
     let n = env_depth env in Hm_declarative.present_def n i; Hm_environment_spec.lookup_def env i;
-    match env with Hm_environment_spec.Empty -> ()
-    | Hm_environment_spec.Bind (_, rest) -> match i with Hm_declarative.Z -> ()
+    match env with Hm_environment_spec.Bind (_, rest) -> match i with Hm_declarative.Z -> ()
       | Hm_declarative.S i -> env_lookup_owned h rest i (); ())
 
 let rec (env_extend @ total) : (h : node Pref.heap) @ immutable -> (after : node Pref.heap) @ immutable ->

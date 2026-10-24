@@ -105,7 +105,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
     match e with
     | RShared _ -> r
     | RVar (i, target, epoch, d, certificate) ->
-      (match lookup env i with None -> r | Some original ->
+      (match lookup env i with Some original ->
         Copy_certificate_spec.certifies_def h certificate epoch depth d original target;
         copy h certificate epoch depth d x r expected (); r)
     | RBool p | RFalse p -> let desc = Bool in let v = cell desc depth in
@@ -129,7 +129,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
       run h depth pool env body after final_pool x r expected ()
     | RPrimitive (op, _, _, body, middle, body_pool, out) ->
       let s = run h depth pool env body middle body_pool x r expected () in
-      (match result body with None -> s | Some _ -> match out with None -> s | Some p ->
+      (match result body with None -> s | Some _ -> match out with Some p ->
         let desc = primitive_desc op in let v = cell desc depth in
         allocated_def middle depth p desc; allocate middle p v x s expected (); s)
     | RLam (arg, body, middle, body_pool, out) ->
@@ -137,7 +137,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
       let next_pool = Entry (arg, pool) in let next_env = Bind (arg, env) in
       allocated_def h depth arg desc; allocate h arg v x r expected ();
       let s = run start depth next_pool next_env body middle body_pool x r expected () in
-      (match result body with None -> s | Some b -> match out with None -> s | Some p ->
+      (match result body with None -> s | Some b -> match out with Some p ->
         let desc = Arrow (arg, b) in let v = cell desc depth in
         allocated_def middle depth p desc; allocate middle p v x s expected (); s)
     | RApp_right (left, right, middle, left_pool) | RCons_right (left, right, middle, left_pool) ->
@@ -146,14 +146,14 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
     | RCons (left, right, h1, pool1, h2, pool2, p, ok, d) ->
       let s = run h depth pool env left h1 pool1 x r expected () in
       let t = run h1 depth pool1 env right h2 pool2 x s expected () in
-      (match result left with None -> t | Some f -> match result right with None -> t | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let desc = List f in let v = cell desc depth in let h3 = H.put h2 p v in
         allocated_def h2 depth p desc; allocate h2 p v x t expected ();
         let out = unify h3 a p ok after d x t expected () in out)
     | RApp (left, right, h1, pool1, h2, pool2, p, arrow, ok, d) ->
       let s = run h depth pool env left h1 pool1 x r expected () in
       let t = run h1 depth pool1 env right h2 pool2 x s expected () in
-      (match result left with None -> t | Some f -> match result right with None -> t | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let var = Var in let v = cell var depth in let h3 = H.put h2 p v in
         let desc = Arrow (a, p) in let w = cell desc depth in let h4 = H.put h3 arrow w in
         allocated_def h2 depth p var; allocated_def h3 depth arrow desc;
@@ -167,7 +167,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
       allocate h arg v x r expected (); allocate h1 res v x r expected ();
       allocate h2 self w x r expected ();
       let s = run h3 depth pool3 env3 body middle body_pool x r expected () in
-      (match result body with None -> s | Some b -> match finish with Aborted -> s | Unified (ok, d) ->
+      (match result body with None -> s | Some b -> match finish with Unified (ok, d) ->
         let t = unify middle b res ok after d x s expected () in t)
     | RLet (rhs, body, middle, child_pool) ->
       let child_depth = depth + 1 in let empty : pool = Empty in
@@ -176,7 +176,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
       let closed = Representative_pool_spec.close_heap middle depth child_pool in
       close middle depth child_pool x s expected ();
       let transferred = Representative_pool_spec.transfer_rep closed child_pool pool in
-      (match result rhs with None -> s | Some p -> let next_env = Bind (p, env) in
+      (match result rhs with Some p -> let next_env = Bind (p, env) in
         let t = run closed depth transferred next_env body after final_pool x s expected () in t))
 
 let (run_protected @ total) : (h : node Pref.heap) @ immutable ->

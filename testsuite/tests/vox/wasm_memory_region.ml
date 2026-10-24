@@ -46,7 +46,7 @@ let rec (append @ total) : (first : C.t) @ immutable -> (second : C.t) @ immutab
       trace_def first state bounds; trace_def (E.append first second) state bounds;
       E.append_def first second; X.run_def first state;
       match first with C.Empty -> () | C.Next (instruction, rest) ->
-        match X.step instruction state with X.Done next -> append rest second next middle bounds () | _ -> ())
+        match X.step instruction state with X.Done next -> append rest second next middle bounds ())
 
 let rec (prefix @ total) : (fuel : C.count) @ immutable -> (code : C.t) @ immutable ->
     (state : X.state) @ immutable -> (bounds : bounds) @ immutable ->
@@ -55,5 +55,5 @@ let rec (prefix @ total) : (fuel : C.count) @ immutable -> (code : C.t) @ immuta
       Prefix.take_def fuel code; trace_def code state bounds; trace_def (Prefix.take fuel code) state bounds;
       match fuel, code with
       | C.Succ fuel, C.Next (instruction, rest) ->
-        (match X.step instruction state with X.Done next -> prefix fuel rest next bounds () | _ -> ())
+        (match X.step instruction state with X.Done next -> prefix fuel rest next bounds ())
       | _ -> ())

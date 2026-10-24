@@ -245,8 +245,7 @@ let (identity_execution @ total) : (h : node Pref.heap) @ immutable -> (depth : 
     {u : unit | let_free e && not (result e === None)} @ ghost =
   fun h depth pool env e after final_pool premise -> ghost_ (
     let refine_ premise = premise in ran_def h depth pool env e after final_pool; source_def e; result_def e; let_free_def e;
-    match e with RLam (_, body, _, _, _) -> source_def body; result_def body; let_free_def body; ()
-    | _ -> ())
+    match e with RLam (_, body, _, _, _) -> source_def body; result_def body; let_free_def body; ())
 
 let (lambda_result_level @ total) : (h : node Pref.heap) @ immutable -> (depth : int) ->
     (pool : pool) @ immutable -> (env : Hm_environment_spec.env) @ immutable ->
@@ -259,10 +258,9 @@ let (lambda_result_level @ total) : (h : node Pref.heap) @ immutable -> (depth :
     let refine_ premise = premise in ran_def h depth pool env e after final_pool;
     source_def e; result_def e; match e with
     | RLam (a, body, middle, body_pool, out) ->
-      (match result body with None -> () | Some b -> match out with None -> () | Some q ->
+      (match result body with Some b -> match out with Some q ->
         let desc = Arrow (a, b) in
-        cell_def desc depth; at_level_def after p; listed_def final_pool p; ())
-    | _ -> ())
+        cell_def desc depth; at_level_def after p; listed_def final_pool p; ()))
 
 let (with_application_model @ total) : (h : node Pref.heap) @ immutable -> (depth : int) -> (pool : pool) @ immutable ->
     (facts : ((x : node Pref.t) @ immutable -> {u : unit | runtime_at h depth pool x})) @ total ->
@@ -323,7 +321,7 @@ let (with_id_id_model @ total) : (e : execution) @ immutable -> (after : node Pr
     | RLet_left (rhs, _) -> identity_execution initial 1 empty env rhs after final_pool (); ()
     | RLet (rhs, body, rhs_heap, rhs_pool) ->
       identity_execution initial 1 empty env rhs rhs_heap rhs_pool ();
-      (match result rhs with None -> () | Some original ->
+      (match result rhs with Some original ->
       let h = closed_heap rhs_heap 0 rhs_pool in let pool = Nested_pool_spec.transfer h rhs_pool empty in
       let env1 = Hm_environment_spec.Bind (original, env) in
       let facts0 : ((x : node Pref.t) @ immutable -> {u : unit | runtime_at initial 0 empty x}) @ total = fun x ->
@@ -407,12 +405,8 @@ let (with_id_id_model @ total) : (e : execution) @ immutable -> (after : node Pr
             with_identity_pair rhs rhs_heap rhs_pool tree h pool facts forest rho converted epoch1 d1 q1 epoch2 d2 q2 b () claim consume_pair in
           Level_finite_proofs.with_finite_model h forest claim consume_model
           | RShared (i, p) -> ran_def h1 0 pool1 env1 right h2 pool2;
-            Hm_environment_spec.lookup_def env1 i; active_def h1 p; at_level_def h1 p; ()
-          | _ -> ())
-        | RShared (i, p) -> Hm_environment_spec.lookup_def env1 i; active_def h p; at_level_def h p; ()
-        | _ -> ())
-      | _ -> ())
-    | _ -> ())
+            Hm_environment_spec.lookup_def env1 i; active_def h1 p; at_level_def h1 p; ())
+        | RShared (i, p) -> Hm_environment_spec.lookup_def env1 i; active_def h p; at_level_def h p; ())))
 
 let (id_id_completes @ total) : (e : execution) @ immutable -> (after : node Pref.heap) @ immutable ->
     (pool : pool) @ immutable ->

@@ -46,7 +46,6 @@ let (load @ total) : (width : M.width) @ immutable -> (offset : B.u32) ->
     X.run_def save loaded; X.step_def (I.Local_set destination) loaded;
     E.step_def (I.Local_set destination) loaded.X.machine;
     match L.set locals destination value with
-    | None -> ()
     | Some locals -> X.run_def C.Empty {X.memory = state.X.memory; machine = {E.locals; stack}});
   code
 
@@ -83,6 +82,5 @@ let (store @ total) : (width : M.width) @ immutable -> (offset : B.u32) ->
     write_code_def width offset base_local source; store_instruction_def width offset;
     X.run_def write operands; X.step_def instruction operands; X.write_def width offset operands; X.compatible_def value width;
     match M.store state.X.memory base offset value with
-    | None -> ()
     | Some memory -> X.run_def C.Empty {X.memory; machine = state.X.machine});
   code

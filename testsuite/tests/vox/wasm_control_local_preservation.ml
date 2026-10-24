@@ -23,7 +23,6 @@ let rec (branch @ total) : (depth : B.u32) -> (stack : T.labels) @ immutable -> 
   fun depth stack state after local premise -> ghost_ (
     labels_def stack local; T.branch_def depth stack state;
     match stack with
-    | T.No_labels -> ()
     | T.Label (label, rest) -> if depth <> 0 then branch (depth - 1) rest state after local () else
       match label.T.restart with None -> T.stack_def state label.T.saved | Some _ -> T.stack_def state S.Empty)
 let (step @ total) : (before : T.configuration) @ immutable -> (after : T.configuration) @ immutable -> (local : B.u32) ->
@@ -34,7 +33,6 @@ let (step @ total) : (before : T.configuration) @ immutable -> (after : T.config
     code_def before.T.code local; labels_def before.T.labels local; T.step_def before;
     match before.T.code with
     | T.Empty -> (match before.T.labels with
-      | T.No_labels -> ()
       | T.Label (label, _) -> T.stack_def before.T.state label.T.saved)
     | T.Block (body, tail) ->
       T.enter_def body tail None before; T.stack_def before.T.state S.Empty;
@@ -47,15 +45,12 @@ let (step @ total) : (before : T.configuration) @ immutable -> (after : T.config
         T.stack_def before.T.state rest;
         T.enter_def (if condition <> 0 then yes else no) tail None {before with T.state = T.stack before.T.state rest};
         T.stack_def (T.stack before.T.state rest) S.Empty;
-        labels_def (T.Label ({T.restart = None; continuation = tail; saved = rest}, before.T.labels)) local
-      | _ -> ())
+        labels_def (T.Label ({T.restart = None; continuation = tail; saved = rest}, before.T.labels)) local)
     | T.Instruction (I.Br depth, _) -> branch depth before.T.labels before.T.state after local ()
     | T.Instruction (I.Br_if depth, _) -> (match before.T.state.X.machine.E.stack with
       | S.Push (S.I32 condition, rest) ->
         T.stack_def before.T.state rest;
-        if condition <> 0 then branch depth before.T.labels (T.stack before.T.state rest) after local () else ()
-      | _ -> ())
-    | T.Instruction (I.Plain I.Unreachable, _) -> ()
+        if condition <> 0 then branch depth before.T.labels (T.stack before.T.state rest) after local () else ())
     | T.Instruction (op, _) -> LP.step op before.T.state after.T.state local ())
 let rec (run @ total) : (fuel : C.count) @ immutable -> (before : T.configuration) @ immutable -> (after : T.configuration) @ immutable -> (local : B.u32) ->
     {u : unit | code before.T.code local && labels before.T.labels local && T.run fuel before === T.Running after} ->
@@ -66,5 +61,4 @@ let rec (run @ total) : (fuel : C.count) @ immutable -> (before : T.configuratio
     match fuel with
     | C.Zero -> ()
     | C.Succ rest -> match T.step before with
-      | T.Running middle -> step before middle local (); run rest middle after local ()
-      | _ -> ())
+      | T.Running middle -> step before middle local (); run rest middle after local ())

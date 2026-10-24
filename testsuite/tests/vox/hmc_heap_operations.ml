@@ -20,8 +20,7 @@ let (cons @ total) : (table : K.table) @ immutable -> (heap : M.heap) @ immutabl
     | Some h, Some t ->
       P.decode_valid table heap head h (); P.decode_valid table heap tail t ();
       H.value_def table h; H.value_def table t;
-      H.value_def table (R.V.Cons (h, t)); H.valid_def table (R.V.Cons (h, t)); H.first_class_def (R.V.Cons (h, t))
-    | _ -> ());
+      H.value_def table (R.V.Cons (h, t)); H.valid_def table (R.V.Cons (h, t)); H.first_class_def (R.V.Cons (h, t)));
   A.allocate table heap limit object_ ()
 let rec (environment_valid @ total) : (table : K.table) @ immutable -> (heap : M.heap) @ immutable ->
     (captures : M.cells) @ immutable -> (env : R.V.value) @ immutable ->
@@ -33,8 +32,7 @@ let rec (environment_valid @ total) : (table : K.table) @ immutable -> (heap : M
   | M.Cell (head, rest) -> (match M.decode_value (M.view heap) head, M.decode_environment (M.view heap) rest with
     | Some value, Some tail ->
       M.decode_def heap head; P.decode_valid table heap head value (); H.value_def table value;
-      environment_valid table heap rest tail (); H.valid_def table env
-    | _ -> ()))
+      environment_valid table heap rest tail (); H.valid_def table env))
 let (closure @ total) : (table : K.table) @ immutable -> (heap : M.heap) @ immutable -> (limit : W.limb) ->
     (code : D.index) @ immutable -> (captures : M.cells) @ immutable ->
     {u : unit | M.valid table heap && M.used heap <= limit
@@ -46,8 +44,7 @@ let (closure @ total) : (table : K.table) @ immutable -> (heap : M.heap) @ immut
     match K.lookup table code, M.decode_environment (M.view heap) captures with
     | Some _, Some env ->
       environment_valid table heap captures env ();
-      H.value_def table (R.V.Closure (code, env)); H.valid_def table (R.V.Closure (code, env)); H.first_class_def (R.V.Closure (code, env))
-    | _ -> ());
+      H.value_def table (R.V.Closure (code, env)); H.valid_def table (R.V.Closure (code, env)); H.first_class_def (R.V.Closure (code, env)));
   A.allocate table heap limit object_ ()
 
 type pair = {head : C.value; tail : C.value}

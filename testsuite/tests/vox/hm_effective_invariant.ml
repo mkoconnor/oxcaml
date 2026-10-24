@@ -31,7 +31,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable ->
     | RShared _ -> facts x; rebase h a b va (refine_ vb) depth pool x ();
       runtime_at_def after b depth final_pool x; ()
     | RVar (i, target, epoch, d, certificate) ->
-      (match lookup env i with None -> () | Some original ->
+      (match lookup env i with Some original ->
         Copy_certificate_proofs.replay h certificate a va epoch depth d original target ();
         copy_heap_def h epoch depth d;
         let raw = heap h epoch depth d in let trail = Pooled_spec.touched d in
@@ -78,7 +78,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable ->
     | RPrimitive (op, _, _, body, middle, body_pool, out) ->
       (match result body with None ->
         run_invariant h a trees depth pool facts env body after b vb final_pool x ()
-      | Some _ -> match out with None -> () | Some p ->
+      | Some _ -> match out with Some p ->
         let ts : ((y : node Pref.t) @ immutable ->
           {t : tree | tree_root t === y && (if H.mem middle y then finite middle t else observe middle y === None)} @ immutable) @ total = fun y ->
           F.run_forest h trees depth pool env body middle body_pool y () in
@@ -106,7 +106,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable ->
       let next_env = Bind (arg, env) in
       (match result body with None ->
         run_invariant h1 h1_heads h1_trees depth h1_pool h1_facts next_env body after b vb final_pool x (); ()
-      | Some target -> match out with None -> () | Some p ->
+      | Some target -> match out with Some p ->
       let middle_trees : ((y : node Pref.t) @ immutable ->
         {t : tree | tree_root t === y && (if H.mem middle y then finite middle t else observe middle y === None)} @ immutable) @ total = fun y ->
         F.run_forest h1 h1_trees depth h1_pool next_env body middle body_pool y () in
@@ -153,7 +153,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable ->
         E.valid_head_def h2 h2_heads y; () in
       let h2_facts : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at h2 h2_heads depth pool2 y}) @ total = fun y ->
         run_invariant h1 h1_heads h1_trees depth pool1 h1_facts env right h2 h2_heads h2_valid pool2 y (); () in
-      (match result left with None -> () | Some f -> match result right with None -> () | Some target ->
+      (match result left with Some f -> match result right with Some target ->
       h1_facts f; Hm_effective_result.result_below h trees depth pool env left h1 pool1 h1_heads f ();
       h1_valid f; h2_valid f;
       Hm_effective_paths.run_below h1 h1_heads h2_heads depth pool1 env right h2 pool2 f depth ();
@@ -188,7 +188,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable ->
         E.valid_head_def h2 h2_heads y; () in
       let h2_facts : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at h2 h2_heads depth pool2 y}) @ total = fun y ->
         run_invariant h1 h1_heads h1_trees depth pool1 h1_facts env right h2 h2_heads h2_valid pool2 y (); () in
-      (match result left with None -> () | Some f -> match result right with None -> () | Some target ->
+      (match result left with Some f -> match result right with Some target ->
       h2_facts target; Hm_effective_result.result_below h1 h1_trees depth pool1 env right h2 pool2 h2_heads target ();
       let var = Var in
       allocated_def h2 depth p var;
@@ -266,7 +266,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable ->
       let next_env = Bind (arg, Bind (self, env)) in
       (match result body with None ->
         run_invariant h3 h3_heads h3_trees depth h3_pool h3_facts next_env body after b vb final_pool x (); ()
-      | Some target -> match finish with Aborted -> () | Unified (ok, d) ->
+      | Some target -> match finish with Unified (ok, d) ->
       let middle_trees : ((y : node Pref.t) @ immutable ->
         {t : tree | tree_root t === y && (if H.mem middle y then finite middle t else observe middle y === None)} @ immutable) @ total = fun y ->
         F.run_forest h3 h3_trees depth h3_pool next_env body middle body_pool y () in
@@ -305,6 +305,6 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable ->
         F.representative_closed_forest middle middle_trees depth child_pool y () in
       let closed_facts : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at closed middle_heads depth transferred y}) @ total = fun y ->
         Hm_effective_closing.close_after_run h a middle_heads depth pool facts env rhs middle child_pool (refine_ middle_facts) y (); () in
-      (match result rhs with None -> () | Some p -> let next_env = Bind (p, env) in
+      (match result rhs with Some p -> let next_env = Bind (p, env) in
         run_invariant closed middle_heads closed_trees depth transferred closed_facts next_env body after b vb final_pool x (); ())
       )

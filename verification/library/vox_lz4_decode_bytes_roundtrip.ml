@@ -342,8 +342,7 @@ let (equal_bytes @ total) :
            | Some l, Some r ->
              let lb = D.byte_of_char l in
              let rb = D.byte_of_char r in
-             let _ = lb, rb in ()
-           | _ -> ());
+             let _ = lb, rb in ());
           ()
         end else begin
           I.at_outside left index;
@@ -379,7 +378,6 @@ let (wire_roundtrip @ total) :
       let model = S.decode_model wire_bytes 0 (-1) (Iarray.length wire_bytes)
         capacity 0 [] in
       match decoded with
-      | Error _ -> ()
       | Ok output -> equal_bytes source_bytes (Vox_string_view.contents output)
           model.S.count model.S.reversed
     end;

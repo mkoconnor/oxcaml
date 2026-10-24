@@ -8,7 +8,7 @@ let[@def] rec (suffix @ total) (tail : B.bytes @ immutable) (bytes : B.bytes @ i
 let rec (suffix_transitive @ total) : (a : B.bytes) @ immutable -> (b : B.bytes) @ immutable -> (c : B.bytes) @ immutable ->
     {u : unit | suffix a b && suffix b c} -> {u : unit | suffix a c} @ ghost =
   fun a b c premise -> ghost_ (suffix_def b c; suffix_def a c;
-    if b === c then () else match c with B.End -> () | B.Byte (_, rest) -> suffix_transitive a b rest ())
+    if b === c then () else match c with B.Byte (_, rest) -> suffix_transitive a b rest ())
 let rec (reflexive @ total) : (n : C.count) @ immutable -> {u : unit | Budget.le n n} @ ghost =
   fun n -> ghost_ (Budget.le_def n n; match n with C.Zero -> () | C.Succ rest -> reflexive rest)
 let rec (transitive @ total) : (a : C.count) @ immutable -> (b : C.count) @ immutable -> (c : C.count) @ immutable ->
@@ -19,7 +19,7 @@ let rec (suffix_length @ total) : (tail : B.bytes) @ immutable -> (bytes : B.byt
     {u : unit | suffix tail bytes} -> {u : unit | Budget.le (length tail) (length bytes)} @ ghost =
   fun tail bytes premise -> ghost_ (suffix_def tail bytes; length_def bytes;
     if tail === bytes then reflexive (length bytes) else
-    match bytes with B.End -> () | B.Byte (_, rest) -> suffix_length tail rest (); Budget.weaken (length tail) (length rest) ())
+    match bytes with B.Byte (_, rest) -> suffix_length tail rest (); Budget.weaken (length tail) (length rest) ())
 let (u32_1 @ total) : (bytes : B.bytes) @ immutable ->
     {u : unit | match B.decode_1 bytes with None -> true | Some (_, tail) -> suffix tail bytes} @ ghost =
   fun bytes -> ghost_ (B.decode_1_def bytes;
@@ -127,11 +127,10 @@ let rec (roundtrip @ total) : (code : C.t) @ immutable -> (bytes : B.bytes) @ im
     | C.Next (_, rest) ->
       progress bytes;
       match I.decode bytes with
-      | None -> ()
       | Some (_, tail) ->
         transitive (C.Succ (length tail)) (length bytes) fuel ();
         Budget.le_def (C.Succ (length tail)) fuel;
-        match fuel with C.Zero -> () | C.Succ fuel ->
+        match fuel with C.Succ fuel ->
           Budget.le_def (C.Succ (length tail)) (C.Succ fuel);
           let proof : {u : unit | C.decode (C.length rest) tail === Some (rest, B.End) && Budget.le (length tail) fuel} = () in
           roundtrip rest tail fuel proof)

@@ -57,6 +57,5 @@ let (invoke @ total) : (program : I.program) @ immutable -> (heap : M.heap) @ im
       M.decode_def heap V.Nil; M.decode_value_def (M.view heap) V.Nil;
       M.decode_environment_def (M.view heap) entered.F.env;
       match object_ with M.Closure (_, captures) ->
-        M.decode_environment_def (M.view heap) (M.Cell (closure, captures)); M.decode_def heap argument
-      | _ -> ())
+        M.decode_environment_def (M.view heap) (M.Cell (closure, captures)); M.decode_def heap argument)
   | _ -> ())

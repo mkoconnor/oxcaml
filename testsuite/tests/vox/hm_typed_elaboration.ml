@@ -37,10 +37,7 @@ let (arguments @ total) : (left : D.term) @ immutable -> (right : D.term) @ immu
         Shape.matches_def (D.Cons (word, D.Nil)) tail; Eq.equations_def rho tail; A.root_def tail;
         (match tail with
         | A.List_constructor (_, literal, _) ->
-          Shape.matches_def word literal; Eq.equations_def rho literal; A.root_def literal
-        | _ -> ())
-      | _ -> ())
-    | _ -> ())
+          Shape.matches_def word literal; Eq.equations_def rho literal; A.root_def literal)))
 
 let rec (lookup_present @ total) : (context : D.context) @ immutable ->
     (index : D.index) @ immutable ->

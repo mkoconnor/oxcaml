@@ -63,6 +63,5 @@ let (padding_from_correspondence @ total) : (context : V.context) @ immutable ->
     padding_typed_def context fragment; Block.corresponds_def globals signature instruction capacity max_pc fragment;
     match fragment, instruction with
     | Block.Call call, Hmc_tail_ir.Keep (Hmc_cfg_ir.Call _) -> (match signature.Hmc_cfg_ir.temporaries with
-      | Hmc_cfg_ir.Value _ -> Call.padding context call.Block.padding (3 + call.Block.saved) call.Block.padding_length ()
-      | _ -> ())
+      | Hmc_cfg_ir.Value _ -> Call.padding context call.Block.padding (3 + call.Block.saved) call.Block.padding_length ())
     | _ -> ())

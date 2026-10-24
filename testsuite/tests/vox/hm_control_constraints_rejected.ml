@@ -30,7 +30,7 @@ Line 6, characters 67-69:
 6 |   C.construct D.Z D.Empty_context word D.Truth D.False D.Boolean d ());;
                                                                        ^^
 Error: Refinement could not be proved (counterexample)
-File "hm_conditional_constraints.ml", line 219, characters 16-52:
+File "hm_conditional_constraints.ml", line 210, characters 16-52:
   The refinement is stated here.
 |}]
 
@@ -44,7 +44,7 @@ Line 5, characters 67-69:
 5 |   C.construct D.Z D.Empty_context D.Truth D.Truth word D.Boolean d ());;
                                                                        ^^
 Error: Refinement could not be proved (counterexample)
-File "hm_conditional_constraints.ml", line 219, characters 16-52:
+File "hm_conditional_constraints.ml", line 210, characters 16-52:
   The refinement is stated here.
 |}]
 

@@ -19,7 +19,6 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (byt
     let suffix = Hmc_wasm_environment_lookup.find count bytes cells tail index number offset value () in
     Wasm_cell.shift memory base offset (base + offset) bytes ();
     match V.decode suffix with
-    | None -> ()
     | Some (_, rest) ->
       Wasm_cell.cell memory (base + offset) suffix value rest ();
       Wasm_cell.tag_def memory (base + offset); Wasm_cell.payload_def memory (base + offset);

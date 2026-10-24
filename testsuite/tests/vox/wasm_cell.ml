@@ -15,7 +15,6 @@ let rec (shift @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) ->
   fun memory base offset effective suffix premise -> ghost_ (
     L.drop_def memory base; L.drop_def memory effective;
     if base = 0 then () else match memory with
-    | B.End -> ()
     | B.Byte (_, rest) -> shift rest (base - 1) offset (effective - 1) suffix ())
 
 let[@def] (eight @ total) (unit : unit) : B.u32 = 8
@@ -25,12 +24,11 @@ let (word_suffix @ total) : (bytes : B.bytes) @ immutable -> (word : W.t) @ immu
     {u : unit | L.drop bytes (eight ()) === Some tail} @ ghost =
   fun bytes word tail premise -> ghost_ (
     Codec.decode_def bytes; Codec.decode_limb_def bytes; M.size_def M.W64; eight_def ();
-    (match Codec.decode_limb bytes with None -> () | Some (_, middle) -> Codec.decode_limb_def middle);
+    (match Codec.decode_limb bytes with Some (_, middle) -> Codec.decode_limb_def middle);
     match bytes with
     | (B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, tail) as b7)) as b6)) as b5)) as b4)) as b3)) as b2)) as b1)) as b0) ->
       Codec.decode_limb_def b4;
-      L.drop_def b0 8; L.drop_def b1 7; L.drop_def b2 6; L.drop_def b3 5; L.drop_def b4 4; L.drop_def b5 3; L.drop_def b6 2; L.drop_def b7 1; L.drop_def tail 0
-    | _ -> ())
+      L.drop_def b0 8; L.drop_def b1 7; L.drop_def b2 6; L.drop_def b3 5; L.drop_def b4 4; L.drop_def b5 3; L.drop_def b6 2; L.drop_def b7 1; L.drop_def tail 0)
 
 let[@def] (tag @ total) (memory : B.bytes @ immutable) (base : B.u32) = M.load memory base 0 M.W64
 let[@def] (payload @ total) (memory : B.bytes @ immutable) (base : B.u32) = M.load memory base 8 M.W64
@@ -48,14 +46,12 @@ let (cell @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) ->
     M.size_def M.W64; M.count_def M.W64;
     L.load_def memory base (C.eight D.Z); L.load_def memory (base + 8) (C.eight D.Z);
     match Codec.decode bytes with
-    | None -> ()
     | Some (tag, middle) ->
       L.take_def D.Z middle;
       let tag_bytes = Prefix.word bytes D.Z tag middle B.End () in
       M.decode_def M.W64 tag_bytes;
       word_suffix bytes tag middle (); eight_def (); shift memory base 8 (base + 8) bytes ();
       match Codec.decode middle with
-      | None -> ()
       | Some (payload, rest) ->
         L.take_def D.Z rest;
         let payload_bytes = Prefix.word middle D.Z payload rest B.End () in

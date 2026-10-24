@@ -866,7 +866,6 @@ end = struct
     compiled_initial_member root;
     let source = initial dfa in
     match lower_raw dfa with
-    | None -> ()
     | Some (initial_id, table) ->
       let raw = initial_id, table in
       Dfa_proof.raw_valid_unique raw;

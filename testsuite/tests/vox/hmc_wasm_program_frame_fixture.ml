@@ -69,8 +69,7 @@ let finish : (lowered : Lower.program) @ immutable -> (fragment : Block.fragment
         if returned.Calls.current.Wasm_instance_control.body.T.state.X.memory <> expected
           || WG.get returned.Calls.current.Wasm_instance_control.globals 1 <> Some (S.I32 0)
           || returned.Calls.capacity <> call.Calls.capacity || returned.Calls.callers <> Calls.Root then
-          failwith "generated frame block disagrees with source"
-      | _ -> failwith "frame block failed to return");
+          failwith "generated frame block disagrees with source");
       {image = {Config.memory; expected; base; block = target.F.code}; kind}
 let audit_source_step (module_ : F.module_ @ immutable) (before : Hmc_wasm_program_registers.registers @ immutable)
     (memory : B.bytes @ immutable) (after : Hmc_wasm_program_registers.registers @ immutable) (fuel : Count.count @ immutable)

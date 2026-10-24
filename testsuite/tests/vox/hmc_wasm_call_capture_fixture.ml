@@ -95,8 +95,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
                 let expected = Wasm_memory_splice.replace memory target before captured () in
                 if expected <> result.Memory.memory then failwith "capture copy independent memory";
                 (match X.run (Copy.emit fragment 0 1) state with
-                | X.Done after -> if after.X.memory <> expected || after.X.machine <> state.X.machine then failwith "capture copy target state"
-                | _ -> failwith "capture copy trap");
+                | X.Done after -> if after.X.memory <> expected || after.X.machine <> state.X.machine then failwith "capture copy target state");
                 {memory; expected; prefix = [I.I32_const address; I.Local_set 0; I.I32_const 256; I.Local_set 1]; code = Copy.emit fragment 0 1; cursor = 256}
               | _ -> failwith "capture copy bounds")))))
 

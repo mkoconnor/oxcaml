@@ -109,7 +109,7 @@ let (step @ total) : (program : I.program) @ immutable -> (globals : X.globals) 
       | _ -> Advanced {configuration with state = Stuck})
     | Some (I.Keep (G.Call next)) -> (match a.F.temporaries with
       | F.Value (closure, env, rest) ->
-        ghost_ (match M.decode heap closure with None -> () | Some value -> Invoke.correct program memory heap closure a.F.accumulator value ());
+        ghost_ (match M.decode heap closure with Some value -> Invoke.correct program memory heap closure a.F.accumulator value ());
         (match Invoke.invoke program memory closure a.F.accumulator with
         | None -> Advanced {configuration with state = Stuck}
         | Some entered ->
@@ -154,7 +154,6 @@ let (step @ total) : (program : I.program) @ immutable -> (globals : X.globals) 
       ghost_ (Basic.step_def op model.X.state; Basic.step_def op (Q.Running (a, Q.Halt)));
       (match Basic.step op (Q.Running (a, Q.Halt)) with
       | Q.Running (a, _) -> Advanced {configuration with state = Running a}
-      | Q.Done value -> Advanced {configuration with state = Done value}
       | Q.Stuck -> Advanced {configuration with state = Stuck})
     | None -> Advanced {configuration with state = Stuck})
   in

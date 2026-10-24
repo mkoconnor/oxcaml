@@ -478,8 +478,7 @@ let (input_proof @ total) :
     derivation_valid_def formula derivation;
     conclusion_def formula derivation;
     (match clause_at formula index with
-     | Some clause -> same_clause_reflexive clause
-     | None -> ());
+     | Some clause -> same_clause_reflexive clause);
     derivation)
 
 let (resolve_proof @ total) :

@@ -18,8 +18,7 @@ let rec (range @ total) : (plan : Plan.plan) @ immutable -> (tail : Plan.plan) @
       match length with
       | D.Z -> ()
       | D.S remaining -> match plan with
-        | Plan.Copy (_, _, Plan.Copy (_, _, rest)) -> range rest tail (source + 1) (destination + 1) remaining ()
-        | _ -> ())
+        | Plan.Copy (_, _, Plan.Copy (_, _, rest)) -> range rest tail (source + 1) (destination + 1) remaining ())
 
 let (split @ total) : (plan : Plan.plan) @ immutable -> (tail : Plan.plan) @ immutable ->
     (source : int) -> (destination : int) -> (length : D.index) @ immutable -> (capacity : Lower.count) ->
@@ -40,7 +39,6 @@ let (two @ total) : (plan : Plan.plan) @ immutable -> (a : int) -> (b : int) -> 
     {u : unit | Copy.bounded plan base base stop} @ ghost = fun plan a b n c d m base capacity stop premise -> ghost_ (
       Geometry.two_def plan a b n c d m; Copy.bounded_def Plan.End base base stop;
       match Geometry.split plan a b n with
-      | None -> ()
       | Some rest -> split rest Plan.End c d m capacity base stop (); split plan rest a b n capacity base stop ())
 
 let (four @ total) : (plan : Plan.plan) @ immutable -> (a : int) -> (b : int) -> (n : D.index) @ immutable ->
@@ -53,9 +51,7 @@ let (four @ total) : (plan : Plan.plan) @ immutable -> (a : int) -> (b : int) ->
     {u : unit | Copy.bounded plan base base stop} @ ghost = fun plan a b n c d m e f k g h l base capacity stop premise -> ghost_ (
       Geometry.four_def plan a b n c d m e f k g h l;
       match Geometry.split plan a b n with
-      | None -> ()
       | Some second -> match Geometry.split second c d m with
-        | None -> ()
         | Some third ->
           two third e f k g h l base capacity stop ();
           split second third c d m capacity base stop ();
@@ -83,6 +79,4 @@ let (correct @ total) : (signature : G.signature) @ immutable -> (instruction : 
         | G.Save_value _ -> four fragment.Lower.copies (2 + env) 2 saved_size 1 (2 + saved) (D.S D.Z)
             (2 + env) (3 + saved) saved_size (2 + env + saved) (3 + 2 * saved) rest_size base capacity stop ()
         | _ -> four fragment.Lower.copies 1 2 (D.S D.Z) (2 + env) 3 saved_size
-            (2 + env) (3 + saved) saved_size (2 + env + saved) (3 + 2 * saved) rest_size base capacity stop ())
-      | _ -> ())
-    | _ -> ())
+            (2 + env) (3 + saved) saved_size (2 + env + saved) (3 + 2 * saved) rest_size base capacity stop ())))

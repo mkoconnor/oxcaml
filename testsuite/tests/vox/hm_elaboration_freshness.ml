@@ -49,7 +49,6 @@ let (initial @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
     if H.mem heap p then (
       valid p;
       match H.at heap p with
-      | None -> ()
       | Some node -> match node.Ty.desc with
         | Ty.Var | Ty.Bool | Ty.Word -> ()
         | Ty.Link q ->
@@ -557,7 +556,6 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable ->
       write heap protected p (Ty.cell Ty.Word depth) x ()
     | Run.RVar (i, target, epoch, history, certificate) ->
       (match Env.lookup env i with
-      | None -> ()
       | Some original ->
         let[@def] heads : E.heads = fun p -> Forest_heads.select heap trees p in
         let valid : ((p : Ty.node Pref.t) @ immutable -> {u : unit | E.valid_head heap heads p}) @ total = fun p ->
@@ -611,7 +609,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable ->
         run heap trees depth pool env body middle body_pool protected closed generic y () in
       (match Run.result body with
       | None -> closed1 x
-      | Some _ -> match out with None -> () | Some p ->
+      | Some _ -> match out with Some p ->
         let desc = Run.primitive_desc op in Run.primitive_desc_def op;
         Ty.cell_def desc depth; closed1 x;
         write middle protected p (Ty.cell desc depth) x ())
@@ -641,7 +639,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable ->
         let r = generic1 y in
         if protected y then generic_run start depth pool1 env1 body middle body_pool y r () else r in
       (match Run.result body with None -> closed2 x | Some b ->
-      match out with None -> () | Some p ->
+      match out with Some p ->
 
       let finite = Result.run start trees1 depth pool1 env1 body middle body_pool b () in
       finite_unprotected middle protected generic2 b finite ();
@@ -695,8 +693,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable ->
         let r = generic3 y in
         if protected y then generic_allocate h3 arrow node4 y r ();
         r in
-      unification h4 f arrow ok after d protected closed4 generic4 x ()
-      | _ -> ())
+      unification h4 f arrow ok after d protected closed4 generic4 x ())
     | Run.RCons (left, right, h1, pool1, h2, pool2, p, ok, d) ->
 
       let trees1 : ((y : Ty.node Pref.t) @ immutable ->
@@ -733,8 +730,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable ->
         let r = generic2 y in
         if protected y then generic_allocate h2 p node3 y r ();
         r in
-      unification h3 a p ok after d protected closed3 generic3 x ()
-      | _ -> ())
+      unification h3 a p ok after d protected closed3 generic3 x ())
     | Run.RRec (arg, res, self, body, middle, body_pool, finish) ->
 
       Run.allocated_def heap depth arg Ty.Var;
@@ -794,7 +790,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable ->
         let r = generic3 y in
         if protected y then generic_run h3 depth pool3 env3 body middle body_pool y r () else r in
       (match Run.result body with None -> closed4 x | Some b ->
-      match finish with Run.Aborted -> () | Run.Unified (ok, d) ->
+      match finish with Run.Unified (ok, d) ->
       unification middle b res ok after d protected closed4 generic4 x ())
     | Run.RLet (rhs, body, middle, child_pool) ->
       let child_depth = depth + 1 in let empty = Pool.Empty in
@@ -809,7 +805,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable ->
         {r : R.representative | not (protected y) || generic_at middle y r} @ immutable) @ total = fun y ->
         let r = generic y in
         if protected y then generic_run heap child_depth empty env rhs middle child_pool y r () else r in
-      (match Run.result rhs with None -> () | Some p ->
+      (match Run.result rhs with Some p ->
       let start = Representative_pool_spec.close_heap middle depth child_pool in
       let trees2 : ((y : Ty.node Pref.t) @ immutable ->
         {t : F.tree | F.tree_root t === y &&
@@ -896,7 +892,7 @@ let rec (template_body_free @ total) : (quantifiers : A.names) @ immutable ->
     | Ty.Boundary q -> avoids_occurrence excluded p (D.embed (rho q)) ()
     | Ty.Parameter q ->
       A.abstract_free_def quantifiers D.Z q;
-      (match A.position quantifiers q with None -> () | Some index ->
+      (match A.position quantifiers q with Some index ->
         G.occurs_def p (D.Parameter (D.add D.Z index)))
     | Ty.Constant _ | Ty.Word_constant _ -> ()
     | Ty.Indirect (_, child) | Ty.List_template (_, child) ->

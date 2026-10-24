@@ -181,7 +181,6 @@ let (serializer_core_roundtrip @ total) (request : request) :
     finish_line_def (Headers (line, request.headers)) [];
     nonempty_def [];
     match framing request.headers with
-    | Bad _ | Too_large _ -> ()
     | Length n ->
       sized_def n request.body;
       if n = 0 then (
@@ -845,7 +844,6 @@ let rec (frame_agreement @ total) : (headers : int list list) ->
     | line :: rest ->
       header_field_def line;
       match header line with
-      | None -> ()
       | Some (name, value) ->
         if is_host name then (
           host_not_cl name;
@@ -853,7 +851,6 @@ let rec (frame_agreement @ total) : (headers : int list list) ->
           ())
         else if is_cl name then (
           match content_length value with
-          | Bad _ | Too_large _ -> ()
           | Length m ->
             frame_agreement rest (Some m) hosts;
             previous_matches_def (Some m) n;

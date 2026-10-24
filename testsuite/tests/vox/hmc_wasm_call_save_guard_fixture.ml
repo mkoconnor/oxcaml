@@ -78,7 +78,6 @@ let fixture (base : B.u32) available =
         Hmc_memory_saved_frame.slots_def blocks; Index.represents_def (D.S (Hmc_frame_capacity.capacity blocks)) 3;
         Stack.zero_def ());
       match Hmc_wasm_reservation.reserve (Hmc_memory_saved_frame.slots blocks) 3 0 48 () with
-      | None -> failwith "guard span"
       | Some _ ->
         let result = Guard.correct Hmc_heap_state.Halt top 48 stack_capacity stack_limit 2 1 T.Empty outer blocks target capacity
           Hmc_closure_ir.Empty heap Runtime.Empty 0 0 3 (base + 64) signature activation cells H.Empty D.Empty_context ty G.Empty_temporaries

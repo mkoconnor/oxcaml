@@ -80,7 +80,7 @@ let rec (run_origin @ total) : (saved : node Pref.heap) @ immutable -> (cut : in
     match e with
     | RShared _ -> prior x
     | RVar (i, _, epoch, d) -> (match Hm_environment_spec.lookup env i with
-      None -> prior x | Some _ ->
+      Some _ ->
       let scope : ((y : node Pref.t) @ immutable ->
         {u : unit | if H.mem h y then source_ok h y else H.at h y === None}) @ total = fun y ->
         facts y; runtime_at_def h depth pool y; safe_def h y; () in
@@ -101,8 +101,7 @@ let rec (run_origin @ total) : (saved : node Pref.heap) @ immutable -> (cut : in
         {o : origin | not (low_var middle y cut) || originates saved middle cut y o} @ immutable) @ total = fun y ->
         run_origin saved cut start depth next_pool start_facts (refine_ start_prior) next_env body middle body_pool y () in
       (match result body with None -> middle_prior x
-      | Some b -> match out with None -> prior x
-        | Some p -> let desc = Arrow (arg, b) in allocated_def middle depth p desc;
+      | Some b -> match out with Some p -> let desc = Arrow (arg, b) in allocated_def middle depth p desc;
           run_invariant start depth next_pool start_facts next_env body middle body_pool p ();
           safe_def middle p;
           let next = allocated_origin saved middle cut middle_prior depth p desc () in
@@ -126,7 +125,7 @@ let rec (run_origin @ total) : (saved : node Pref.heap) @ immutable -> (cut : in
       let prior2 : ((y : node Pref.t) @ immutable ->
         {o : origin | not (low_var h2 y cut) || originates saved h2 cut y o} @ immutable) @ total = fun y ->
         run_origin saved cut h1 depth pool1 facts1 (refine_ prior1) env right h2 pool2 y () in
-      (match result left with None -> prior x | Some f -> match result right with None -> prior x | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let var : desc = Var in let h3 = H.put h2 p (cell var depth) in let pool3 = Entry (p, pool2) in
         let desc = Arrow (a, p) in let h4 = H.put h3 arrow (cell desc depth) in
         allocated_def h2 depth p var; allocated_def h3 depth arrow desc;
@@ -157,7 +156,7 @@ let rec (run_origin @ total) : (saved : node Pref.heap) @ immutable -> (cut : in
       let next_env = Hm_environment_spec.Bind (arg, Hm_environment_spec.Bind (self, env)) in
       (match result body with None ->
         run_origin saved cut h3 depth pool3 facts3 (refine_ prior3) next_env body middle body_pool x ()
-      | Some b -> match finish with Aborted -> prior x | Unified (ok, d) ->
+      | Some b -> match finish with Unified (ok, d) ->
       let middle_prior : ((y : node Pref.t) @ immutable ->
         {o : origin | not (low_var middle y cut) || originates saved middle cut y o} @ immutable) @ total = fun y ->
         run_origin saved cut h3 depth pool3 facts3 (refine_ prior3) next_env body middle body_pool y () in
@@ -186,7 +185,7 @@ let rec (run_origin @ total) : (saved : node Pref.heap) @ immutable -> (cut : in
         {o : origin | not (low_var closed y cut) || originates saved closed cut y o} @ immutable) @ total = fun y ->
         let refine_ o = middle_prior y in 
         Leaf_provenance_proofs.closed_leaf_origin saved middle depth cut child_pool y o (); refine_ o in
-      (match result rhs with None -> prior x | Some p -> let next_env = Hm_environment_spec.Bind (p, env) in
+      (match result rhs with Some p -> let next_env = Hm_environment_spec.Bind (p, env) in
         run_origin saved cut closed depth transferred closed_facts closed_prior next_env body after final_pool x ()))
 
 let (rhs_origin @ total) : (h : node Pref.heap) @ immutable -> (depth : int) ->

@@ -55,7 +55,7 @@ let rec (run @ total) :
       run h trees depth pool env body middle body_pool child ();
       let frame : ((x : node Pref.t) @ immutable ->
         {u : unit | not (H.mem middle x) || H.mem after x}) @ total = fun x ->
-        (match result body with None -> () | Some _ -> match out with None -> () | Some _ ->
+        (match result body with None -> () | Some _ -> match out with Some _ ->
           let desc = primitive_desc op in let _ = cell desc depth in ()); () in
       S.owned_after middle after child frame ()
     | A.Abstraction (_, _, child), RLam (arg, body, middle, body_pool, _) ->
@@ -171,5 +171,4 @@ let rec (run @ total) :
            fun x ->
              closing_extends middle depth child_pool x ();
              M.run_extends closed depth parent next_env b after final_pool x () in
-         S.owned_after middle after rhs frame ())
-    | _ -> ())
+         S.owned_after middle after rhs frame ()))

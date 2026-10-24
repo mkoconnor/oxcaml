@@ -44,10 +44,8 @@ let () =
         | GE.Done final ->
           if L.get final.GE.execution.X.machine.E.locals 0 <> Some (S.I32 42)
             || final.GE.execution.X.machine.E.stack <> state.GE.execution.X.machine.E.stack
-            || final.GE.execution.X.memory <> state.GE.execution.X.memory then failwith "global read result"
-        | _ -> failwith "read failed")
-      else failwith "read destination"
-    | _ -> failwith "write failed")
+            || final.GE.execution.X.memory <> state.GE.execution.X.memory then failwith "global read result")
+      else failwith "read destination")
   else failwith "write rejected";
   if G.set globals 1 full <> None then failwith "immutable write";
   if G.set globals 0 full <> None then failwith "wrong type";

@@ -21,7 +21,7 @@ let () =
     F.tree_root_def tree; F.finite_def h tree;
     U.observe_def h p; F.readback_def tree);
   let ty = Hm_readback_runtime.read tree p (borrow_ allocated.state) in
-  match ty with Boolean -> () | _ -> failwith "wrong Boolean readback"
+  match ty with Boolean -> ()
 
 let () =
   let state = Pref.empty () in
@@ -37,7 +37,6 @@ let () =
   let ty = Hm_readback_runtime.read tree p (borrow_ allocated.state) in
   match ty with
   | Variable q -> if not (Pref.equal p q) then failwith "wrong free variable"
-  | _ -> failwith "lost free variable"
 
 let () =
   let state = Pref.empty () in

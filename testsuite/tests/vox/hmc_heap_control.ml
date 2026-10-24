@@ -51,20 +51,18 @@ let (step @ total) : (program : I.program) @ immutable -> (globals : X.globals) 
           (match M.decode heap closure, M.decode heap a.F.accumulator with
           | Some source_closure, Some argument ->
             L.invoke program heap closure a.F.accumulator source_closure argument ();
-            L.abstract_invoke_def program source_closure argument
-          | _ -> ())
+            L.abstract_invoke_def program source_closure argument)
         | _ -> ())
       | I.Keep (G.List_branch _) ->
         (match a.F.accumulator with
         | V.Cons_pointer address ->
-          (match M.decode heap a.F.accumulator with None -> () | Some value ->
+          (match M.decode heap a.F.accumulator with Some value ->
             let object_ = P.fetch program.I.origin.C.origin.O.table heap address value () in
             M.decode_object_def (M.view heap) object_;
             match object_ with
             | M.Cons (head, tail) ->
               M.decode_environment_def (M.view heap) (M.Cell (head, M.Cell (tail, a.F.env)));
-              M.decode_environment_def (M.view heap) (M.Cell (tail, a.F.env))
-            | _ -> ())
+              M.decode_environment_def (M.view heap) (M.Cell (tail, a.F.env)))
         | _ -> ())
       | I.Keep op -> B.supports_def op;
         Hmc_heap_simple_proofs.step program heap a frames abstract op ())));

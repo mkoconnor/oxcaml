@@ -26,9 +26,9 @@ let (words @ total) : (head : V.value) @ immutable -> (tail : V.value) @ immutab
   fun head tail bytes suffix premise -> ghost_ (
     Wire.decode_def Wire.Cons_schema bytes;
     Wire.decode_cells_def (D.S (D.S D.Z)) bytes;
-    (match V.decode bytes with None -> () | Some (_, rest) ->
+    (match V.decode bytes with Some (_, rest) ->
       Wire.decode_cells_def (D.S D.Z) rest;
-      match V.decode rest with None -> () | Some (_, remaining) -> Wire.decode_cells_def D.Z remaining);
+      match V.decode rest with Some (_, remaining) -> Wire.decode_cells_def D.Z remaining);
     let cells = Heap.Cell (head, Heap.Cell (tail, Heap.Empty)) in
     Words.decode (D.S (D.S D.Z)) bytes cells suffix ();
     Words.words_def cells; Words.words_def (Heap.Cell (tail, Heap.Empty)); Words.words_def Heap.Empty;

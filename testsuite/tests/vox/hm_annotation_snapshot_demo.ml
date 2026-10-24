@@ -43,4 +43,3 @@ let () =
     Snapshot.lookup p snapshot in
   match result with
   | Some Copy_spec.Boolean -> ()
-  | _ -> failwith "wrong annotation snapshot"

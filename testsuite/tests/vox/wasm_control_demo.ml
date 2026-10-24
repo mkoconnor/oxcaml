@@ -24,8 +24,7 @@ let check code =
     let bytes = Wasm_control_codec.encode code suffix () in
     (match C.decode (C.length (T.flatten code C.Empty)) bytes with
     | Some (tokens, rest) ->
-      if rest <> suffix || Wasm_control_codec.decode tokens <> Some code then failwith "control binary roundtrip"
-    | None -> failwith "control binary decode");
+      if rest <> suffix || Wasm_control_codec.decode tokens <> Some code then failwith "control binary roundtrip");
     if N.scan (T.flatten code C.Empty) N.Empty <> Some N.Empty then failwith "flattened nesting";
     match T.run (fuel 1000 C.Zero) {T.code; labels = T.No_labels; state} with
     | T.Finished state -> if state.X.machine.E.stack <> S.Push (S.I32 42, S.Empty) then failwith "control result"

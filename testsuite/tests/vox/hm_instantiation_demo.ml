@@ -23,7 +23,7 @@ let expect_instance :
   ghost_ (Hm_instantiation.complete scheme target args ());
   let result : {out : D.arguments option | match out with None -> false | Some _ -> true} @ immutable =
     Hm_instantiation.infer scheme target in
-  match result with None -> failwith "proved instance rejected" | Some _ -> ()
+  match result with Some _ -> ()
 
 let () =
   let z = D.Z in

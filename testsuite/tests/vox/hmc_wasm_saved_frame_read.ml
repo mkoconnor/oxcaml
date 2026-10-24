@@ -21,7 +21,7 @@ let rec (decoded_length @ total) : (count : D.index) @ immutable -> (bytes : B.b
   Wire.decode_cells_def count bytes; H.length_def cells;
   match count, cells with
   | D.S rest, H.Cell (_, tail) ->
-    (match V.decode bytes with None -> () | Some (_, after) -> decoded_length rest after tail suffix ())
+    (match V.decode bytes with Some (_, after) -> decoded_length rest after tail suffix ())
   | _ -> ())
 let rec (lookup_index @ total) : (blocks : G.table) @ immutable -> (code : B.u32) ->
     (pc : D.index) @ immutable -> (block : G.block) @ immutable ->
@@ -30,7 +30,6 @@ let rec (lookup_index @ total) : (blocks : G.table) @ immutable -> (code : B.u32
   fun blocks code pc block premise -> ghost_ (
     Lookup.lookup_def blocks code;
     (match blocks with
-    | G.Empty -> ()
     | G.Add (_, rest) -> if Index.represents (G.size rest) code then () else lookup_index rest code pc block ());
     Lookup.correct blocks pc code ())
 type result = {block : G.block; pc : B.u32; cells : H.cells; padding : H.cells; bytes : B.bytes; suffix : B.bytes}
@@ -60,8 +59,7 @@ let (read @ total) : (blocks : G.table) @ immutable -> (memory : B.bytes) @ immu
           | Some payload ->
             ghost_ (Wire.decode_def (Wire.Closure_schema (Cap.capacity blocks)) payload;
               (match V.decode payload with
-              | Some (_, rest) -> decoded_length (Cap.capacity blocks) rest cells B.End ()
-              | None -> ()));
+              | Some (_, rest) -> decoded_length (Cap.capacity blocks) rest cells B.End ()));
             let values = H.Cell (V.Word (Header.number pc), cells) in
             let width : B.u32 = 16 * (capacity + 1) in
             ghost_ (H.length_def values; Index.represents_def (D.S (H.length cells)) (capacity + 1);

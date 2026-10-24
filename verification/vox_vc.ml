@@ -161,6 +161,21 @@ let fresh_group () =
   incr next_group;
   !next_group
 
+(* A probe is a goal that may fail: the verifier tries to prove it after the
+   batch's obligations and acts only if it is proved. A match records its
+   entry, so that the cases of a match that is itself unreachable are not
+   reported. *)
+type probe =
+  | Match_entry of int * Location.t
+  | Exhaustive of Location.t
+      (** The fall-through of a partial match: proving it unreachable
+          discharges the match's partial-match warning. *)
+  | Impossible_case of
+      { entry : int;
+        loc : Location.t
+      }  (** Proving the goal shows that no value reaching the match can
+             select this case. *)
+
 (* Command lists are stored in reverse execution order. Define binds a fresh
    symbol to a total SMT expression; it does not restrict reachability. Check
    verifies a nested computation without exporting its assumptions. *)
@@ -168,6 +183,7 @@ type command =
   | Assume of term
   | Define of term
   | Assert of obligation
+  | Probe of probe * term
   | Choice of command list * command list
   | Check of command list
 
@@ -528,8 +544,37 @@ let merge_patterns base outcomes =
   ( { base with values; code; omitted_premises },
     disjunction (List.map snd outcomes) )
 
-let guarded_case ctx eval_guard eval_body loc s matched guard body rest =
+(* A case written to be unreachable is not reported as impossible: its body is
+   [assert false], [unreachable_ ()] (which ends with one) or a refutation. *)
+let reportable_case (c : _ case) =
+  let refuted e =
+    match e.exp_desc with
+    | Texp_unreachable -> true
+    | Texp_assert
+        ( { exp_desc = Texp_construct (_, { cstr_name = "false"; _ }, _, _, _);
+            _
+          },
+          _ ) ->
+      true
+    | _ -> false
+  in
+  (not c.c_lhs.pat_loc.loc_ghost)
+  &&
+  match c.c_rhs.exp_desc with
+  | Texp_sequence (_, _, trap) -> not (refuted trap)
+  | _ -> not (refuted c.c_rhs)
+
+(* A partial match whose warning is held back for the verifier. *)
+let deferred_match e =
+  match e.exp_desc with
+  | Texp_match (_, _, _, _, Partial) ->
+    Verification.is_deferred_partial_match e.exp_loc
+  | _ -> false
+
+let guarded_case ?(on_match = fun s _ -> s) ctx eval_guard eval_body loc s
+    matched guard body rest =
   let matched, condition = merge_patterns s matched in
+  let matched = on_match matched condition in
   let values = s.values in
   let s, accepted =
     match guard with
@@ -660,7 +705,7 @@ let record_value ctx env ty base fields =
 let rec erase_assertions code =
   List.filter_map
     (function
-      | Assert _ | Check _ -> None
+      | Assert _ | Probe _ | Check _ -> None
       | (Assume _ | Define _) as c -> Some c
       | Choice (a, b) -> Some (Choice (erase_assertions a, erase_assertions b)))
     code
@@ -4417,10 +4462,11 @@ and expression_desc ?deferred ctx s e =
     | Some checks -> defer checks s check
     end;
     s, value
-  | Texp_match (scrutinee, _, cases, [], _)
+  | Texp_match (scrutinee, _, cases, [], partial)
     when List.for_all (fun c -> snd (split_pattern c.c_lhs) = None) cases ->
     let s, value = eval s scrutinee in
-    computation_cases ?deferred ctx s scrutinee.exp_type value cases
+    computation_cases ?deferred ~checked:(e.exp_loc, partial) ctx s
+      scrutinee.exp_type value cases
   | Texp_for { for_id; for_from; for_to; for_dir; for_body; _ } ->
     let s, first = eval s for_from in
     let s, last = eval s for_to in
@@ -4702,23 +4748,70 @@ and value_bindings ctx s rec_flag bindings =
 
 and value_cases ctx s value cases = cases_with_pattern ctx s value cases
 
-and computation_cases ?deferred ctx s scrutinee_type value cases =
-  cases_with_pattern ?deferred ~scrutinee_type ctx s value cases
+and computation_cases ?deferred ?checked ctx s scrutinee_type value cases =
+  (* A checked match records its entry, then probes each reportable case and,
+     if partial, its fall-through. A case that earlier unguarded cases already
+     cover is left to the unused-case warning. *)
+  let s, checked =
+    match checked with
+    | Some (loc, partial) when ctx.verify_introductions && not (impossible s)
+      ->
+      let entry = fresh_group () in
+      let _, covered =
+        List.fold_left
+          (fun (earlier, covered) c ->
+            match fst (split_pattern c.c_lhs) with
+            | None -> earlier, covered
+            | Some p ->
+              let covered =
+                if List.exists (fun e -> Parmatch.le_pat e p) earlier
+                then c.c_lhs.pat_loc :: covered
+                else covered
+              in
+              (if c.c_guard = None then p :: earlier else earlier), covered)
+          ([], []) cases
+      in
+      ( { s with
+          code = Probe (Match_entry (entry, loc), Boolean false) :: s.code
+        },
+        Some (entry, loc, partial, covered) )
+    | _ -> s, None
+  in
+  cases_with_pattern ?deferred ?checked ~scrutinee_type ctx s value cases
 
 and cases_with_pattern : type k.
     ?scrutinee_type:Types.type_expr ->
     ?deferred:deferred_check list ref ->
+    ?checked:int * Location.t * partial * Location.t list ->
     context ->
     state ->
     value option ->
     k case list ->
     state * value option =
- fun ?scrutinee_type ?deferred ctx s value cases ->
+ fun ?scrutinee_type ?deferred ?checked ctx s value cases ->
+  let partial_match =
+    match checked with
+    | Some (_, loc, Partial, _) when Verification.is_deferred_partial_match loc
+      ->
+      Some loc
+    | _ -> None
+  in
   if impossible s
-  then s, None
+  then begin
+    (* No value reaches the rest of the cases. *)
+    Option.iter Verification.discharge_partial_match partial_match;
+    s, None
+  end
   else
     match cases with
-    | [] -> branch s (Boolean false), None
+    | [] ->
+      let s =
+        match partial_match with
+        | Some loc ->
+          { s with code = Probe (Exhaustive loc, Boolean false) :: s.code }
+        | None -> s
+      in
+      branch s (Boolean false), None
     | c :: cases ->
       (* A generalized nullary constructor can have a different datatype
          instance from the pattern after refinement elaboration. *)
@@ -4740,9 +4833,19 @@ and cases_with_pattern : type k.
       in
       let matched = pattern ctx s matched_value c.c_lhs in
       let rest s =
-        cases_with_pattern ?scrutinee_type ?deferred ctx s value cases
+        cases_with_pattern ?scrutinee_type ?deferred ?checked ctx s value
+          cases
       in
-      guarded_case ctx (expression ctx) (expression ?deferred ctx)
+      let on_match =
+        match checked with
+        | Some (entry, _, _, covered)
+          when reportable_case c && not (List.mem c.c_lhs.pat_loc covered) ->
+          fun s condition ->
+            let probe = Impossible_case { entry; loc = c.c_lhs.pat_loc } in
+            { s with code = Probe (probe, not_ condition) :: s.code }
+        | _ -> fun s _ -> s
+      in
+      guarded_case ~on_match ctx (expression ctx) (expression ?deferred ctx)
         c.c_rhs.exp_loc s matched c.c_guard c.c_rhs rest
 
 and structure ctx s str =
@@ -4995,6 +5098,7 @@ let query ?indicators ctx code =
     | term -> term
   in
   let goals = ref [] in
+  let probes = ref [] in
   (* A refined value's predicate is re-derived, with fresh names, each time the
      value is used. Definitions are total and unconditional, so a symbol defined
      like an earlier one is replaced by it; an assumption already on the current
@@ -5056,6 +5160,11 @@ let query ?indicators ctx code =
             goals
               := (o, both Implies (both And prefix reachable) (rename o.goal))
                  :: !goals;
+            reachable
+          | Probe (probe, goal) ->
+            probes
+              := (probe, both Implies (both And prefix reachable) (rename goal))
+                 :: !probes;
             reachable
           | Choice (a, b) ->
             let prefix = share (both And prefix reachable) in
@@ -5380,11 +5489,12 @@ let query ?indicators ctx code =
   let slice query term = slice_goal ~rename ctx query term in
   ( slice (expand ~slice:false goal) goal.term,
     goals,
+    List.rev !probes,
     fun term -> slice (expand ~slice:true { label = "refine_"; term }) term )
 
 (* [proved] receives the obligations of each query that was proved. *)
 let verify_batch ?(proved = fun _ -> ()) ctx prove code =
-  let query, goals, expand = query ctx code in
+  let query, goals, probes, expand = query ctx code in
   let prove_one (o : obligation) q =
     match prove ~batch:false o.loc q with
     | () -> proved [o]
@@ -5452,7 +5562,7 @@ let verify_batch ?(proved = fun _ -> ()) ctx prove code =
   let conjunction members =
     List.fold_left (fun q (_, goal) -> both And q goal) (Boolean true) members
   in
-  match groups goals with
+  (match groups goals with
   | [] -> ()
   | [members] -> prove_group members (lazy query)
   | ((first, _) :: _) :: _ as groups -> (
@@ -5463,7 +5573,36 @@ let verify_batch ?(proved = fun _ -> ()) ctx prove code =
         (fun members ->
           prove_group members (lazy (expand (conjunction members))))
         groups)
-  | [] :: _ -> ()
+  | [] :: _ -> ());
+  let holds loc term =
+    match prove ~batch:false loc (expand term) with
+    | () -> true
+    | exception Unproved _ -> false
+  in
+  (* Whether each match entry is unreachable, decided only when one of its
+     cases is shown impossible. *)
+  let entries = Hashtbl.create 4 in
+  let unreachable entry =
+    match Hashtbl.find_opt entries entry with
+    | None -> false
+    | Some decided -> Lazy.force decided
+  in
+  List.iter
+    (fun (probe, term) ->
+      match probe with
+      | Match_entry (entry, loc) ->
+        Hashtbl.replace entries entry (lazy (holds loc term))
+      | Exhaustive loc ->
+        if holds loc term then Verification.discharge_partial_match loc
+      | Impossible_case { entry; loc } ->
+        if holds loc term && not (unreachable entry)
+        then
+          Location.raise_errorf ~loc
+            "@[<v>This match case is impossible: the refinements in scope \
+             exclude every value it matches.@,\
+             Hint: remove it, or make its body %a.@]"
+            Misc.Style.inline_code "unreachable_ ()")
+    probes
 
 (* Whether [code] assumes facts of a proof step not yet known to be used. *)
 let rec has_unused_step code =
@@ -5476,7 +5615,7 @@ let rec has_unused_step code =
         | None -> false)
       | Choice (a, b) -> has_unused_step a || has_unused_step b
       | Check code -> has_unused_step code
-      | Assert _ -> false)
+      | Assert _ | Probe _ -> false)
     code
 
 (* Prove [code]; with warning 227 enabled, then, after the pass's other proofs,
@@ -5494,7 +5633,7 @@ let verify_steps ctx prove code =
     if has_unused_step code
     then begin
       let indicators = ref [] in
-      let query, goals, expand = query ~indicators ctx code in
+      let query, goals, _, expand = query ~indicators ctx code in
       List.iter
         (fun obligations ->
           let selected =
@@ -5673,8 +5812,16 @@ let generate ?(poll = fun () -> ()) ?unused_steps ?interface ~prove str =
   in
   declarations.structure declarations str;
   let exception Has_obligation in
+  (* Refinements in scope can show a case of a match impossible. *)
+  let has_match = ref false and has_refined_binder = ref false in
   let scan =
     { Tast_iterator.default_iterator with
+      pat =
+        (fun self p ->
+          (match get_desc (Ctype.expand_head p.pat_env p.pat_type) with
+          | Trefine _ -> has_refined_binder := true
+          | _ -> ());
+          Tast_iterator.default_iterator.pat self p);
       expr =
         (fun self e ->
           poll ();
@@ -5683,7 +5830,11 @@ let generate ?(poll = fun () -> ()) ?unused_steps ?interface ~prove str =
             || List.exists
                  (function Texp_subsumption _, _, _ -> true | _ -> false)
                  e.exp_extra
+            || deferred_match e
           then raise Has_obligation;
+          (match e.exp_desc with
+          | Texp_match _ -> has_match := true
+          | _ -> ());
           (* A unit without obligations uses none of its proof steps. *)
           if
             Vox_proof_steps.enabled ()
@@ -5716,7 +5867,8 @@ let generate ?(poll = fun () -> ()) ?unused_steps ?interface ~prove str =
   match
     if Option.is_some interface || Verification.has_refinement_sites ()
     then raise Has_obligation;
-    scan.structure scan str
+    scan.structure scan str;
+    if !has_match && !has_refined_binder then raise Has_obligation
   with
   | () -> ()
   | exception Has_obligation ->

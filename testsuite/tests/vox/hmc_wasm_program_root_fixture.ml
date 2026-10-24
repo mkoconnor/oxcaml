@@ -106,8 +106,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
               if actual.Calls.current.P.body.T.state.X.memory <> memory || actual.Calls.callers <> Calls.Root || actual.Calls.capacity <> call.Calls.capacity
                 || WG.get actual.Calls.current.P.globals 4 <> Some (S.I32 1)
                 || WG.get actual.Calls.current.P.globals 1 <> Some (S.I64 (V.tag value))
-                || WG.get actual.Calls.current.P.globals 2 <> Some (S.I64 (V.payload value)) then failwith "root indirect result"
-            | _ -> failwith "root indirect execution");
+                || WG.get actual.Calls.current.P.globals 2 <> Some (S.I64 (V.payload value)) then failwith "root indirect result");
             {memory; block = target.Func.code; globals = wasm_globals; value})
         | _ -> failwith "root imported types"))
 

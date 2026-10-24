@@ -27,8 +27,7 @@ let rec (prefix @ total) : (words : words) @ immutable -> (before : B.bytes) @ i
         Wasm_cell.word_suffix before value b (); Wasm_cell.word_suffix after value d ();
         Wasm_cell.eight_def ();
         Wasm_cell.shift before 8 (count - 8) count b ();
-        Wasm_cell.shift after 8 (count - 8) count d ()
-      | _ -> ()))
+        Wasm_cell.shift after 8 (count - 8) count d ()))
 let rec (encode @ total) : (words : words) @ immutable -> (tail : B.bytes) @ immutable ->
     {bytes : B.bytes | decode words bytes === Some tail} @ immutable = fun words tail ->
   match words with
@@ -46,8 +45,7 @@ let rec (unique @ total) : (words : words) @ immutable -> (left : B.bytes) @ imm
     | Word (value, rest) -> (match Codec.decode left, Codec.decode right with
       | Some (a, b), Some (c, d) ->
         W.equal_def value a; W.equal_def value c; unique rest b d tail ();
-        Wasm_word_prefix.unique left right value b ()
-      | _ -> ()))
+        Wasm_word_prefix.unique left right value b ()))
 let[@def] rec (append @ total) (left : words @ immutable) (right : words @ immutable) = match left with
   | End -> right | Word (value, rest) -> Word (value, append rest right)
 let rec (split @ total) : (left : words) @ immutable -> (right : words) @ immutable ->

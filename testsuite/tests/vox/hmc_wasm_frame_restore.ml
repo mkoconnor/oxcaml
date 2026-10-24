@@ -69,8 +69,7 @@ let (correct @ total) : (plan : Plan.plan) @ immutable -> (pc : B.u32) -> (paylo
       Wasm_scatter_range.right_identity (W.words payload);
       W.words_def cells;
       Scatter.matches_def plan 0 (W.words cells) state.X.memory source;
-      Scatter.matches_def second 8 (Q.Word (V.payload (V.Word (Header.number pc)), W.words payload)) state.X.memory source
-    | _ -> ());
+      Scatter.matches_def second 8 (Q.Word (V.payload (V.Word (Header.number pc)), W.words payload)) state.X.memory source);
     ghost_ (Memory.zero_def (); width_def count);
     let result = Memory.correct plan (W.words cells) (width count) state base limit source source_local base_local () in
     ghost_ (W.recover cells result.Memory.bytes result.Memory.suffix ());

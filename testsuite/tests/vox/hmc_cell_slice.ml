@@ -22,5 +22,4 @@ let rec (take_length @ total) : (count : D.index) @ immutable -> (cells : Heap.c
     Seg.take_def count cells;
     match count, cells, prefix with
     | D.Z, _, _ -> Heap.length_def prefix
-    | D.S n, Heap.Cell (_, rest), Heap.Cell (_, more) -> Heap.length_def prefix; take_length n rest more ()
-    | _ -> ())
+    | D.S n, Heap.Cell (_, rest), Heap.Cell (_, more) -> Heap.length_def prefix; take_length n rest more ())

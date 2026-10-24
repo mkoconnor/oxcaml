@@ -70,8 +70,7 @@ let rec execute : (program : I.program) @ immutable -> (globals : X.globals) @ i
         if reason <> expected then failwith "stack machine exhaustion differs";
         (match reason with X.Stack -> Out_of_stack | X.Heap -> Out_of_heap)
       | Machine.Advanced next, X.Advanced next_model ->
-        execute program globals code_capacity width heap_limit base stack_limit frame_limit next next_model (U.step program abstract) (fuel - 1) ()
-      | _ -> failwith "stack machine transition differs")
+        execute program globals code_capacity width heap_limit base stack_limit frame_limit next next_model (U.step program abstract) (fuel - 1) ())
 let check source input frame_limit (heap_limit : W.limb) expected =
   let program = build source in
   let code_capacity : W.limb = 4294967295 in
@@ -130,8 +129,7 @@ let check source input frame_limit (heap_limit : W.limb) expected =
                 | Hmc_memory_stack_runs.Blocked (_, X.Heap, _) -> Out_of_heap in
               if bounded_outcome <> expected then failwith "bounded stack execution differs";
               let out = execute program start.A.globals code_capacity width heap_limit base stack_limit frame_limit concrete start.A.configuration (U.initial program input) 5000 () in
-              if out <> expected then failwith "stack machine source result"
-            | _ -> failwith "initial stack") else failwith "zero frame width") else failwith "heap limit"
+              if out <> expected then failwith "stack machine source result") else failwith "zero frame width") else failwith "heap limit"
   | _ -> failwith "code capacity"
 let () =
   let list = D.Lambda (D.CaseList (D.Cons (var 0, D.Cons (word 2, D.Nil)), word 0, var 0)) in

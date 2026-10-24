@@ -10,7 +10,7 @@ let rec (running @ total) : (prefix : C.count) @ immutable -> (full : C.count) @
     Budget.le_def prefix full; M.run_def prefix module_ before; M.run_def full module_ before;
     match prefix, full with
     | C.Succ prefix, C.Succ full ->
-      (match M.step module_ before with M.Running next -> running prefix full module_ next after () | _ -> ())
+      (match M.step module_ before with M.Running next -> running prefix full module_ next after ())
     | _ -> ())
 let rec (finished @ total) : (prefix : C.count) @ immutable -> (full : C.count) @ immutable ->
     (module_ : F.module_) @ immutable -> (before : M.configuration) @ immutable -> (after : Wasm_global_execution.state) @ immutable ->

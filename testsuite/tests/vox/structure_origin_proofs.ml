@@ -19,8 +19,7 @@ let rec (path_mentions @ total) : (h : node Pref.heap) @ immutable -> (t : tree)
     let p = tree_root t in let ty = readback t in mentions_def ty x;
     reaches_def h p x path; observe_def h p; match path with Stop -> (match t with Free _ | Constant_tree _ | Word_tree _ | Alias_tree _ | List_tree _ | Branch _ -> ())
     | Step (next, rest) -> edge_def h p next;
-      match t with Free _ | Constant_tree _ | Word_tree _ -> ()
-      | Alias_tree (_, child) | List_tree (_, child) -> path_mentions h child x rest (); ()
+      match t with Alias_tree (_, child) | List_tree (_, child) -> path_mentions h child x rest (); ()
       | Branch (_, a, b) -> if next === tree_root a then (path_mentions h a x rest (); ())
         else (path_mentions h b x rest (); ()))
 

@@ -17,13 +17,11 @@ let (decide_cdcl @ total) :
   ghost_ (classify_input_def n formula);
   let result = Vox_cdcl_total.solve_complete n formula in
   (match result with
-   | Error _ -> ()
    | Ok report -> match report.answer with
      | Vox_cdcl_total.Sat assignment ->
        ghost_ (check_def n formula assignment)
      | Vox_cdcl_total.Unsat ->
-       ghost_ (Vox_sat.unsat_at n formula candidate)
-     | Vox_cdcl_total.Unknown -> ());
+       ghost_ (Vox_sat.unsat_at n formula candidate));
   result
 
 let (input_classification @ total) : (n : int) -> (formula : formula) ->

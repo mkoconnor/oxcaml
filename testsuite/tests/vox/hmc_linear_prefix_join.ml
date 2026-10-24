@@ -11,5 +11,4 @@ let rec (correct @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) 
     if base = 0 then () else (
       P.equal_prefix_def base before after; P.equal_prefix_def stop before after;
       match before, after with
-      | B.Byte (_, a), B.Byte (_, b) -> correct a b (base - 1) count (stop - 1) left right ()
-      | _ -> ()))
+      | B.Byte (_, a), B.Byte (_, b) -> correct a b (base - 1) count (stop - 1) left right ()))

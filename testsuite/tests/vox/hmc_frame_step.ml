@@ -20,7 +20,7 @@ let (step @ total) : (p : C.program) @ immutable -> (state : S.state) @ immutabl
   | S.Done _ | S.Stuck -> ()
   | S.Running (a, frames) ->
     H.at_label_def table blocks a;
-    (match G.lookup blocks a.S.pc with None -> () | Some block ->
+    (match G.lookup blocks a.S.pc with Some block ->
       let s = block.G.signature in
       C.valid_def p; H.activation_def table s a;
       Hmc_cfg_extension.lookup_valid (M.manifest p.C.origin.P.origin.M.definitions) table blocks a.S.pc block ();
@@ -42,20 +42,17 @@ let (step @ total) : (p : C.program) @ immutable -> (state : S.state) @ immutabl
         | Some ty, G.Environment (g, rest), S.Environment (env, tail) ->
           let schema = G.Value (g, ty, rest) in let runtime = S.Value (a.S.accumulator, env, tail) in
           H.temporaries_def table schema runtime;
-          E.edge table blocks g schema None {a with S.pc = next; env; temporaries = runtime} ()
-        | _ -> ())
+          E.edge table blocks g schema None {a with S.pc = next; env; temporaries = runtime} ())
       | G.Bind next ->
         (match s.G.accumulator, s.G.temporaries, a.S.temporaries with
         | Some ty, G.Environment (g, _), S.Environment (env, _) ->
           V.binding table g (D.Forall (D.Z, ty)) a.S.accumulator env ();
           E.edge table blocks (D.Binding (D.Forall (D.Z, ty), g)) s.G.temporaries None
-            {a with S.pc = next; env = R.V.Bind (a.S.accumulator, env)} ()
-        | _ -> ())
+            {a with S.pc = next; env = R.V.Bind (a.S.accumulator, env)} ())
       | G.Restore next ->
         (match s.G.accumulator, s.G.temporaries, a.S.temporaries with
         | Some ty, G.Environment (g, rest), S.Environment (env, tail) ->
-          E.edge table blocks g rest (Some ty) {a with S.pc = next; env; temporaries = tail} ()
-        | _ -> ())
+          E.edge table blocks g rest (Some ty) {a with S.pc = next; env; temporaries = tail} ())
       | G.Primitive (op, next) ->
         (match s.G.temporaries, a.S.temporaries, a.S.accumulator with
         | G.Value (g, _, rest), S.Value (R.V.Word left, env, tail), R.V.Word right ->
@@ -69,8 +66,7 @@ let (step @ total) : (p : C.program) @ immutable -> (state : S.state) @ immutabl
           let value = R.V.Cons (head, a.S.accumulator) in
           H.value_def table head; H.value_def table a.S.accumulator;
           H.value_def table value; H.valid_def table value; H.first_class_def value;
-          E.edge table blocks g rest s.G.accumulator {a with S.pc = next; env; temporaries = tail; accumulator = value} ()
-        | _ -> ())
+          E.edge table blocks g rest s.G.accumulator {a with S.pc = next; env; temporaries = tail; accumulator = value} ())
       | G.Call next ->
         (match s.G.temporaries, a.S.temporaries with
         | G.Value (g, D.Function (_, result), rest), S.Value (R.V.Closure (id, captured), env, tail) ->

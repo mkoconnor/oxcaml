@@ -25,8 +25,7 @@ let (value @ total) : (program : I.program) @ immutable -> (heap : H.heap) @ imm
       match F.decode heap activation with
       | Some source ->
         S.load_def program.I.origin.Hmc_cfg_program.origin.Hmc_closure_program.globals source.S.env (G.Local index);
-        Hmc_heap_simple_proofs.lookup heap activation.F.env source.S.env index ()
-      | None -> ());
+        Hmc_heap_simple_proofs.lookup heap activation.F.env source.S.env index ());
     match Lookup.lookup activation.F.env index with Some out -> out | None -> unreachable_ ()
 let rec (environment_bound @ total) : (context : D.context) @ immutable -> (cells : H.cells) @ immutable ->
     (env : H.cells) @ immutable -> (suffix : H.cells) @ immutable -> (index : D.index) @ immutable ->
@@ -42,9 +41,7 @@ let rec (environment_bound @ total) : (context : D.context) @ immutable -> (cell
     | D.Binding (_, rest), H.Cell (_, tail) ->
       (match Codec.decode_environment rest tail with
       | Some (remaining, _) ->
-        (match index with D.Z -> () | D.S i -> environment_bound rest tail remaining suffix i (number - 1) (count - 1) ())
-      | None -> ())
-    | _ -> ())
+        (match index with D.Z -> () | D.S i -> environment_bound rest tail remaining suffix i (number - 1) (count - 1) ())))
 let (address_bound @ total) : (signature : G.signature) @ immutable -> (activation : F.activation) @ immutable ->
     (cells : H.cells) @ immutable -> (padding : H.cells) @ immutable -> (index : D.index) @ immutable ->
     (number : Simple.slot) -> (count : B.u32) -> (base : B.u32) -> (frame_end : B.u32) ->
@@ -61,6 +58,4 @@ let (address_bound @ total) : (signature : G.signature) @ immutable -> (activati
     | H.Cell (_, (H.Cell (_, body) as rest)) ->
       H.length_def rest; Index.represents_def (H.length rest) (count - 2);
       (match Codec.decode_environment signature.G.locals body with
-      | Some (env, suffix) -> environment_bound signature.G.locals body env suffix index number (count - 3) ()
-      | None -> ())
-    | _ -> ())
+      | Some (env, suffix) -> environment_bound signature.G.locals body env suffix index number (count - 3) ()))

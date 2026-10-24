@@ -15,16 +15,15 @@ let (below_child @ total) : (h : node Pref.heap) @ immutable -> (heads : E.heads
     E.effective_ordered_def h heads p;
     E.effective_below_def h heads p cut; E.effective_below_def h heads q cut;
     Level_finite_spec.edge_def h p q; Level_unifier_spec.observe_def h p;
-    match H.at h p with None -> () | Some v ->
+    match H.at h p with Some v ->
     match v.desc with
-    | Var | Bool | Word -> ()
     | Link r -> E.link_level h heads p r (); ()
     | List a -> Level_unifier_spec.terminal_def h p;
       E.terminal_level h heads p (); at_level_def h p;
-      (match v.level with Generic -> () | Finite n -> E.effective_below_def h heads a n; ()); ()
+      (match v.level with Finite n -> E.effective_below_def h heads a n; ()); ()
     | Arrow (a, b) -> Level_unifier_spec.terminal_def h p;
       E.terminal_level h heads p (); at_level_def h p;
-      (match v.level with Generic -> () | Finite n ->
+      (match v.level with Finite n ->
         E.effective_below_def h heads a n; E.effective_below_def h heads b n; ());
       ())
 
@@ -160,8 +159,7 @@ let rec (environment_avoids @ total) : (h : node Pref.heap) @ immutable -> (head
     F.template_context_def rho schemas; let names = generalized_names h heads cut rhs in
     let context = F.template_context rho schemas in A.context_avoids_def names context;
     match schemas with Hm_environment_spec.No_templates -> ()
-    | Hm_environment_spec.Template_binding (schema, rest) -> match env with Hm_environment_spec.Empty -> ()
-      | Hm_environment_spec.Bind (_, tail) ->
+    | Hm_environment_spec.Template_binding (schema, rest) -> match env with Hm_environment_spec.Bind (_, tail) ->
         template_avoids h heads cut depth order trees rho values rhs schema ();
         let binders = F.template_names schema in let mono = D.embed (interpret rho variable_choice schema) in
         let z = D.Z in F.abstract_avoids names binders z mono ();

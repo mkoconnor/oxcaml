@@ -12,7 +12,7 @@ let run () =
   let u = () in let proof : {u : unit | is_var desc} = refine_ u in
   let refine_ proof = proof in
   ghost_ (
-    let result = match desc with Var -> true | Link q -> q = 0 in
+    let result = match desc with Var -> true in
     let result : {b : bool | b} = refine_ result in
     let refine_ result = result in ());
   ()

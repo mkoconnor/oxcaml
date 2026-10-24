@@ -21,7 +21,6 @@ let fixture (base : B.u32) (descriptor : R.descriptor) =
       Hmc_u32_index.represents_def (D.S (D.S D.Z)) 2;
       Hmc_u32_index.represents_def (D.S D.Z) 1; Hmc_u32_index.represents_def D.Z 0);
     match Hmc_wasm_reservation.reserve (Descriptor.slots ()) 2 base 512 () with
-    | None -> failwith "descriptor extent"
     | Some stop ->
       let memory = Descriptor.store before 512 base stop descriptor () in
       let slots = {Load.start = 1; captures = 2; recursive = 3} in

@@ -32,9 +32,9 @@ let (read @ total) : (before : Registers.registers) @ immutable -> (fuel : C.cou
       ghost_ (Registers.exports_def actual after); after
     | heap, top, status, tag, payload ->
       ghost_ (
-        (match heap with Some value -> S.same_type_def value (S.I32 0) | None -> ());
-        (match top with Some value -> S.same_type_def value (S.I32 0) | None -> ());
-        (match status with Some value -> S.same_type_def value (S.I32 0) | None -> ());
-        (match tag with Some value -> S.same_type_def value (S.I64 before.Registers.tag) | None -> ());
-        (match payload with Some value -> S.same_type_def value (S.I64 before.Registers.payload) | None -> ()));
+        (match heap with Some value -> S.same_type_def value (S.I32 0));
+        (match top with Some value -> S.same_type_def value (S.I32 0));
+        (match status with Some value -> S.same_type_def value (S.I32 0));
+        (match tag with Some value -> S.same_type_def value (S.I64 before.Registers.tag));
+        (match payload with Some value -> S.same_type_def value (S.I64 before.Registers.payload)));
       unreachable_ ()

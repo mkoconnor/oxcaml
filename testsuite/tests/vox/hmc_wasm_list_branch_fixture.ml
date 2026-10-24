@@ -101,8 +101,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
             let structured = Source.emit fragment empty_pc 0 1 slots T.Empty in
             let code = T.flatten structured C.Empty in
             (match T.run (Source.cost fragment empty_pc 0 1 slots (Hmc_wasm_list_probe.is_nil activation.Frame.accumulator)) {T.code = structured; labels = T.No_labels; state} with
-            | T.Running done_ -> let actual = done_.T.state in if actual.X.memory <> result.Full.frame.Finished.memory || actual.X.machine.E.locals <> result.Full.locals then failwith "reached list target state"
-            | _ -> failwith "reached list did not finish");
+            | T.Running done_ -> let actual = done_.T.state in if actual.X.memory <> result.Full.frame.Finished.memory || actual.X.machine.E.locals <> result.Full.locals then failwith "reached list target state");
             let prefix = [I.I32_const base; I.Local_set 0; I.I32_const 999; I.Local_set 1; I.I32_const cursor; I.Local_set 2;
               I.I64_const (Header.number 999); I.Local_set 3; I.I64_const (Header.number 999); I.Local_set 4;
               I.I64_const (Header.number 999); I.Local_set 5; I.I64_const (Header.number 999); I.Local_set 6] in

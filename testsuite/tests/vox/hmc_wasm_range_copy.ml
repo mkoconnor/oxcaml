@@ -29,7 +29,7 @@ let rec (unique @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @
     {u : unit | before === after} @ ghost = fun before after base frame premise -> ghost_ (
     P.equal_prefix_def base before after; Bytes.drop_def before base; Bytes.drop_def after base;
     if base = 0 then () else match before, after with
-    | B.Byte (_, a), B.Byte (_, b) -> unique a b (base - 1) frame () | _ -> ())
+    | B.Byte (_, a), B.Byte (_, b) -> unique a b (base - 1) frame ())
 let rec (correct @ total) : (values : Heap.cells) @ immutable -> (plan : Copy.plan) @ immutable -> (tail_plan : Copy.plan) @ immutable ->
     (source_position : Lower.count) -> (destination_position : Lower.count) -> (count : Lower.count) -> (destination : D.index) @ immutable ->
     (source : B.bytes) @ immutable -> (before : B.bytes) @ immutable -> (after : B.bytes) @ immutable -> (base : B.u32) ->
@@ -57,7 +57,6 @@ let rec (correct @ total) : (values : Heap.cells) @ immutable -> (plan : Copy.pl
     | Heap.Cell (value, rest) ->
       Patch.cons (D.S destination) value rest before_cells;
       (match Patch.write (D.S (D.S destination)) rest before_cells with
-      | None -> ()
       | Some middle_cells ->
         let split = Patch.split (D.S destination) middle_cells value after_cells () in
         let middle_frame = Wire.encode_cells middle_cells tail in
@@ -71,5 +70,4 @@ let rec (correct @ total) : (values : Heap.cells) @ immutable -> (plan : Copy.pl
           tag_def source_position; payload_def source_position;
           let _intermediate = Hmc_wasm_cell_update.correct split.Patch.prefix split.Patch.rest split.Patch.old value (destination_position + 1)
             middle after base (16 + 16 * destination_position) (24 + 16 * destination_position) middle_frame after_frame tail
-            source (tag source_position) (payload source_position) remaining () in ()
-        | _ -> ())))
+            source (tag source_position) (payload source_position) remaining () in ())))

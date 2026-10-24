@@ -90,7 +90,7 @@ let rec (aligned_weaken @ total) : (g : D.context) @ immutable -> (ts : template
     aligned_def g ts; D.weaken_context_def k g;
     let shifted = D.weaken_context k g in aligned_def shifted ts;
     match g with D.Empty_context -> () | D.Binding (_, rest) ->
-      match ts with No_templates -> () | Template_binding (_, tail) -> aligned_weaken rest tail k (); ())
+      match ts with Template_binding (_, tail) -> aligned_weaken rest tail k (); ())
 
 let[@def] rec (default_values @ total) (k : D.index @ immutable) = match k with
   | D.Z -> T.No_values | D.S k -> T.Value (Boolean, default_values k)
@@ -152,11 +152,11 @@ let (with_variable_model @ total) : (h : node Pref.heap) @ immutable -> (heads :
       {u : unit | tau q === T.eval xi (D.open_scheme sigma args)} -> {u : unit | claim})) @ total -> {u : unit | claim} @ ghost =
   fun h heads certificate depth pool facts forest env ts g rho model xi realize i sigma args epoch d q premise claim use -> ghost_ (
     copy_heap_def h epoch depth d; Hm_environment_models.aligned_lookup g ts i ();
-    match template_lookup ts i with None -> () | Some schema ->
+    match template_lookup ts i with Some schema ->
     let original = root schema in
     let valid : ((x : node Pref.t) @ immutable -> {u : unit | E.valid_head h heads x}) @ total = fun x ->
       facts x; runtime_at_def h heads depth pool x; safe_def h heads x; () in
-    let actual = match lookup env i with None -> root schema | Some p -> p in
+    let actual = match lookup env i with Some p -> p in
     let refine_ selected = Hm_effective_environment.lookup_schema h heads depth env ts i actual () in
     Copy_certificate_proofs.replay h certificate heads valid epoch depth d original q ();
     let scope : ((x : node Pref.t) @ immutable -> {u : unit | if H.mem h x then source_ok h x else H.at h x === None}) @ total = fun x ->
@@ -325,7 +325,5 @@ let rec (env_lookup @ total) : (h : node Pref.heap) @ immutable -> (heads : E.he
     Hm_effective_environment.effective_env_def h heads depth env ts;
     lookup_def env i; template_lookup_def ts i;
     match env with
-    | Empty -> ()
-    | Bind (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (_, tail) -> match i with D.Z -> ()
+    | Bind (_, rest) -> match ts with Template_binding (_, tail) -> match i with D.Z -> ()
         | D.S i -> env_lookup h heads depth rest tail i s (); ())

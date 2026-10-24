@@ -11,11 +11,9 @@ let (suffix @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) ->
     {u : unit | L.drop memory next === Some tail} @ ghost = fun memory base bytes value tail next premise -> ghost_ (
   C.decode_def bytes; Cell.eight_def ();
   match Codec.decode bytes with
-  | None -> ()
   | Some (tag, middle) ->
     Cell.word_suffix bytes tag middle ();
     (match Codec.decode middle with
-    | None -> ()
     | Some (payload, rest) ->
       Cell.word_suffix middle payload rest ();
       Cell.shift bytes 8 8 16 middle ();

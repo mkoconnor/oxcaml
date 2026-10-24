@@ -55,8 +55,7 @@ let fixture (base : B.u32) (pc : W.limb) =
     let code = Loop.emit table 0 in
     ghost_ (zero_def (); Loop.enter table 0 T.No_labels state (); Trace.correct trace table 0 base T.No_labels state ());
     (match T.run (Trace.cost trace table 0) (Loop.configuration table 0 T.No_labels state) with
-    | T.Running actual -> if actual <> Loop.configuration table 0 T.No_labels last then failwith "loop trace"
-    | _ -> failwith "loop prefix terminated");
+    | T.Running actual -> if actual <> Loop.configuration table 0 T.No_labels last then failwith "loop trace");
     let after_frame = Wire.encode_cells (Heap.Cell (V.Word (Header.number 3), cells)) tail in
     let after = Wasm_memory_splice.replace memory base frame after_frame () in
     if last.X.memory <> after || last.X.machine <> state.X.machine then failwith "loop result";

@@ -12,8 +12,7 @@ let (variable @ total) : (n : D.index) @ immutable -> (context : D.context) @ im
     D.typed_def n context (D.Bound index) ty derivation;
     match derivation with
     | D.Variable args -> (match D.lookup context index with
-      | None -> () | Some scheme -> Hm_instantiation.complete scheme ty args ())
-    | _ -> ())
+      | Some scheme -> Hm_instantiation.complete scheme ty args ()))
 
 let (generalized @ total) : (variables : G.variables) @ immutable -> (scope : E.scope) @ immutable ->
     (context : D.context) @ immutable -> (index : D.index) @ immutable -> (ty : Ty.ty) @ immutable ->

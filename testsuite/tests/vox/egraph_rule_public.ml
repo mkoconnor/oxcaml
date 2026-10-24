@@ -36,8 +36,7 @@ let interpreted_query :
     | G.Equal ->
       ghost_ (
         match proof with
-        | Some proof -> Interpret.sound input_rules proof env interpretation ()
-        | None -> ());
+        | Some proof -> Interpret.sound input_rules proof env interpretation ());
       true
     | _ -> false
 
@@ -115,7 +114,6 @@ let () =
       assert equal;
       ghost_ (
         match proof with
-        | None -> ()
         | Some proof ->
           let _ : {u : unit | E.valid rules proof && E.left proof === E.right proof} = () in ());
       ()

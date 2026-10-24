@@ -52,7 +52,7 @@ let rec (take @ total) : (small : D.index) @ immutable -> (large : D.index) @ im
   Cap.le_def small large; L.take_def large bytes; L.take_def small bytes; L.take_def small prefix;
   match small, large, bytes with
   | D.S n, D.S m, B.Byte (_, rest) ->
-    (match L.take m rest with None -> () | Some tail -> take n m rest tail ())
+    (match L.take m rest with Some tail -> take n m rest tail ())
   | _ -> ())
 let (four_le @ total) : (a : D.index) @ immutable -> (b : D.index) @ immutable ->
     {u : unit | Cap.le a b} -> {u : unit | Cap.le (C.four a) (C.four b)} @ ghost = fun a b premise -> ghost_ (

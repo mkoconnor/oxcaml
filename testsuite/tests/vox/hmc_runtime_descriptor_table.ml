@@ -47,7 +47,6 @@ let rec (lookup @ total) : (table : R.table) @ immutable -> (memory : B.bytes) @
   fun table memory base count code descriptor premise -> ghost_ (
     related_def table memory base count; R.lookup_def table code;
     match table with
-    | R.Empty -> ()
     | R.Add (_, rest) ->
       size rest memory base (count - 1) ();
       if Index.represents (R.size rest) code then Index.unique (R.size rest) code (count - 1) ()

@@ -36,8 +36,7 @@ let (reflection @ total) : (program : I.program) @ immutable -> (definitions : {
       | Runs.Finished concrete, Model.Finished model ->
         Machine.related_def program.I.origin.C.blocks width base active concrete model;
         H.valid_def program globals heap_limit model (U.advance program fuel (U.initial program input));
-        Hmc_heap_execute.word_agreement model.X.heap model.X.state word
-      | _ -> ());
+        Hmc_heap_execute.word_agreement model.X.heap model.X.state word);
     T.source_reflection program definitions input word fuel ()
 let (safe @ total) : (program : I.program) @ immutable -> (definitions : {d : M.definitions | M.origins d}) @ immutable ->
     (globals : X.globals) @ immutable -> (width : W.limb) -> (base : W.limb) -> (heap_limit : W.limb) -> (stack_limit : W.limb) -> (active : W.limb) -> (memory_limit : W.limb) ->
@@ -61,8 +60,7 @@ let (safe @ total) : (program : I.program) @ immutable -> (definitions : {d : M.
     | Runs.Blocked (concrete, _, steps), Model.Blocked (model, _, _) ->
       Machine.related_def program.I.origin.C.blocks width base active concrete model;
       H.valid_def program globals heap_limit model (U.advance program steps (U.initial program input));
-      T.safe program definitions input steps (); State.decode_def model.X.heap model.X.state
-    | _ -> ())
+      T.safe program definitions input steps (); State.decode_def model.X.heap model.X.state)
 type execution = {steps : D.index; result : Runs.result}
 let (preservation @ total) : (program : I.program) @ immutable -> (definitions : {d : M.definitions | M.origins d}) @ immutable ->
     (globals : X.globals) @ immutable -> (code_capacity : W.limb) -> (width : W.limb) -> (base : W.limb) ->

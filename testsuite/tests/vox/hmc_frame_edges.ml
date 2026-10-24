@@ -15,7 +15,7 @@ let (edge @ total) : (table : K.table) @ immutable -> (blocks : G.table) @ immut
       && H.temporaries table temporaries a.S.temporaries && H.value table a.S.accumulator && H.value table a.S.current} ->
     {u : unit | H.at_label table blocks a} @ ghost = fun table blocks g temporaries accumulator a premise -> ghost_ (
   G.accepts_def blocks a.S.pc g temporaries accumulator; H.at_label_def table blocks a;
-  match G.lookup blocks a.S.pc with None -> () | Some block -> H.activation_def table block.G.signature a)
+  match G.lookup blocks a.S.pc with Some block -> H.activation_def table block.G.signature a)
 let (entry @ total) : (table : K.table) @ immutable -> (blocks : G.table) @ immutable -> (g : D.context) @ immutable ->
     (a : S.activation) @ immutable ->
     {u : unit | G.entry blocks a.S.pc g G.Empty_temporaries && a.S.temporaries === S.Empty
@@ -23,13 +23,13 @@ let (entry @ total) : (table : K.table) @ immutable -> (blocks : G.table) @ immu
     {u : unit | H.at_label table blocks a} @ ghost = fun table blocks g a premise -> ghost_ (
   G.entry_def blocks a.S.pc g G.Empty_temporaries; H.at_label_def table blocks a;
   H.temporaries_def table G.Empty_temporaries S.Empty;
-  match G.lookup blocks a.S.pc with None -> () | Some block -> H.activation_def table block.G.signature a)
+  match G.lookup blocks a.S.pc with Some block -> H.activation_def table block.G.signature a)
 let (accumulator @ total) : (table : K.table) @ immutable -> (blocks : G.table) @ immutable ->
     (a : S.activation) @ immutable -> (v : R.V.value) @ immutable ->
     {u : unit | H.at_label table blocks a && H.value table v} ->
     {u : unit | H.at_label table blocks {a with S.accumulator = v}} @ ghost = fun table blocks a v premise -> ghost_ (
   H.at_label_def table blocks a; H.at_label_def table blocks {a with S.accumulator = v};
-  match G.lookup blocks a.S.pc with None -> () | Some block ->
+  match G.lookup blocks a.S.pc with Some block ->
     H.activation_def table block.G.signature a; H.activation_def table block.G.signature {a with S.accumulator = v})
 let (enter @ total) : (p : C.program) @ immutable -> (id : D.index) @ immutable -> (captured : R.V.value) @ immutable ->
     (arg : R.V.value) @ immutable -> (callee : K.entry) @ immutable -> (code : C.function_entry) @ immutable ->

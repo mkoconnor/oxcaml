@@ -197,7 +197,6 @@ let rec (mapped_lower_bound @ total) :
   | [] -> ()
   | x :: tail ->
     match ys with
-    | [] -> ()
     | y :: outputs ->
       Vox_int_sequence.accepts_def x bound lower;
       Vox_int_sequence.accepts_def y mapped lower;
@@ -221,7 +220,6 @@ let rec (map_sorted @ total) :
   | [] -> ()
   | x :: tail ->
     match ys with
-    | [] -> ()
     | y :: outputs ->
       mapped_lower_bound r monotone tail outputs x y ();
       map_sorted r monotone tail outputs ();

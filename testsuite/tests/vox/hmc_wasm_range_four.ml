@@ -52,9 +52,7 @@ let (correct @ total) : (first : Heap.cells) @ immutable -> (second : Heap.cells
       source_third (destination_position + first_count + second_count) (Heap.length third)
       source_fourth (destination_position + first_count + second_count + third_count) (Heap.length fourth);
     match Geometry.split plan source_first destination_position (Heap.length first) with
-    | None -> ()
     | Some second_plan -> (match Geometry.split second_plan source_second (destination_position + first_count) (Heap.length second) with
-      | None -> ()
       | Some third_plan ->
         Split.split_def plan source_first destination_position (Heap.length first);
         Split.split_def second_plan source_second (destination_position + first_count) (Heap.length second);
@@ -69,7 +67,6 @@ let (correct @ total) : (first : Heap.cells) @ immutable -> (second : Heap.cells
         Hmc_cell_patch_algebra.append pair last (D.S destination) before_cells;
         D.add_def (D.S destination) (Heap.length pair);
         match Patch.write (D.add (D.S destination) (Heap.length pair)) last before_cells with
-        | None -> ()
         | Some middle_cells ->
           let middle_frame = Wire.encode_cells middle_cells tail in
           let middle = Splice.replace source base before_frame middle_frame () in

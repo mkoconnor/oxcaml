@@ -40,7 +40,7 @@ let (preserve_instruction @ total) : (larger : G.table) @ immutable -> (smaller 
     {u : unit | G.extends larger smaller && instruction smaller id op} ->
     {u : unit | instruction larger id op} @ ghost = fun larger smaller id op premise -> ghost_ (
   instruction_def smaller id op; instruction_def larger id op;
-  match G.lookup smaller id with None -> () | Some block -> E.lookup larger smaller id block ())
+  match G.lookup smaller id with Some block -> E.lookup larger smaller id block ())
 let rec (preserve @ total) : (larger : G.table) @ immutable -> (smaller : G.table) @ immutable ->
     (source : K.term) @ immutable -> (next : D.index) @ immutable -> (trace : t) @ immutable ->
     {u : unit | G.extends larger smaller && generated smaller source next trace} ->
@@ -66,5 +66,4 @@ let rec (preserve @ total) : (larger : G.table) @ immutable -> (smaller : G.tabl
     preserve_instruction larger smaller start (G.Jump (entry scrutinee)) ();
     preserve_instruction larger smaller branch (G.List_branch (entry empty, entry full)) ();
     preserve_instruction larger smaller restore (G.Restore next) ();
-    preserve larger smaller s branch scrutinee (); preserve larger smaller a next empty (); preserve larger smaller b restore full ()
-  | _ -> ())
+    preserve larger smaller s branch scrutinee (); preserve larger smaller a next empty (); preserve larger smaller b restore full ())

@@ -33,15 +33,13 @@ let rec (reflexive @ total) : (memory : B.bytes) @ immutable -> (boundary : W.li
     {u : unit | Preserve.equal_prefix boundary memory memory} @ ghost = fun memory boundary premise -> ghost_ (
     Bounds.covers_def memory boundary; Hmc_linear_bytes.drop_def memory boundary; Preserve.equal_prefix_def boundary memory memory;
     if boundary = 0 then () else match memory with
-    | B.End -> ()
     | B.Byte (_, rest) -> Bounds.covers_def rest (boundary - 1); reflexive rest (boundary - 1) ())
 let rec (transitive @ total) : (first : B.bytes) @ immutable -> (middle : B.bytes) @ immutable -> (last : B.bytes) @ immutable ->
     (boundary : W.limb) -> {u : unit | Preserve.equal_prefix boundary first middle && Preserve.equal_prefix boundary middle last} ->
     {u : unit | Preserve.equal_prefix boundary first last} @ ghost = fun first middle last boundary premise -> ghost_ (
     Preserve.equal_prefix_def boundary first middle; Preserve.equal_prefix_def boundary middle last; Preserve.equal_prefix_def boundary first last;
     if boundary = 0 then () else match first, middle, last with
-    | B.Byte (_, a), B.Byte (_, b), B.Byte (_, c) -> transitive a b c (boundary - 1) ()
-    | _ -> ())
+    | B.Byte (_, a), B.Byte (_, b), B.Byte (_, c) -> transitive a b c (boundary - 1) ())
 let rec (materialize @ total) : (table : K.table) @ immutable -> (capacity : W.limb) -> (memory : B.bytes) @ immutable ->
     (heap : M.heap) @ immutable -> (limit : W.limb) -> (boundary : W.limb) ->
     {u : unit | M.valid table heap && M.used heap <= limit && Image.encodable capacity heap && Bounds.covers memory limit

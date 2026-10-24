@@ -38,9 +38,7 @@ let () =
      | T.Branch (_, l, r) ->
        T.shape_of_def before; T.shape_of_def l;
        (match l with
-        | T.Branch (_, _, lr) -> T.shape_of_def lr
-        | T.Empty -> ())
-     | T.Empty -> ());
+        | T.Branch (_, _, lr) -> T.shape_of_def lr));
     let leaf4 = T.Fork (4, T.Tip, T.Tip) in
     let leaf3 = T.Fork (3, T.Tip, T.Tip) in
     T.mirror_shape_def (T.Fork (1, T.Fork (2, leaf4, T.Tip), leaf3));

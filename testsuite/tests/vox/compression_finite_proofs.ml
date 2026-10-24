@@ -42,7 +42,7 @@ let rec (resolution_head @ total) : (h : node Pref.heap) @ immutable -> (tree : 
     finite_def h tree; tree_root_def tree; head_def tree;
     let p = tree_root tree in resolves_def h p r path; terminal_def h p;
     match path with Here -> () | Via (_, rest) ->
-      match tree with Alias_tree (_, child) -> resolution_head h child r rest (); () | _ -> ())
+      match tree with Alias_tree (_, child) -> resolution_head h child r rest (); ())
 
 let rec (finite_compress @ total) : (h : node Pref.heap) @ immutable ->
     (p : node Pref.t) @ immutable -> (q : node Pref.t) @ immutable -> (r : node Pref.t) @ immutable ->

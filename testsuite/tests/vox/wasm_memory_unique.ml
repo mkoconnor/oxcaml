@@ -15,5 +15,4 @@ let rec (updated @ total) : (before : B.bytes) @ immutable -> (address : B.u32) 
   L.updated_def before address payload left; L.updated_def before address payload right;
   if address = 0 then overlay payload before left right () else
     match before, left, right with
-    | B.Byte (_, rest), B.Byte (_, a), B.Byte (_, b) -> updated rest (address - 1) payload a b ()
-    | _ -> ())
+    | B.Byte (_, rest), B.Byte (_, a), B.Byte (_, b) -> updated rest (address - 1) payload a b ())

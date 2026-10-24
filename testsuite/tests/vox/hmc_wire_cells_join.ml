@@ -15,4 +15,4 @@ let rec (correct @ total) : (first : Heap.cells) @ immutable -> (second : Heap.c
     match first with
     | Heap.Empty -> ()
     | Heap.Cell (_, rest) -> (match V.decode bytes with
-      | None -> () | Some (_, remaining) -> correct rest second remaining middle tail ()))
+      | Some (_, remaining) -> correct rest second remaining middle tail ()))

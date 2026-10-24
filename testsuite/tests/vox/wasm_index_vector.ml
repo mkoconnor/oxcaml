@@ -37,7 +37,6 @@ let rec (encode_entries @ total) : (indices : F.table) @ immutable -> (tail : B.
     ghost_ (count_def indices);
     match indices with
     | F.No_elements -> ghost_ (encoded_def indices tail tail); tail
-    | F.Element (None, _) -> tail
     | F.Element (Some index, rest) ->
       let bytes = B.encode_u32 index (encode_entries rest tail (number - 1) ()) in
       ghost_ (encoded_def indices bytes tail); bytes
@@ -51,10 +50,10 @@ let rec (roundtrip @ total) : (indices : F.table) @ immutable -> (tail : B.bytes
     | F.No_elements | F.Element (None, _) -> ()
     | F.Element (Some _, rest) ->
       progress bytes;
-      match B.decode_5 bytes with None -> () | Some (_, suffix) ->
+      match B.decode_5 bytes with Some (_, suffix) ->
         Stream.transitive (C.Succ (Stream.length suffix)) (Stream.length bytes) fuel ();
         Budget.le_def (C.Succ (Stream.length suffix)) fuel;
-        match fuel with C.Zero -> () | C.Succ fuel -> roundtrip rest tail (number - 1) fuel suffix ())
+        match fuel with C.Succ fuel -> roundtrip rest tail (number - 1) fuel suffix ())
 let (encode @ total) : (indices : F.table) @ immutable -> (tail : B.bytes) @ immutable ->
     {out : B.bytes option | match out with None -> count indices === None | Some bytes -> not (count indices === None) && decode bytes === Some (indices, tail)} @ immutable =
   fun indices tail -> match count indices with

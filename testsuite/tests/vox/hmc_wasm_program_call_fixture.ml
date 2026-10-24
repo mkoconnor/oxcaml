@@ -154,7 +154,6 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
               | None -> failwith "descriptor lookup"
               | Some descriptor ->
               (match Hmc_closure_ir.lookup table id with
-              | None -> failwith "capture entry lookup"
               | Some entry ->
               if count > 64 then failwith "capture fixture count" else
               let minimum : Hmc_wasm_relayout.count = (if entry.Hmc_closure_ir.recursive then 4 else 3) + count in
@@ -163,10 +162,8 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
               | None -> failwith "capture plan build"
               | Some fragment ->
               match Some lowered.Lower.calls with
-              | None -> failwith "call plan table"
               | Some plans ->
               (match Hmc_cfg_program.lookup program.Program.origin.Hmc_cfg_program.functions id with
-              | None -> failwith "callee lookup"
               | Some function_ ->
               (match Hmc_u32_index.encode 1000 function_.Hmc_cfg_program.start with
               | None -> failwith "callee PC encoding"
@@ -184,7 +181,6 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
               let full = Heap.Cell (V.Word (Header.number old_pc), source_cells) in
               ghost_ (Heap.length_def full; Hmc_u32_index.represents_def (Heap.length full) (source_count + 1));
               match Hmc_wasm_reservation.reserve (Heap.length full) (source_count + 1) 256 8192 () with
-              | None -> failwith "source frame extent"
               | Some source_stop ->
               let memory = Hmc_memory_cells.store original_memory 8192 256 source_stop full () in
               if not (above heap source_stop) then failwith "source frame overlaps heap" else (
@@ -264,10 +260,9 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
                   table blocks activation.Frame.pc block ();
                 G.block_valid_def (Hmc_monomorphic.manifest program.Program.origin.Hmc_cfg_program.origin.Hmc_closure_program.origin.Hmc_monomorphic.definitions)
                   table blocks block;
-                (match ty with D.Function (_, result) -> G.accepts_def blocks next context schema (Some result) | _ -> ())) in
+                (match ty with D.Function (_, result) -> G.accepts_def blocks next context schema (Some result))) in
               if not (Entry.separate capture 0 5 11 && Separate.separate slots 4 11) then failwith "stack pointer scratch overlap" else
               (match Hmc_wasm_reservation.reserve (Hmc_memory_saved_frame.slots blocks) (1 + stored_capacity) 0 width () with
-              | None -> failwith "stack frame extent"
               | Some _ ->
               let call_fragment = Block.Call {Block.save = save_fragment; padding; padding_length; saved = saved_count; environment = env_count} in
               if stored_capacity <> lowered.Lower.capacity || width <> lowered.Lower.width || Hmc_wasm_program_table.lookup lowered.Lower.blocks old_pc <> Some call_fragment
@@ -306,13 +301,11 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
                       (match L.drop saved_memory 256, L.drop saved_memory stop with
                       | Some before, Some suffix -> Wasm_memory_splice.replace saved_memory 256 before (Wire.encode_cells callee_full suffix) ()
                       | _ -> failwith "callee expected extent")
-                    | _ -> failwith "saved expected extent")
-                  | _ -> failwith "source ordinary call") in
+                    | _ -> failwith "saved expected extent")) in
               (match T.run result.New.fuel {T.code = control; labels = Round.labels config; state} with
               | T.Running returned ->
                 let final = returned.T.state in
-                if returned.T.code <> T.Empty || returned.T.labels <> Round.labels config || final <> result.New.state || Wasm_locals.get final.X.machine.E.locals 13 <> Some (S.I32 (if available then 0 else 3)) || final.X.memory <> expected || Wasm_locals.get final.X.machine.E.locals 11 <> Some (S.I32 cursor) then failwith "ordinary call execution"
-              | _ -> failwith "ordinary call control");
+                if returned.T.code <> T.Empty || returned.T.labels <> Round.labels config || final <> result.New.state || Wasm_locals.get final.X.machine.E.locals 13 <> Some (S.I32 (if available then 0 else 3)) || final.X.memory <> expected || Wasm_locals.get final.X.machine.E.locals 11 <> Some (S.I32 cursor) then failwith "ordinary call execution");
               (match Hmc_wasm_program_table.lookup lowered.Lower.blocks old_pc, Index.encode 1000 (G.size blocks) with
               | Some (Block.Call selected), Some block_count ->
                 let selection = Hmc_wasm_program_selection.select_reachable program globals lowered 1000 block_count
@@ -399,8 +392,7 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
                 | Calls.Running actual ->
                   if actual.Calls.current.P.body.T.state.X.memory <> expected || actual.Calls.callers <> Calls.Root || actual.Calls.capacity <> call.Calls.capacity
                     || WG.get actual.Calls.current.P.globals 0 <> Some (S.I32 (if available then 0 else 3))
-                    || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 cursor) then failwith "ordinary indirect result"
-                | _ -> failwith "ordinary indirect execution");
+                    || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 cursor) then failwith "ordinary indirect result");
                 {memory; expected; block = target.Func.code; globals = wasm_globals; cursor; status = (if available then 0 else 3)})))
               | _ -> failwith "call save plan")
               | _ -> failwith "ordinary call expected"))))))))

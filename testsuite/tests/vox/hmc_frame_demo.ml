@@ -63,7 +63,6 @@ let check_frames : I.program @ immutable -> Hmc_word64.t @ immutable -> unit = f
       ghost_ (H.state_def p.I.origin.C.origin.P.table p.I.origin.C.blocks state;
         H.at_label_def p.I.origin.C.origin.P.table p.I.origin.C.blocks a);
       (match G.lookup p.I.origin.C.blocks a.S.pc with
-      | None -> failwith "missing frame signature"
       | Some block ->
         ghost_ (L.shaped p.I.origin.C.origin.P.table block.G.signature a ());
         let suffix = L.Cell (R.V.True, L.Cell (R.V.False, L.Empty)) in

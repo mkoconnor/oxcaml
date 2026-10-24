@@ -93,7 +93,7 @@ let matched_rule : (state : {s : H.t | H.O.valid s.owner && V.valid s.store &&
       #{status = Invalid_bindings; merged = false; left = -1; right = -1;
         state = {H.owner; store}}
     else
-      let subst = ghost_ (match subst with Some subst -> subst | None -> []) in
+      let subst = ghost_ (match subst with Some subst -> subst) in
       if not (Scan.matches store.nodes store.semantic.union.parents
         store.semantic.union.count rule.lhs bindings root) then
         #{status = No_match; merged = false; left = -1; right = -1;

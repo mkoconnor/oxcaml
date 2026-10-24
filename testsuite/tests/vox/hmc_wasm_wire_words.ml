@@ -15,7 +15,7 @@ let (parts @ total) : (bytes : B.bytes) @ immutable -> (value : V.value) @ immut
   match C.decode bytes with
   | None -> unreachable_ ()
   | Some (_, middle) ->
-    ghost_ (match C.decode middle with None -> () | Some (payload, _) ->
+    ghost_ (match C.decode middle with Some (payload, _) ->
       let _lo : W.limb = payload.W.lo in let _hi : W.limb = payload.W.hi in ());
     middle
 let (cell_unique @ total) : (left : B.bytes) @ immutable -> (right : B.bytes) @ immutable ->
@@ -34,9 +34,7 @@ let rec (cells_unique @ total) : (count : D.index) @ immutable -> (left : B.byte
     | D.Z -> ()
     | D.S rest -> (match V.decode left, V.decode right with
       | Some (value, a), Some (_, b) -> (match cells with
-        | Heap.Empty -> ()
-        | Heap.Cell (_, remaining) -> cells_unique rest a b remaining tail (); cell_unique left right value a ())
-      | _ -> ()))
+        | Heap.Cell (_, remaining) -> cells_unique rest a b remaining tail (); cell_unique left right value a ())))
 let (header @ total) : (count : D.index) @ immutable -> (bytes : B.bytes) @ immutable -> (pc : W.limb) ->
     (current : V.value) @ immutable -> (accumulator : V.value) @ immutable -> (cells : Heap.cells) @ immutable ->
     (tail : B.bytes) @ immutable ->

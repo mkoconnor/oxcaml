@@ -5430,6 +5430,7 @@ let type_implementation target modulename initial_env ast =
       end
     )
     ~exceptionally:(fun () ->
+        Verification.flush_partial_matches ();
         Profile.record_call "save_cmt" (fun () ->
           let annots =
             Cmt_format.Partial_implementation

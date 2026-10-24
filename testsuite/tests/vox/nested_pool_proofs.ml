@@ -75,7 +75,7 @@ let (transferred_bound @ total) : (h : node Pref.heap) @ immutable ->
     closed_observe h cut child x ();
     closed_at_def h after cut child x; retained_def after x;
     at_level_def after x;
-    (match H.at h x with None -> () | Some v ->
+    (match H.at h x with Some v ->
       close_level_def cut v.level; ()); ())
 
 let (closed_retained @ total) : (h : node Pref.heap) @ immutable -> (cut : int) ->

@@ -74,7 +74,6 @@ let rec (build @ total) : (state : {s : V.t | V.valid s}) @ immutable ->
           let subst = ghost_ (
             let expr = if id < 0 then default sort else S.origin state.semantic.origins id in
             match subst with
-            | None -> None
             | Some rest ->
               R.subst_valid_def vars (expr :: rest);
               P.agrees_def state.semantic.origins bindings (expr :: rest);

@@ -32,8 +32,7 @@ let rec (prefix_transitive @ total) : (before : B.bytes) @ immutable -> (middle 
     {u : unit | P.equal_prefix width before after} @ ghost = fun before middle after width premise -> ghost_ (
   P.equal_prefix_def width before middle; P.equal_prefix_def width middle after; P.equal_prefix_def width before after;
   if width = 0 then () else match before, middle, after with
-  | B.Byte (_, a), B.Byte (_, b), B.Byte (_, c) -> prefix_transitive a b c (width - 1) ()
-  | _ -> ())
+  | B.Byte (_, a), B.Byte (_, b), B.Byte (_, c) -> prefix_transitive a b c (width - 1) ())
 let rec (above_lower @ total) : (heap : H.heap) @ immutable -> (upper : B.u32) -> (lower : B.u32) ->
     {u : unit | lower <= upper && Above.above heap upper} ->
     {u : unit | Above.above heap lower} @ ghost = fun heap upper lower premise -> ghost_ (

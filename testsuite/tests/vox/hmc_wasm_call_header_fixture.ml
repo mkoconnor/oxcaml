@@ -49,8 +49,7 @@ let fixture (base : B.u32) recursive argument =
       if after <> expected then failwith "header encoding mismatch";
       let code = Write.emit recursive 13 0 1 2 3 in
       (match X.run code state with
-      | X.Done out -> if out.X.memory <> expected || out.X.machine <> state.X.machine then failwith "header target state"
-      | _ -> failwith "header target trap");
+      | X.Done out -> if out.X.memory <> expected || out.X.machine <> state.X.machine then failwith "header target state");
       {memory; expected; code; cursor = base;
         prefix = [I.I32_const base; I.Local_set 0; I.I32_const 4096; I.Local_set 1;
           I.I64_const (V.tag argument); I.Local_set 2; I.I64_const (V.payload argument); I.Local_set 3]})

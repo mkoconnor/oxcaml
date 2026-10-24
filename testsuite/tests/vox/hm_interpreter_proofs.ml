@@ -10,38 +10,30 @@ let rec (erase_typing @ total) :
   (match d with
   | D.Variable _ | D.Constant | D.Word_constant | D.Empty_list _ -> ()
   | D.List_cons (a, head, tail) -> (match e with
-    | D.Cons (h, r) -> erase_typing n g h a head (); erase_typing n g r t tail ()
-    | _ -> ())
+    | D.Cons (h, r) -> erase_typing n g h a head (); erase_typing n g r t tail ())
   | D.List_case (a, scrutinee, empty, nonempty) -> (match e with
     | D.CaseList (s, l, r) -> erase_typing n g s (D.List_type a) scrutinee ();
       erase_typing n g l t empty ();
       erase_typing n (D.Binding (D.Forall (D.Z, a),
-        D.Binding (D.Forall (D.Z, D.List_type a), g))) r t nonempty ()
-    | _ -> ())
+        D.Binding (D.Forall (D.Z, D.List_type a), g))) r t nonempty ())
   | D.Conditional (condition, yes, no) -> (match e with
     | D.If (c, a, b) -> erase_typing n g c D.Boolean condition ();
-      erase_typing n g a t yes (); erase_typing n g b t no ()
-    | _ -> ())
+      erase_typing n g a t yes (); erase_typing n g b t no ())
   | D.Word_primitive (left, right) -> (match e with
     | D.Primitive (_, a, b) -> erase_typing n g a D.Word64 left ();
-      erase_typing n g b D.Word64 right ()
-    | _ -> ())
+      erase_typing n g b D.Word64 right ())
   | D.Abstraction (a, body) -> (match e, t with
     | D.Lambda e, D.Function (_, b) ->
-      erase_typing n (D.Binding (D.Forall (D.Z, a), g)) e b body ()
-    | _ -> ())
+      erase_typing n (D.Binding (D.Forall (D.Z, a), g)) e b body ())
   | D.Application (a, left, right) -> (match e with
     | D.Apply (f, x) -> erase_typing n g f (D.Function (a, t)) left ();
-      erase_typing n g x a right ()
-    | _ -> ())
+      erase_typing n g x a right ())
   | D.Recursion (a, b, body) -> (match e with
     | D.Recursive e -> erase_typing n
       (D.Binding (D.Forall (D.Z, a), D.Binding (D.Forall (D.Z, t), g)))
-      e b body ()
-    | _ -> ())
+      e b body ())
   | D.Let_binding (s, rhs, body) -> (match e, s with
     | D.Let (r, b), D.Forall (k, a) ->
       erase_typing (D.add k n) (D.weaken_context k g) r a rhs ();
-      erase_typing n (D.Binding (s, g)) b t body ()
-    | _ -> ()));
+      erase_typing n (D.Binding (s, g)) b t body ()));
   ())

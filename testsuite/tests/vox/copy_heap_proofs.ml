@@ -58,8 +58,7 @@ let rec (target_allocated @ total) : (saved : node Pref.heap) @ immutable ->
       let h = heap saved epoch depth rest in let w = session_mark rest old epoch y in put_frame h x w q;
       if p === x then (
         match old.desc with Link child ->
-          target_allocated saved epoch depth rest child y (); ()
-        | _ -> ())
+          target_allocated saved epoch depth rest child y (); ())
       else (target_for_def saved rest p q;
         target_allocated saved epoch depth rest p q (); ()))
 
@@ -67,8 +66,7 @@ let rec (extension_trans @ total) : (a : history) @ immutable -> (b : history) @
     (c : history) @ immutable -> {u : unit | extends a b && extends b c} ->
     {u : unit | extends a c} @ ghost = fun a b c premise -> ghost_ (
   extends_def b c; extends_def a c;
-  if b === c then () else match c with Start | Clean -> ()
-  | Fresh (rest, _, _, _, _) | Alias (rest, _, _, _) ->
+  if b === c then () else match c with Fresh (rest, _, _, _, _) | Alias (rest, _, _, _) ->
     extension_trans a b rest (); ())
 let rec (mapping_preserved @ total) : (saved : node Pref.heap) @ immutable ->
     (epoch : node Pref.t) @ immutable -> (depth : int) -> (before : history) @ immutable ->
@@ -77,8 +75,7 @@ let rec (mapping_preserved @ total) : (saved : node Pref.heap) @ immutable ->
     {u : unit | mapping after p === Some q} @ ghost = fun saved epoch depth before after p q premise -> ghost_ (
   extends_def before after;
   valid_def saved epoch depth after; mapping_def after p;
-  if before === after then () else match after with Start | Clean -> ()
-  | Fresh (rest, x, _, _, _) | Alias (rest, x, _, _) ->
+  if before === after then () else match after with Fresh (rest, x, _, _, _) | Alias (rest, x, _, _) ->
     mapping_preserved saved epoch depth before rest p q (); ())
 let (target_preserved @ total) : (saved : node Pref.heap) @ immutable ->
     (epoch : node Pref.t) @ immutable -> (depth : int) -> (before : history) @ immutable ->
@@ -86,7 +83,7 @@ let (target_preserved @ total) : (saved : node Pref.heap) @ immutable ->
     {u : unit | valid saved epoch depth after && extends before after && target_for saved before p q} ->
     {u : unit | target_for saved after p q} @ ghost = fun saved epoch depth before after p q premise -> ghost_ (
   target_for_def saved before p q; target_for_def saved after p q;
-  match H.at saved p with None -> () | Some v -> match v.level with
+  match H.at saved p with Some v -> match v.level with
   | Finite _ -> () | Generic -> mapping_preserved saved epoch depth before after p q (); ())
 
 let rec (fresh_epoch @ total) : (saved : node Pref.heap) @ immutable ->
@@ -114,8 +111,7 @@ let rec (extension_valid @ total) : (saved : node Pref.heap) @ immutable ->
     (after : history) @ immutable -> {u : unit | valid saved epoch depth after && extends before after} ->
     {u : unit | valid saved epoch depth before} @ ghost = fun saved epoch depth before after premise -> ghost_ (
   extends_def before after; valid_def saved epoch depth after;
-  if before === after then () else match after with Start | Clean -> ()
-  | Fresh (rest, _, _, _, _) | Alias (rest, _, _, _) ->
+  if before === after then () else match after with Fresh (rest, _, _, _, _) | Alias (rest, _, _, _) ->
     extension_valid saved epoch depth before rest (); ())
 let rec (fresh_frame @ total) : (saved : node Pref.heap) @ immutable ->
     (epoch : node Pref.t) @ immutable -> (depth : int) -> (before : history) @ immutable ->
@@ -128,7 +124,6 @@ let rec (fresh_frame @ total) : (saved : node Pref.heap) @ immutable ->
     extends_def before after;
     valid_def saved epoch depth after; heap_def saved epoch depth after;
     if before === after then () else match after with
-    | Start | Clean -> ()
     | Fresh (rest, p, q, old, desc) ->
       fresh_frame saved epoch depth before rest x ();
       let h = heap saved epoch depth rest in let v = cell desc depth in let h1 = H.put h q v in let w = session_mark rest old epoch q in put_frame h1 p w x; ()
@@ -156,8 +151,7 @@ let rec (copied_fresh @ total) : (saved : node Pref.heap) @ immutable ->
         | Some v -> v.level === Finite depth && v.memo === Empty_memo} @ ghost =
   fun saved epoch depth d final p q premise -> ghost_ (
     valid_def saved epoch depth d; mapping_def d p;
-    match d with Start | Clean -> ()
-    | Fresh (rest, x, y, old, desc) ->
+    match d with Fresh (rest, x, y, old, desc) ->
       if p === x then (
         history_at saved epoch depth rest p (); history_grows saved epoch depth rest q ();
         heap_def saved epoch depth d;

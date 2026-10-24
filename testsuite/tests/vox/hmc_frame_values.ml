@@ -39,8 +39,7 @@ let rec (global @ total) : (interface : A.table) @ immutable -> (table : K.table
       closure interface table D.Empty_context selected (Hmc_ground_type.mono d.M.body.B.origin.I.ty) d.M.body.B.derivation ();
       H.value_def table (R.V.Closure (code, R.V.Empty)); H.first_class_def (R.V.Closure (code, R.V.Empty));
       H.valid_def table (R.V.Closure (code, R.V.Empty)); H.valid_def table R.V.Empty; H.environment_def D.Empty_context R.V.Empty)
-    else global interface table rest tail id code ()
-  | _ -> ())
+    else global interface table rest tail id code ())
 let (load @ total) : (program : C.program) @ immutable -> (g : D.context) @ immutable -> (env : R.V.value) @ immutable ->
     (atom : G.atom) @ immutable -> (ty : D.mono) @ immutable -> (d : D.typing) @ immutable -> (v : R.V.value) @ immutable ->
     {u : unit | H.locals program.C.origin.P.table g env
@@ -52,7 +51,7 @@ let (load @ total) : (program : C.program) @ immutable -> (g : D.context) @ immu
   H.value_def p.P.table v; H.first_class_def v; H.valid_def p.P.table v;
   match atom with
   | G.Local index -> local p.P.table env index v ()
-  | G.Global id -> (match P.lookup p.P.globals id with None -> () | Some code ->
+  | G.Global id -> (match P.lookup p.P.globals id with Some code ->
     P.valid_def p; global (M.manifest p.P.origin.M.definitions) p.P.table p.P.origin.M.definitions p.P.globals id code ())
   | G.Closure id -> closure (M.manifest p.P.origin.M.definitions) p.P.table g id ty d ()
   | _ -> ())

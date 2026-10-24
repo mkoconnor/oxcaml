@@ -38,7 +38,6 @@ let (saved @ total) : (program : I.program) @ immutable -> (globals : X.globals)
       Shape.frames_def program.I.origin.C.origin.P.table program.I.origin.C.blocks (S.Frame (source_saved, source_frames));
       Shape.at_label_def program.I.origin.C.origin.P.table program.I.origin.C.blocks source_saved;
       F.decode_def heap saved;
-      (match G.lookup program.I.origin.C.blocks next with None -> () | Some block ->
+      (match G.lookup program.I.origin.C.blocks next with Some block ->
         Hmc_frame_codec.shaped program.I.origin.C.origin.P.table block.G.signature source_saved ();
-        Hmc_pointer_frame_shape.shape heap block.G.signature saved source_saved ())
-    | _ -> ())
+        Hmc_pointer_frame_shape.shape heap block.G.signature saved source_saved ()))

@@ -19,5 +19,4 @@ let rec (straight @ total) : (code : C.t) @ immutable -> (state : X.state) @ imm
     match code with
     | C.Empty -> ()
     | C.Next (instruction, rest) -> (match X.step instruction state with
-      | X.Done next -> ordinary instruction state next (); straight rest next after ()
-      | _ -> ()))
+      | X.Done next -> ordinary instruction state next (); straight rest next after ()))

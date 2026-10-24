@@ -108,8 +108,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
     | RShared (_, _, r) -> active_def h r.root; at_level_def h r.root;
       finite_node_def h r.root; finite_path_def after p r; r
     | RVar (i, q, epoch, d, certificate) ->
-      (match lookup env i with None -> let r = {R.root = p; path = Here} in r
-      | Some original -> let r = copied_forest h trees certificate epoch depth d original q () in r)
+      (match lookup env i with Some original -> let r = copied_forest h trees certificate epoch depth d original q () in r)
     | RBool q | RFalse q -> let desc = Bool in let r = fresh h depth q desc () in
       bounded_finite after q r depth (); r
     | RWord (_, q) -> let desc = Word in let r = fresh h depth q desc () in
@@ -129,23 +128,16 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
         primitive_desc_def op;
         let r = fresh middle depth q desc () in bounded_finite after q r depth (); r)
     | RLam (arg, body, middle, _, out) ->
-      (match result body with None -> let r = {R.root = p; path = Here} in r
-      | Some b -> match out with None -> let r = {R.root = p; path = Here} in r
-      | Some q -> let desc = Arrow (arg, b) in let r = fresh middle depth q desc () in
+      (match result body with Some b -> match out with Some q -> let desc = Arrow (arg, b) in let r = fresh middle depth q desc () in
         bounded_finite after q r depth (); r)
-    | RApp_left _ | RCons_left _ | RApp_right _ | RCons_right _ | RLet_left _ -> let r = {R.root = p; path = Here} in r
     | RCons (left, right, _, _, h2, _, q, ok, d) ->
-      (match result left with None -> let r = {R.root = p; path = Here} in r
-      | Some f -> match result right with None -> let r = {R.root = p; path = Here} in r
-      | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let desc = List f in let h3 = H.put h2 q (cell desc depth) in
         let r = fresh h2 depth q desc () in
         let s = P.unify h3 a q ok after d q r depth () in
         bounded_finite after q s depth (); s)
     | RApp (left, right, _, _, h2, _, q, arrow, ok, d) ->
-      (match result left with None -> let r = {R.root = p; path = Here} in r
-      | Some f -> match result right with None -> let r = {R.root = p; path = Here} in r
-      | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let var = Var in let v = cell var depth in let h3 = H.put h2 q v in
         let desc = Arrow (a, q) in let w = cell desc depth in let h4 = H.put h3 arrow w in
         let r = fresh h2 depth q var () in
@@ -158,8 +150,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
       let r = fresh h2 depth self desc () in
       let pool3 = Entry (self, Entry (res, Entry (arg, pool))) in let env3 = Bind (arg, Bind (self, env)) in
       let s = P.run h3 depth pool3 env3 body middle body_pool self r depth () in
-      (match result body with None -> s | Some b -> match finish with Aborted -> s
-      | Unified (ok, d) -> let t = P.unify middle b res ok after d self s depth () in
+      (match result body with Some b -> match finish with Unified (ok, d) -> let t = P.unify middle b res ok after d self s depth () in
         bounded_finite after self t depth (); t)
     | RLet (rhs, body, middle, child_pool) ->
       let child_depth = depth + 1 in let empty : pool = Empty in
@@ -171,8 +162,7 @@ let rec (run @ total) : (h : node Pref.heap) @ immutable ->
         {t : tree | tree_root t === x && (if H.mem closed x then finite closed t else observe closed x === None)} @ immutable) @ total = fun x ->
         let t = Hm_effective_forest.representative_closed_forest middle middle_trees depth child_pool x () in t in
       let transferred = Representative_pool_spec.transfer_rep closed child_pool pool in
-      (match result rhs with None -> let r = {R.root = p; path = Here} in r
-      | Some q -> let next_env = Bind (q, env) in
+      (match result rhs with Some q -> let next_env = Bind (q, env) in
         let r = run closed closed_trees depth transferred next_env body after final_pool p () in r))
 
 let (result_below @ total) : (h : node Pref.heap) @ immutable ->

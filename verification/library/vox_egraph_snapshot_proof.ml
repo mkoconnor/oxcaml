@@ -34,7 +34,6 @@ let rec (origin @ total) : (state : V.t) @ immutable -> (id : int) ->
       | Q.Add (a, b) | Q.Eq_int (a, b) -> origin state a (); origin state b ()
       | Q.Int_if (c, a, b) | Q.Bool_if (c, a, b) ->
         origin state c (); origin state a (); origin state b ()
-      | _ -> ())
-   | _ -> ());
+      | _ -> ()));
   ())
   [@@decreases if id > 0 then id else 0]

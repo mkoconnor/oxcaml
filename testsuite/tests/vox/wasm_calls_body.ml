@@ -14,7 +14,7 @@ let rec (local_target @ total) : (depth : B.u32) -> (labels : T.labels) @ immuta
     {u : unit | Target.valid depth labels} -> {u : unit | M.target depth labels === M.Local_label} @ ghost =
   fun depth labels premise -> ghost_ (
     Target.valid_def depth labels; M.target_def depth labels;
-    match labels with T.No_labels -> () | T.Label (_, rest) -> if depth = 0 then () else local_target (depth - 1) rest ())
+    match labels with T.Label (_, rest) -> if depth = 0 then () else local_target (depth - 1) rest ())
 let (step @ total) : (module_ : F.module_) @ immutable -> (before : M.configuration) @ immutable -> (after : P.configuration) @ immutable ->
     {u : unit | P.step before.M.current === P.Running after} ->
     {u : unit | M.step module_ before === M.Running {before with M.current = after}} @ ghost =
@@ -47,8 +47,7 @@ let (step @ total) : (module_ : F.module_) @ immutable -> (before : M.configurat
           M.branch_def depth branching;
           let moved = {branching with M.current = {P.globals = current.P.globals;
             body = {T.code = T.Instruction (I.Br depth, T.Empty); labels = body.T.labels; state = updated}}} in
-          M.advance_def moved; P.step_def moved.M.current; T.step_def moved.M.current.P.body)
-      | _ -> ())
+          M.advance_def moved; P.step_def moved.M.current; T.step_def moved.M.current.P.body))
     | _ -> M.advance_def before)
 let rec (run @ total) : (fuel : C.count) @ immutable -> (module_ : F.module_) @ immutable ->
     (before : M.configuration) @ immutable -> (after : P.configuration) @ immutable ->
@@ -58,8 +57,7 @@ let rec (run @ total) : (fuel : C.count) @ immutable -> (module_ : F.module_) @ 
     P.run_def fuel before.M.current; M.run_def fuel module_ before;
     match fuel with C.Zero -> () | C.Succ rest ->
       match P.step before.M.current with
-      | P.Running next -> step module_ before next (); run rest module_ {before with M.current = next} after ()
-      | _ -> ())
+      | P.Running next -> step module_ before next (); run rest module_ {before with M.current = next} after ())
 let rec (compose @ total) : (first : C.count) @ immutable -> (second : C.count) @ immutable ->
     (module_ : F.module_) @ immutable -> (configuration : M.configuration) @ immutable ->
     {u : unit | M.run (Fuel.add first second) module_ configuration ===

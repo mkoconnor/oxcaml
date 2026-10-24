@@ -106,7 +106,6 @@ let rec (fresh_ordered @ total) : (saved : node Pref.heap) @ immutable ->
     fresh_frame saved heads epoch depth d final x ();
     E.effective_ordered_def after next x;
     match d with
-    | Clean -> ()
     | Start -> let desc = Bool in let v = cell desc depth in cell_def desc depth;
       put_frame saved epoch v x; ()
     | Fresh (rest, p, q, old, desc) ->

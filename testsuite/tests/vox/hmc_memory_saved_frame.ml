@@ -30,7 +30,7 @@ let rec (padding @ total) : (count : D.index) @ immutable -> {out : M.cells | M.
 let rec (label_bound @ total) : (blocks : G.table) @ immutable -> (id : D.index) @ immutable -> (block : G.block) @ immutable ->
     {u : unit | G.lookup blocks id === Some block} -> {u : unit | Cap.le id (G.size blocks)} @ ghost = fun blocks id block premise -> ghost_ (
   G.lookup_def blocks id; G.size_def blocks;
-  match blocks with G.Empty -> () | G.Add (_, rest) ->
+  match blocks with G.Add (_, rest) ->
     if Hm_elaboration_check.index_equal id (G.size rest) then (Cap.reflexive id; Hmc_heap_code_bounds.weaken id id ())
     else (label_bound rest id block (); Hmc_heap_code_bounds.weaken id (G.size rest) ()))
 let (store @ total) : (blocks : G.table) @ immutable -> (code_capacity : W.limb) ->

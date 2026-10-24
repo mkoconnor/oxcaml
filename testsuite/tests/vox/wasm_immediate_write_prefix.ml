@@ -113,5 +113,4 @@ let (reflect @ total) : (offset : B.u32) -> (base_local : B.u32) -> (word : W.t)
     X.run_def write operands; X.step_def (I.I64_store (3, offset)) operands;
     M.width_def (S.I64 word); X.write_def M.W64 offset operands; X.compatible_def (S.I64 word) M.W64;
     match M.store state.X.memory base offset (S.I64 word) with
-    | None -> ()
     | Some memory -> X.run_def C.Empty {X.memory; machine = state.X.machine})

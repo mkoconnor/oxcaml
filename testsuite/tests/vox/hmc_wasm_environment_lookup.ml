@@ -15,7 +15,7 @@ let rec (environment @ total) : (context : D.context) @ immutable -> (cells : He
     Codec.decode_environment_def context cells; Simple.lookup_def env index; Simple.lookup_def cells index;
     match context, cells, env, index with
     | D.Binding (_, rest), Heap.Cell (_, more), Heap.Cell (_, remaining), D.S previous ->
-      (match Codec.decode_environment rest more with None -> () | Some (_, after) -> environment rest more remaining after previous value ())
+      (match Codec.decode_environment rest more with Some (_, after) -> environment rest more remaining after previous value ())
     | _ -> ())
 let rec (find @ total) : (count : D.index) @ immutable -> (bytes : B.bytes) @ immutable -> (cells : Heap.cells) @ immutable ->
     (tail : B.bytes) @ immutable -> (index : D.index) @ immutable -> (number : W.limb) -> (offset : B.u32) -> (value : V.value) @ immutable ->

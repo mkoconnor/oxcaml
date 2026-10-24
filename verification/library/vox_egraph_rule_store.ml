@@ -112,8 +112,7 @@ let (child_origin_sort @ total) :
   match I.at nodes id with
   | Some (Some node) ->
     N.sort_def node;
-    ()
-  | _ -> ())
+    ())
 
 let (node_origin_typed @ total) :
     (nodes : N.t option iarray) @ immutable ->
@@ -171,8 +170,7 @@ let (node_ok_frame @ total) :
        N.children_below_def index old_node;
        N.origin_frame origins index expr old_node ();
        N.well_typed_frame sorts index (N.sort node) id old_node ();
-       ()
-     | _ -> ());
+       ());
     ())
 
 let rec (nodes_valid_frame @ total) :
@@ -353,8 +351,6 @@ let rec (extract_origin @ total) :
           extract_origin state b) in
     ghost_ (N.origin_def state.semantic.origins node);
     result
-  (* Unreachable for a valid store. *)
-  | _ -> L.Int_input
   [@@decreases if id > 0 then id else 0]
 
 (* Congruence evidence: for two nodes with the same constructor whose
@@ -689,8 +685,7 @@ let (collision_evidence @ total) :
      | _ ->
        N.origin_def origins first;
        N.origin_def origins second;
-       same_origin_evidence state left right ())
-  | _ -> (E.Refl (S.origin origins left)))
+       same_origin_evidence state left right ()))
 
 
 (* The converse of [child_origin_sort], used when a node is built from

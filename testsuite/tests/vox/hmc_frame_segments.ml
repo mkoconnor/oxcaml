@@ -42,18 +42,15 @@ let rec (temporaries @ total) : (schema : G.temporaries) @ immutable -> (cells :
     match schema with
     | G.Empty_temporaries -> drop_def D.Z cells
     | G.Environment (context, rest) -> (match Codec.decode_environment context cells with
-      | None -> ()
       | Some (env, after) ->
         environment context cells env after ();
-        (match Codec.decode_temporaries rest after with None -> () | Some (remaining, _) -> temporaries rest after remaining tail ());
+        (match Codec.decode_temporaries rest after with Some (remaining, _) -> temporaries rest after remaining tail ());
         drop_add (Codec.locals_size context) (Codec.temporaries_size rest) cells)
     | G.Value (context, _, rest) -> (match cells with
-      | Heap.Empty -> ()
       | Heap.Cell (_, more) ->
         drop_def (Codec.temporaries_size schema) cells;
         (match Codec.decode_environment context more with
-        | None -> ()
         | Some (env, after) ->
           environment context more env after ();
-          (match Codec.decode_temporaries rest after with None -> () | Some (remaining, _) -> temporaries rest after remaining tail ());
+          (match Codec.decode_temporaries rest after with Some (remaining, _) -> temporaries rest after remaining tail ());
           drop_add (Codec.locals_size context) (Codec.temporaries_size rest) more)))

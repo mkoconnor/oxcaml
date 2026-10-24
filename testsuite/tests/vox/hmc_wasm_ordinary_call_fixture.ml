@@ -146,7 +146,6 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
               let full = Heap.Cell (V.Word (Header.number old_pc), source_cells) in
               ghost_ (Heap.length_def full; Hmc_u32_index.represents_def (Heap.length full) (source_count + 1));
               match Hmc_wasm_reservation.reserve (Heap.length full) (source_count + 1) 256 8192 () with
-              | None -> failwith "source frame extent"
               | Some source_stop ->
               let memory = Hmc_memory_cells.store original_memory 8192 256 source_stop full () in
               if not (above heap source_stop) then failwith "source frame overlaps heap" else (
@@ -226,10 +225,9 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
                   table blocks activation.Frame.pc block ();
                 G.block_valid_def (Hmc_monomorphic.manifest program.Program.origin.Hmc_cfg_program.origin.Hmc_closure_program.origin.Hmc_monomorphic.definitions)
                   table blocks block;
-                (match ty with D.Function (_, result) -> G.accepts_def blocks next context schema (Some result) | _ -> ())) in
+                (match ty with D.Function (_, result) -> G.accepts_def blocks next context schema (Some result))) in
               if not (Entry.separate capture 0 5 11 && Separate.separate slots 4 11) then failwith "stack pointer scratch overlap" else
               (match Hmc_wasm_reservation.reserve (Hmc_memory_saved_frame.slots blocks) (1 + stored_capacity) 0 width () with
-              | None -> failwith "stack frame extent"
               | Some _ ->
               let called = Call.correct State.Halt 4096 width stack_capacity stack_limit 12 1 outer blocks target_block stored_capacity table heap runtime 0 table_count source_count source_stop signature activation source_cells Heap.Empty context ty schema next env_count saved_count old_pc save_fragment 1000 padding padding_count padding_length state 256 4096 8192 source_bytes source_suffix 1 11 program entry function_ id address captures capture count plans 5 80 4 slots stop 0 globals () in
               let body = Call.emit save_fragment padding 1 11 width 12 1 env_count capture plans 0 5 4 slots 0 in
@@ -252,8 +250,7 @@ let fixture : bool -> (program : Program.program) @ immutable -> (globals : Mach
                       (match L.drop saved_memory 256, L.drop saved_memory stop with
                       | Some before, Some suffix -> Wasm_memory_splice.replace saved_memory 256 before (Wire.encode_cells callee_full suffix) ()
                       | _ -> failwith "callee expected extent")
-                    | _ -> failwith "saved expected extent")
-                  | _ -> failwith "source ordinary call") in
+                    | _ -> failwith "saved expected extent")) in
               (match T.run (fuel 20000) {T.code = control; labels = T.No_labels; state} with
               | T.Finished final ->
                 if final.X.memory <> expected || Wasm_locals.get final.X.machine.E.locals 11 <> Some (S.I32 cursor) then failwith "ordinary call execution"

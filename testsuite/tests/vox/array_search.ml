@@ -187,7 +187,6 @@ let () =
   let result = Search.find array target upper end_index in
   match result with
   | None -> Format.printf "empty interval@."
-  | Some _ -> Format.printf "unexpected match@."
 ;;
 [%%expect{|
 4: index 0

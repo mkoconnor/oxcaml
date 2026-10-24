@@ -43,7 +43,6 @@ let expect term ty proof expected =
     match S.observe budget (S.initial term) with
     | S.Finished v when v = expected -> ()
     | S.Finished _ -> failwith "source machine result mismatch"
-    | S.Invalid -> failwith "typed source machine stuck"
     | S.Suspended _ -> failwith "source machine fuel exhausted"
 
 let expect_suspended term =

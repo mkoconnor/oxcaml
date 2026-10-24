@@ -66,8 +66,7 @@ let rec (subtrace_trans @ total) : (child : trace) @ immutable -> (middle : trac
     | Abstraction (_, _, body) | Recursion (_, _, _, body) | Conditional body | List_case body | Primitive (_, _, body) ->
       subtrace_trans child middle body ()
     | Application (_, left, right) | List_constructor (_, left, right) | Let_binding (left, right) ->
-      if subtrace middle left then subtrace_trans child middle left () else subtrace_trans child middle right ()
-    | _ -> ())
+      if subtrace middle left then subtrace_trans child middle left () else subtrace_trans child middle right ())
 
 let (children @ total) : (parent : trace) @ immutable -> (all : trace) @ immutable ->
     {u : unit | subtrace parent all} ->
@@ -92,5 +91,4 @@ let rec (subtrace_contains @ total) : (p : Copy_spec.node Pref.t) @ immutable ->
     | Abstraction (_, _, body) | Recursion (_, _, _, body) | Conditional body | List_case body | Primitive (_, _, body) ->
       subtrace_contains p child body ()
     | Application (_, left, right) | List_constructor (_, left, right) | Let_binding (left, right) ->
-      if subtrace child left then subtrace_contains p child left () else subtrace_contains p child right ()
-    | _ -> ())
+      if subtrace child left then subtrace_contains p child left () else subtrace_contains p child right ())

@@ -131,7 +131,6 @@ let (edited_contents @ total) (source : int iarray @ immutable)
     else if Bigint.of_int (Iarray.length result) <= index then (
       S.at_outside after index; S.at_outside expected index)
     else match Bigint.to_int_opt index with
-    | None -> ()
     | Some i ->
       S.of_iarray_at result i;
       Arrays.edited_at source result position value inserting 0

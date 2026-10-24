@@ -47,8 +47,7 @@ let fixture (base : B.u32) (source : Lower.count) (destination : Lower.count) (c
         ghost_ (Wasm_locals.get_def locals 0; Copy.correct plan 0 state base after ());
         let code : {code : Wasm_code.t | X.run code state === X.Done {X.memory = after; machine = state.X.machine}} @ immutable = Copy.emit plan 0 in
         (match X.run code state with
-        | X.Done result -> if result.X.memory <> after || result.X.machine <> state.X.machine then failwith "range representation"
-        | _ -> failwith "range execution");
+        | X.Done result -> if result.X.memory <> after || result.X.machine <> state.X.machine then failwith "range representation");
         {R.memory; base; first = word 37; second = word 99; code; expected = fields 0 after_cells}))
 let fixtures () =
   [fixture 0 2 3 2; fixture 7 2 3 2; fixture 0 3 2 2; fixture 7 3 2 2;

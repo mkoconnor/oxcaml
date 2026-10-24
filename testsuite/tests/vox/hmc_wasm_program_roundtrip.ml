@@ -22,7 +22,7 @@ let[@def] (cost @ total) (config : Assembly.config @ immutable) (body : C.count 
 let (store_preserves @ total) : (plan : R.plan) @ immutable -> (before : GE.state) @ immutable -> (after : GE.state) @ immutable ->
     {u : unit | GE.run (R.store_code plan) before === GE.Done after} ->
     {u : unit | after.GE.execution === before.GE.execution} @ ghost = fun plan before after premise -> ghost_ (
-  match R.store plan before with None -> () | Some _ -> ())
+  match R.store plan before with Some _ -> ())
 let (correct @ total) : (program : Lower.program) @ immutable -> (fragment : Block.fragment) @ immutable -> (config : Assembly.config) @ immutable ->
     (module_ : F.module_) @ immutable -> (call : M.configuration) @ immutable -> (signature : B.u32) -> (slot : B.u32) -> (index : B.u32) ->
     (tail : T.code) @ immutable -> (stack : S.stack) @ immutable -> (capacity : C.count) @ immutable ->

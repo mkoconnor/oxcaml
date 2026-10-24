@@ -295,7 +295,6 @@ let (framed @ total) : (lowered : Program_lower.program) @ immutable -> (module_
         Lower.matches_def signature next capacity max_pc plan;
         Model.transition_def activation next (V.Cons_pointer before.Registers.heap);
         match out.body.New.source.Entry.result.Guarded.frame with
-        | None -> ()
         | Some frame -> Hmc_wasm_program_frame.valid_def next_signature next_activation out.registers out.body.New.state.X.memory frame_stop plan.Lower.pc
             frame.Invariant.cells frame.Invariant.padding frame.Invariant.bytes out.body.New.source.Entry.result.Guarded.tail cell_count);
     out

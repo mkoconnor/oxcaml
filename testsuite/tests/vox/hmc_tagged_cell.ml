@@ -34,22 +34,21 @@ let (limb_size @ total) : (bytes : B.bytes) @ immutable -> (limb : W.limb) -> (t
   M.decode_limb_def bytes; four_def (length tail);
   match bytes with
   | B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, _) as c)) as b)) as a)) ->
-    length_def bytes; length_def a; length_def b; length_def c
-  | _ -> ())
+    length_def bytes; length_def a; length_def b; length_def c)
 let (word_size @ total) : (bytes : B.bytes) @ immutable -> (word : W.t) @ immutable -> (tail : B.bytes) @ immutable ->
     {u : unit | M.decode bytes === Some (word, tail)} ->
     {u : unit | length bytes === eight (length tail)} @ ghost = fun bytes word tail premise -> ghost_ (
   M.decode_def bytes; eight_def (length tail);
-  match M.decode_limb bytes with None -> () | Some (lo, middle) ->
+  match M.decode_limb bytes with Some (lo, middle) ->
     limb_size bytes lo middle ();
-    (match M.decode_limb middle with None -> () | Some (hi, _) -> limb_size middle hi tail ()))
+    (match M.decode_limb middle with Some (hi, _) -> limb_size middle hi tail ()))
 let (fixed_size @ total) : (bytes : B.bytes) @ immutable -> (value : value) @ immutable -> (tail : B.bytes) @ immutable ->
     {u : unit | decode bytes === Some (value, tail)} ->
     {u : unit | length bytes === sixteen (length tail)} @ ghost = fun bytes value tail premise -> ghost_ (
   decode_def bytes; sixteen_def (length tail);
-  match M.decode bytes with None -> () | Some (tag, middle) ->
+  match M.decode bytes with Some (tag, middle) ->
     word_size bytes tag middle ();
-    (match M.decode middle with None -> () | Some (payload, _) -> word_size middle payload tail ()))
+    (match M.decode middle with Some (payload, _) -> word_size middle payload tail ()))
 let (encode @ total) : (value : value) @ immutable -> (tail : B.bytes) @ immutable ->
     {out : B.bytes | decode out === Some (value, tail) && length out === sixteen (length tail)} @ immutable = fun value tail ->
   let payload_bytes = M.encode (payload value) tail in

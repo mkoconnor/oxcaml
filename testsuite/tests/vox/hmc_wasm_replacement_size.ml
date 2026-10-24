@@ -27,7 +27,6 @@ let (correct @ total) : (instruction : G.instruction) @ immutable -> (saved : He
     | G.Bind _ ->
       Hmc_wasm_range_four.length_append saved (Seg.append saved old);
       Hmc_u32_index_sum.correct (Heap.length saved) (Heap.length (Seg.append saved old)) saved_count (saved_count + old_count) (2 * saved_count + old_count) ();
-      Heap.length_def values; Index.represents_def (Heap.length values) (1 + 2 * saved_count + old_count)
-    | _ -> ());
+      Heap.length_def values; Index.represents_def (Heap.length values) (1 + 2 * saved_count + old_count));
     Index.represents_def (D.S (Heap.length values)) (required - 1);
     Index.represents_def (D.S (D.S (Heap.length values))) required)

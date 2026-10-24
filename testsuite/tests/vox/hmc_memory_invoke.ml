@@ -30,6 +30,5 @@ let (correct @ total) : (program : I.program) @ immutable -> (memory : B.bytes) 
     M.decode_def heap reference; M.decode_value_def (M.view heap) reference;
     match reference with
     | V.Closure_pointer _ -> (match value with
-      | R.V.Closure (code, env) -> Ops.closure_correct program.I.origin.C.origin.P.table heap memory reference code env ()
-      | _ -> ())
+      | R.V.Closure (code, env) -> Ops.closure_correct program.I.origin.C.origin.P.table heap memory reference code env ())
     | _ -> Ops.read_closure_def program.I.origin.C.origin.P.table memory reference)

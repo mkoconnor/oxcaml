@@ -18,4 +18,4 @@ let rec (add_left @ total) : (first : C.count) @ immutable -> (second : C.count)
 let (positive_add @ total) : (first : C.count) @ immutable -> (second : C.count) @ immutable -> (bound : C.count) @ immutable ->
     {u : unit | not (first === C.Zero) && le bound second} -> {u : unit | le (C.Succ bound) (Add.add first second)} @ ghost =
   fun first second bound premise -> ghost_ (Add.add_def first second; le_def (C.Succ bound) (Add.add first second);
-    match first with C.Zero -> () | C.Succ rest -> add_left rest second bound ())
+    match first with C.Succ rest -> add_left rest second bound ())

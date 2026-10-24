@@ -42,5 +42,4 @@ let rec (embed_checked @ total) : (context : V.context) @ immutable -> (labels :
       V.instruction_def context op before;
       Check.check_def context labels (Lift.embed code tail) before;
       match V.instruction context op before with
-      | None -> ()
       | Some middle -> embed_checked context labels rest tail middle after ())

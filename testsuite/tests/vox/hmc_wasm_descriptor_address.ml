@@ -19,28 +19,28 @@ let (correct @ total) : (base : B.u32) -> (code : Table.count) -> (source : B.u3
   fun base code source destination state premise ->
     let state0 = state in
     ghost_ (L.can_set_def state0.X.machine.E.locals destination (S.I32 (S.add32 (code) (code)));
-      (match L.get state0.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (code) (code))) | _ -> ()));
+      (match L.get state0.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (code) (code)))));
     let locals1 = Double.correct source destination (code) state0 () in
     let state1 = {X.memory = state.X.memory; machine = {E.locals = locals1; stack = state.X.machine.E.stack}} in
     ghost_ (L.can_set_def state1.X.machine.E.locals destination (S.I32 (S.add32 (2 * code) (2 * code)));
-      (match L.get state1.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (2 * code) (2 * code))) | _ -> ()));
+      (match L.get state1.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (2 * code) (2 * code)))));
     let locals2 = Double.correct destination destination (2 * code) state1 () in
     ghost_ (S.add32_def (2 * code) (2 * code));
     let state2 = {X.memory = state.X.memory; machine = {E.locals = locals2; stack = state.X.machine.E.stack}} in
     ghost_ (Replace.compose state.X.machine.E.locals locals1 locals2 destination (S.I32 (2 * code)) (S.I32 (4 * code)) ());
     ghost_ (L.can_set_def state2.X.machine.E.locals destination (S.I32 (S.add32 (4 * code) (4 * code)));
-      (match L.get state2.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (4 * code) (4 * code))) | _ -> ()));
+      (match L.get state2.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (4 * code) (4 * code)))));
     let locals3 = Double.correct destination destination (4 * code) state2 () in
     ghost_ (S.add32_def (4 * code) (4 * code));
     let state3 = {X.memory = state.X.memory; machine = {E.locals = locals3; stack = state.X.machine.E.stack}} in
     ghost_ (Replace.compose state.X.machine.E.locals locals2 locals3 destination (S.I32 (4 * code)) (S.I32 (8 * code)) ());
     ghost_ (L.can_set_def state3.X.machine.E.locals destination (S.I32 (S.add32 (8 * code) (8 * code)));
-      (match L.get state3.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (8 * code) (8 * code))) | _ -> ()));
+      (match L.get state3.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (8 * code) (8 * code)))));
     let locals4 = Double.correct destination destination (8 * code) state3 () in
     let state4 = {X.memory = state.X.memory; machine = {E.locals = locals4; stack = state.X.machine.E.stack}} in
     ghost_ (Replace.compose state.X.machine.E.locals locals3 locals4 destination (S.I32 (8 * code)) (S.I32 (16 * code)) ());
     ghost_ (L.can_set_def state4.X.machine.E.locals destination (S.I32 (S.add32 (16 * code) (16 * code)));
-      (match L.get state4.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (16 * code) (16 * code))) | _ -> ()));
+      (match L.get state4.X.machine.E.locals destination with Some old -> S.same_type_def old (S.I32 (S.add32 (16 * code) (16 * code)))));
     let locals5 = Double.correct destination destination (16 * code) state4 () in
     let state5 = {X.memory = state.X.memory; machine = {E.locals = locals5; stack = state.X.machine.E.stack}} in
     ghost_ (Replace.compose state.X.machine.E.locals locals4 locals5 destination (S.I32 (16 * code)) (S.I32 (32 * code)) ());

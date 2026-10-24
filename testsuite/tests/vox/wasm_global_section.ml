@@ -57,7 +57,6 @@ let rec (encode_entries @ total) : (values : S.stack) @ immutable -> (permission
     | S.Push (value, rest), G.Global (mutable_, permissions) ->
       let bytes = E.encode {E.mutable_; value} (encode_entries rest permissions tail (number - 1) ()) in
       ghost_ (encoded_def values (G.Global (mutable_, permissions)) bytes tail); bytes
-    | _ -> tail
 let rec (roundtrip @ total) : (values : S.stack) @ immutable -> (permissions : G.permissions) @ immutable ->
     (tail : B.bytes) @ immutable -> (number : B.u32) -> (fuel : C.count) @ immutable ->
     (bytes : B.bytes) @ immutable ->
@@ -71,11 +70,10 @@ let rec (roundtrip @ total) : (values : S.stack) @ immutable -> (permissions : G
     | S.Empty, G.Empty -> ()
     | S.Push (_, rest), G.Global (_, remaining) ->
       progress bytes;
-      (match E.decode bytes with None -> () | Some (_, suffix) ->
+      (match E.decode bytes with Some (_, suffix) ->
         Stream.transitive (C.Succ (Stream.length suffix)) (Stream.length bytes) fuel ();
         Budget.le_def (C.Succ (Stream.length suffix)) fuel;
-        match fuel with C.Zero -> () | C.Succ fuel -> roundtrip rest remaining tail (number - 1) fuel suffix ())
-    | _ -> ())
+        match fuel with C.Succ fuel -> roundtrip rest remaining tail (number - 1) fuel suffix ()))
 
 let (encode @ total) : (globals : G.t) @ immutable -> (tail : B.bytes) @ immutable ->
     {out : B.bytes option | match out with None -> count globals.G.values globals.G.permissions === None

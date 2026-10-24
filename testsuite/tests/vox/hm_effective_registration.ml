@@ -114,7 +114,7 @@ let (unify_finite_before @ total) : (h : node Pref.heap) @ immutable -> (p : nod
       Level_unifier_spec.terminal_def h x; Level_unifier_spec.terminal_def after x;
       Level_unifier_spec.observe_def h x; Level_unifier_spec.observe_def after x;
       finite_node_def h x; finite_node_def after x;
-      (match H.at h x, H.at after x with Some a, Some b -> decreases_def a.level b.level; () | _ -> ()); ())
+      (match H.at h x, H.at after x with Some a, Some b -> decreases_def a.level b.level; ()); ())
 
 let rec (run_unlisted @ total) : (h : node Pref.heap) @ immutable -> (depth : int) -> (pool : pool) @ immutable ->
     (env : env) @ immutable -> (e : execution) @ immutable -> (after : node Pref.heap) @ immutable ->
@@ -126,14 +126,13 @@ let rec (run_unlisted @ total) : (h : node Pref.heap) @ immutable -> (depth : in
     ran_def h depth pool env e after final_pool; result_def e;
     match e with
     | RShared _ -> ()
-    | RVar (i, target, epoch, d, certificate) -> (match lookup env i with None -> () | Some original ->
+    | RVar (i, target, epoch, d, certificate) -> (match lookup env i with Some original ->
       Copy_certificate_spec.certifies_def h certificate epoch depth d original target;
       copy_unlisted h pool certificate epoch depth d x (); ())
     | RBool p | RFalse p -> let desc : desc = Bool in let v = cell desc depth in
       allocation_unlisted h pool p v x (); ()
     | RWord (_, p) -> let desc : desc = Word in let v = cell desc depth in
       allocation_unlisted h pool p v x (); ()
-    | RApp_left _ | RCons_left _ | RApp_right _ | RCons_right _ | RLet_left _ -> ()
     | RNil (arg, p) ->
       let var = Var in let v = cell var depth in let middle = H.put h arg v in
       let desc = List arg in let w = cell desc depth in let pool1 = Entry (arg, pool) in
@@ -144,26 +143,26 @@ let rec (run_unlisted @ total) : (h : node Pref.heap) @ immutable -> (depth : in
     | RIf (_, _, _, body) ->
       run_unlisted h depth pool env body after final_pool x ()
     | RPrimitive (op, _, _, body, middle, body_pool, out) ->
-      (match result body with None -> () | Some _ -> match out with None -> () | Some p ->
+      (match result body with Some _ -> match out with Some p ->
         let desc = primitive_desc op in let v = cell desc depth in
         allocation_unlisted middle body_pool p v x ();
         run_unlisted h depth pool env body middle body_pool x (); ())
     | RLam (arg, body, middle, body_pool, out) ->
-      (match result body with None -> () | Some b -> match out with None -> () | Some p ->
+      (match result body with Some b -> match out with Some p ->
       let desc = Arrow (arg, b) in let w = cell desc depth in allocation_unlisted middle body_pool p w x ();
       let var : desc = Var in let v = cell var depth in let h1 = H.put h arg v in
       let pool1 = Entry (arg, pool) in let env1 = Bind (arg, env) in
       run_unlisted h1 depth pool1 env1 body middle body_pool x ();
       allocation_unlisted h pool arg v x (); ())
     | RCons (left, right, h1, pool1, h2, pool2, p, ok, d) ->
-      (match result left with None -> () | Some f -> match result right with None -> () | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let desc = List f in let v = cell desc depth in let h3 = H.put h2 p v in
         unify_finite_before h3 a p ok after d x ();
         allocation_unlisted h2 pool2 p v x ();
         run_unlisted h1 depth pool1 env right h2 pool2 x ();
         run_unlisted h depth pool env left h1 pool1 x (); ())
     | RApp (left, right, h1, pool1, h2, pool2, p, arrow, ok, d) ->
-      (match result left with None -> () | Some f -> match result right with None -> () | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let var : desc = Var in let v = cell var depth in let h3 = H.put h2 p v in let pool3 = Entry (p, pool2) in
         let desc = Arrow (a, p) in let w = cell desc depth in let h4 = H.put h3 arrow w in
         unify_finite_before h4 f arrow ok after d x ();
@@ -171,7 +170,7 @@ let rec (run_unlisted @ total) : (h : node Pref.heap) @ immutable -> (depth : in
         run_unlisted h1 depth pool1 env right h2 pool2 x ();
         run_unlisted h depth pool env left h1 pool1 x (); ())
     | RRec (arg, res, self, body, middle, body_pool, finish) ->
-      (match result body with None -> () | Some b -> match finish with Aborted -> () | Unified (ok, d) ->
+      (match result body with Some b -> match finish with Unified (ok, d) ->
         unify_finite_before middle b res ok after d x ();
         let var : desc = Var in let v = cell var depth in let h1 = H.put h arg v in let pool1 = Entry (arg, pool) in
         let h2 = H.put h1 res v in let pool2 = Entry (res, pool1) in
@@ -180,7 +179,7 @@ let rec (run_unlisted @ total) : (h : node Pref.heap) @ immutable -> (depth : in
         run_unlisted h3 depth pool3 env3 body middle body_pool x ();
         allocation_unlisted h2 pool2 self w x (); allocation_unlisted h1 pool1 res v x ();
         allocation_unlisted h pool arg v x (); ())
-    | RLet (rhs, body, middle, child_pool) -> (match result rhs with None -> () | Some p ->
+    | RLet (rhs, body, middle, child_pool) -> (match result rhs with Some p ->
       let closed = Representative_pool_spec.close_heap middle depth child_pool in
       let transferred = Representative_pool_spec.transfer_rep closed child_pool pool in let env1 = Bind (p, env) in
       run_unlisted closed depth transferred env1 body after final_pool x ();

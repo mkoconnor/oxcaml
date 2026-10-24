@@ -129,6 +129,6 @@ let (source @ total) : (h : node Pref.heap) @ immutable ->
     if H.mem h x then (
       let t = Effective_unifier_finite.unified_finite_at h trees p q ok after d x () in
       Level_finite_proofs.finite_scope_at after t (); scoped_def after x; observe_def after x;
-      (match H.at h x with None -> () | Some v -> match v.memo with Empty_memo | Forward _ -> ()
+      (match H.at h x with Some v -> match v.memo with Empty_memo | Forward _ -> ()
         | Memo (stamp, _) -> cells h p q ok after d stamp (); cell_frame_def h after stamp; ()); ()) else ();
     ())

@@ -53,8 +53,7 @@ let rec (aligned_lookup @ total) : (g : D.context) @ immutable ->
     D.lookup_def g i; template_lookup_def ts i;
     match g with
     | D.Empty_context -> ()
-    | D.Binding (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (_, tail) -> match i with D.Z -> ()
+    | D.Binding (_, rest) -> match ts with Template_binding (_, tail) -> match i with D.Z -> ()
         | D.S i -> aligned_lookup rest tail i (); ())
 
 let rec (env_lookup @ total) : (h : node Pref.heap) @ immutable -> (depth : int) ->
@@ -67,9 +66,7 @@ let rec (env_lookup @ total) : (h : node Pref.heap) @ immutable -> (depth : int)
     let refine_ premise = premise in env_at_def h depth env ts;
     lookup_def env i; template_lookup_def ts i;
     match env with
-    | Empty -> ()
-    | Bind (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (_, tail) -> match i with D.Z -> ()
+    | Bind (_, rest) -> match ts with Template_binding (_, tail) -> match i with D.Z -> ()
         | D.S i -> env_lookup h depth rest tail i s (); ())
 
 let rec (template_transport @ total) : (h : node Pref.heap) @ immutable ->
@@ -103,8 +100,7 @@ let rec (env_transport @ total) : (h : node Pref.heap) @ immutable ->
     let refine_ premise = premise in env_at_def h depth env ts;
     env_at_def after depth env ts; match env with
     | Empty -> ()
-    | Bind (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (s, tail) -> template_transport h after depth frame s ();
+    | Bind (_, rest) -> match ts with Template_binding (s, tail) -> template_transport h after depth frame s ();
         env_transport h after depth frame rest tail (); ())
 
 let (allocation_protected @ total) : (h : node Pref.heap) @ immutable ->
@@ -234,8 +230,7 @@ let (realize_monomorphic @ total) :
       | T.No_values ->
         T.meaning_def xi mono args; eval_empty args xi a ();
         interpret_def rho rho bound;
-        use rho ()
-      | T.Value _ -> ())
+        use rho ())
     | D.S i -> realize i sigma schema args () claim use)
 
 let (realize_weaken @ total) :
@@ -261,7 +256,6 @@ let (realize_weaken @ total) :
   fun g ts rho xi realize ambient zeta equal i sigma schema args premise claim use -> ghost_ (
     let refine_ premise = premise in let k = T.values_length ambient in
     T.lookup_weaken k g i; match D.lookup g i with
-    | None -> ()
     | Some original ->
       D.weaken_scheme_def k original;
       D.arity_def sigma; D.arity_def original;
@@ -278,8 +272,7 @@ let rec (lookup_boundary @ total) : (ts : templates) @ immutable ->
     {u : unit | template_lookup ts i === Some s && boundary_member s p} ->
     {u : unit | environment_boundary ts p} @ ghost = fun ts i s p premise -> ghost_ (
     let refine_ premise = premise in template_lookup_def ts i; environment_boundary_def ts p;
-    match ts with No_templates -> ()
-    | Template_binding (_, rest) -> match i with D.Z -> ()
+    match ts with Template_binding (_, rest) -> match i with D.Z -> ()
       | D.S i -> lookup_boundary rest i s p (); ())
 
 let rec (environment_boundary_owned @ total) : (h : node Pref.heap) @ immutable ->
@@ -288,9 +281,7 @@ let rec (environment_boundary_owned @ total) : (h : node Pref.heap) @ immutable 
     {u : unit | env_at h depth env ts && environment_boundary ts p} ->
     {u : unit | H.mem h p} @ ghost = fun h depth env ts p premise -> ghost_ (
     let refine_ premise = premise in env_at_def h depth env ts; environment_boundary_def ts p;
-    match env with Empty -> ()
-    | Bind (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (s, tail) -> if boundary_member s p then
+    match env with Bind (_, rest) -> match ts with Template_binding (s, tail) -> if boundary_member s p then
         (boundary_below h depth s p (); below_def h p depth; ())
         else (environment_boundary_owned h depth rest tail p (); ()))
 

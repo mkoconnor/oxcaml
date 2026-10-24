@@ -48,7 +48,6 @@ let rec (lookup_correct @ total) : (program : Lower.program) @ immutable -> (blo
     functions_def program blocks config tail; Table.lookup_def blocks label;
     F.lookup_def (functions program blocks config tail) (reverse_index count label);
     match blocks with
-    | Table.Empty -> ()
     | Table.Add (head, _, rest) -> if label = head then () else (
       reverse_index_def head label; lookup_correct program rest config tail head label ()) )
 let[@def] rec (elements @ total) (length : D.index @ immutable) (count : B.u32) = match length with
@@ -61,7 +60,6 @@ let rec (element_correct @ total) : (length : D.index) @ immutable -> (count : B
     Index.represents_def length count; elements_def length count; reverse_index_def count label;
     F.element_def (elements length count) label;
     match length with
-    | D.Z -> ()
     | D.S rest -> if label = 0 then () else (
       reverse_index_def (count - 1) (label - 1); element_correct rest (count - 1) (label - 1) ()))
 let[@def] (assemble @ total) (program : Lower.program @ immutable) (length : D.index @ immutable) (count : B.u32)

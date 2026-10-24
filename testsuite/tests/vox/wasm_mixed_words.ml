@@ -42,5 +42,4 @@ let rec (correct @ total) : (old : Q.words) @ immutable -> (values : Q.words) @ 
       A.associative prefix one old_rest; A.associative prefix one rest;
       Q.append_def one old_rest; Q.append_def Q.End old_rest;
       Q.append_def one rest; Q.append_def Q.End rest;
-      correct old_rest rest next_prefix more (offset + 8) (width - 8) locals middle after base middle_frame after_frame suffix ()
-    | _ -> ())
+      correct old_rest rest next_prefix more (offset + 8) (width - 8) locals middle after base middle_frame after_frame suffix ())

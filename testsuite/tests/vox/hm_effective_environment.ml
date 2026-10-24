@@ -25,8 +25,7 @@ let rec (lookup_schema @ total) : (h : node Pref.heap) @ immutable ->
     lookup_def env i; template_lookup_def schemas i;
     match env, schemas with
     | Bind (_, rest), Template_binding (s, tail) -> (match i with D.Z -> s
-      | D.S j -> let s = lookup_schema h heads depth rest tail j p () in s)
-    | _ -> let s = Boundary p in s)
+      | D.S j -> let s = lookup_schema h heads depth rest tail j p () in s))
 
 let (bind_schema @ total) : (h : node Pref.heap) @ immutable ->
     (heads : E.heads) @ total -> (depth : int) -> (env : env) @ immutable ->
@@ -50,7 +49,6 @@ let rec (transport @ total) : (h : node Pref.heap) @ immutable ->
   fun h heads after next depth frame env schemas premise -> ghost_ (
     effective_env_def h heads depth env schemas;
     effective_env_def after next depth env schemas; match env with Empty -> ()
-    | Bind (_, rest) -> match schemas with No_templates -> ()
-      | Template_binding (s, tail) ->
+    | Bind (_, rest) -> match schemas with Template_binding (s, tail) ->
         T.transport h heads after next depth frame s ();
         transport h heads after next depth frame rest tail (); ())

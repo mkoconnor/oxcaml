@@ -77,8 +77,7 @@ let fixture (base : B.u32) =
       let code = E.append capture_code finish_code in
       ghost_ (X.append_correct capture_code finish_code state);
       (match X.run code state with
-      | X.Done actual -> if actual <> result.Hmc_wasm_cons_success.state then failwith "Cons finish execution"
-      | _ -> failwith "Cons finish incomplete");
+      | X.Done actual -> if actual <> result.Hmc_wasm_cons_success.state then failwith "Cons finish execution");
       let prefix = [I.I32_const base; I.Local_set 0; I.I32_const heap_base; I.Local_set 1; I.I32_const limit; I.Local_set 2;
         I.I64_const (Header.number 999); I.Local_set 3; I.I64_const (Header.number 999); I.Local_set 4;
         I.I64_const (Header.number 999); I.Local_set 5; I.I64_const (Header.number 999); I.Local_set 6] in

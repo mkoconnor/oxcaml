@@ -21,7 +21,7 @@ let rec (lookup @ total) : (functions : F.functions) @ immutable -> (elements : 
     {u : unit | table functions elements && F.element elements slot === Some index && F.lookup functions index === Some function_} ->
     {u : unit | Policy.code Policy.No_calls function_.F.code} @ ghost = fun functions elements slot index function_ premise -> ghost_ (
   table_def functions elements; F.element_def elements slot;
-  match elements with F.No_elements -> () | F.Element (_, rest) -> if slot = 0 then () else lookup functions rest (slot - 1) index function_ ())
+  match elements with F.Element (_, rest) -> if slot = 0 then () else lookup functions rest (slot - 1) index function_ ())
 let[@def] (saved @ total) (caller : M.caller @ immutable) =
   Policy.code Policy.Indirect_calls caller.M.code && Policy.labels Policy.Indirect_calls caller.M.labels
 let[@def] (bounded @ total) (state : M.configuration @ immutable) = ghost_ (
@@ -34,8 +34,7 @@ let (leave @ total) : (before : M.configuration) @ immutable -> (after : M.confi
     {u : unit | bounded after} @ ghost = fun before after premise -> ghost_ (
   bounded_def before; M.leave_def before; bounded_def after;
   match before.M.callers with
-  | M.Caller (caller, M.Root) -> saved_def caller; Policy.configuration_def Policy.Indirect_calls after.M.current.P.body
-  | _ -> ())
+  | M.Caller (caller, M.Root) -> saved_def caller; Policy.configuration_def Policy.Indirect_calls after.M.current.P.body)
 let (advance @ total) : (before : M.configuration) @ immutable -> (after : M.configuration) @ immutable ->
     {u : unit | bounded before && M.advance before === M.Running after} ->
     {u : unit | bounded after} @ ghost = fun before after premise -> ghost_ (
@@ -44,17 +43,14 @@ let (advance @ total) : (before : M.configuration) @ immutable -> (after : M.con
   | P.Running current ->
     (match before.M.callers with
     | M.Root -> Policy.instance_step Policy.Indirect_calls before.M.current current ()
-    | M.Caller (_, M.Root) -> Policy.instance_step Policy.No_calls before.M.current current ()
-    | _ -> ())
-  | P.Finished _ -> leave before after ()
-  | _ -> ())
+    | M.Caller (_, M.Root) -> Policy.instance_step Policy.No_calls before.M.current current ())
+  | P.Finished _ -> leave before after ())
 let (branch @ total) : (depth : B.u32) -> (before : M.configuration) @ immutable -> (after : M.configuration) @ immutable ->
     {u : unit | bounded before && M.branch depth before === M.Running after} ->
     {u : unit | bounded after} @ ghost = fun depth before after premise -> ghost_ (
   M.branch_def depth before;
   match M.target depth before.M.current.P.body.T.labels with
   | M.Function_label -> leave before after ()
-  | M.Invalid_label -> ()
   | M.Local_label ->
     let body = {before.M.current.P.body with T.code = T.Instruction (I.Br depth, T.Empty)} in
     let reconstructed = {before with M.current = {before.M.current with P.body = body}} in
@@ -69,8 +65,7 @@ let (branch @ total) : (depth : B.u32) -> (before : M.configuration) @ immutable
       Policy.configuration_def Policy.No_calls before.M.current.P.body;
       Policy.configuration_def Policy.No_calls body;
       Policy.code_def Policy.No_calls body.T.code; Policy.instruction_def Policy.No_calls (I.Br depth);
-      Policy.code_def Policy.No_calls T.Empty
-    | _ -> ());
+      Policy.code_def Policy.No_calls T.Empty);
     advance reconstructed after ())
 let (enter @ total) : (function_ : F.function_) @ immutable -> (tail : T.code) @ immutable ->
     (before : M.configuration) @ immutable -> (after : M.configuration) @ immutable ->
@@ -89,8 +84,7 @@ let (step @ total) : (module_ : F.module_) @ immutable -> (before : M.configurat
   M.step_def module_ before; bounded_def before;
   (match before.M.callers with
   | M.Root -> Policy.configuration_def Policy.Indirect_calls before.M.current.P.body; Policy.code_def Policy.Indirect_calls before.M.current.P.body.T.code
-  | M.Caller (_, M.Root) -> Policy.configuration_def Policy.No_calls before.M.current.P.body; Policy.code_def Policy.No_calls before.M.current.P.body.T.code
-  | _ -> ());
+  | M.Caller (_, M.Root) -> Policy.configuration_def Policy.No_calls before.M.current.P.body; Policy.code_def Policy.No_calls before.M.current.P.body.T.code);
   match before.M.current.P.body.T.code with
   | T.Instruction (I.Call index, _) ->
     Policy.instruction_def Policy.No_calls (I.Call index); Policy.instruction_def Policy.Indirect_calls (I.Call index)
@@ -106,10 +100,7 @@ let (step @ total) : (module_ : F.module_) @ immutable -> (before : M.configurat
           let popped = {before with M.current = current} in
           M.with_stack_def before.M.current rest;
           bounded_def popped; Policy.configuration_def Policy.Indirect_calls popped.M.current.P.body;
-          enter function_ tail popped after ()
-        | None -> ())
-      | None -> ())
-    | _ -> ())
+          enter function_ tail popped after ())))
   | T.Instruction (I.Plain I.Return, _) -> leave before after ()
   | T.Instruction (I.Br depth, _) -> branch depth before after ()
   | T.Instruction (I.Br_if depth, _) ->
@@ -121,8 +112,7 @@ let (step @ total) : (module_ : F.module_) @ immutable -> (before : M.configurat
       Policy.configuration_def Policy.Indirect_calls popped.M.current.P.body;
       if condition <> 0 then branch depth popped after () else (
         bounded_def after; Policy.configuration_def Policy.No_calls after.M.current.P.body;
-        Policy.configuration_def Policy.Indirect_calls after.M.current.P.body)
-    | _ -> ())
+        Policy.configuration_def Policy.Indirect_calls after.M.current.P.body))
   | _ -> advance before after ())
 let rec (run @ total) : (fuel : C.count) @ immutable -> (module_ : F.module_) @ immutable ->
     (before : M.configuration) @ immutable -> (after : M.configuration) @ immutable ->
@@ -132,8 +122,7 @@ let rec (run @ total) : (fuel : C.count) @ immutable -> (module_ : F.module_) @ 
   match fuel with
   | C.Zero -> ()
   | C.Succ rest -> match M.step module_ before with
-    | M.Running next -> step module_ before next (); run rest module_ next after ()
-    | _ -> ())
+    | M.Running next -> step module_ before next (); run rest module_ next after ())
 let (advance_available @ total) : (before : M.configuration) @ immutable ->
     {u : unit | not (M.advance before === M.Host_limit)} @ ghost = fun before -> ghost_ (
   M.advance_def before; M.leave_def before)
@@ -149,8 +138,7 @@ let (available @ total) : (module_ : F.module_) @ immutable -> (before : M.confi
   bounded_def before; M.step_def module_ before;
   (match before.M.callers with
   | M.Root -> Policy.configuration_def Policy.Indirect_calls before.M.current.P.body; Policy.code_def Policy.Indirect_calls before.M.current.P.body.T.code
-  | M.Caller (_, M.Root) -> Policy.configuration_def Policy.No_calls before.M.current.P.body; Policy.code_def Policy.No_calls before.M.current.P.body.T.code
-  | _ -> ());
+  | M.Caller (_, M.Root) -> Policy.configuration_def Policy.No_calls before.M.current.P.body; Policy.code_def Policy.No_calls before.M.current.P.body.T.code);
   match before.M.current.P.body.T.code with
   | T.Instruction (I.Call index, _) ->
     Policy.instruction_def Policy.No_calls (I.Call index); Policy.instruction_def Policy.Indirect_calls (I.Call index)

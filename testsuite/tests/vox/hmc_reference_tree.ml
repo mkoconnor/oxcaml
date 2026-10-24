@@ -26,7 +26,7 @@ let rec (global_lookup @ total) : (locals : D.context) @ immutable -> (globals :
     global_index_def locals index; context_def locals globals;
     match locals with D.Empty_context -> ()
     | D.Binding (_, rest) -> D.lookup_def (context locals globals) index;
-      (match index with D.Z -> () | D.S i -> global_lookup rest globals i global ()))
+      (match index with D.S i -> global_lookup rest globals i global ()))
 
 let[@def] rec (below @ total) (catalog : T.catalog @ immutable) (tree : tree @ immutable) = ghost_ (
   match tree with

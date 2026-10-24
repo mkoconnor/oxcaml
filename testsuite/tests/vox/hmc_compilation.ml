@@ -133,8 +133,7 @@ let compile : (term : D.term) @ immutable -> (configuration : M.layout) @ immuta
       refuse (match error with
       | A.Unsupported_polymorphic_local_let -> Unsupported_polymorphic_local_let
       | A.Non_callable_outer_binding -> Non_callable_outer_binding
-      | A.Non_callable_entry -> Non_callable_entry
-      | A.Invalid_annotation -> Invalid_annotation) term No_inference ()
+      | A.Non_callable_entry -> Non_callable_entry) term No_inference ()
     | Core.Layout_rejected -> refuse Layout_rejected term No_inference ()
     | Core.Initialization_exhausted _ -> refuse Initialization_exhausted term No_inference ()
     | Core.Encoding_rejected -> refuse Encoding_rejected term No_inference ()
@@ -150,8 +149,7 @@ let (untypable @ total) : (rejection : rejection) @ immutable -> (ty : Copy_spec
   fun rejection ty typing premise -> ghost_ (
     reason_def rejection; program_def rejection;
     match rejection.run with
-    | Inference run -> F.untypable rejection.rejected run ty typing ()
-    | No_inference -> ())
+    | Inference run -> F.untypable rejection.rejected run ty typing ())
 
 let (no_entry_type @ total) : (rejection : rejection) @ immutable -> (typing : D.typing) @ immutable ->
     {u : unit | reason rejection === Entry_type_mismatch
@@ -160,8 +158,7 @@ let (no_entry_type @ total) : (rejection : rejection) @ immutable -> (typing : D
   fun rejection typing premise -> ghost_ (
     reason_def rejection; program_def rejection;
     match rejection.run with
-    | Inference run -> F.no_entry_type rejection.rejected run typing ()
-    | No_inference -> ())
+    | Inference run -> F.no_entry_type rejection.rejected run typing ())
 
 (* Runs of the bytes. Each lemma unfolds the artifact's invariant and uses
    the lemma of Hmc_compiler or Hmc_wasm_program_binary of the same name. *)

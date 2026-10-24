@@ -11,7 +11,6 @@ let rec (lookup_exists @ total) : (h : node Pref.heap) @ immutable -> (env : env
     let refine_ premise = premise in env_allocated_def h env; depth_def env;
     let n = depth env in present_def n i; lookup_def env i;
     match env with
-    | Empty -> ()
     | Bind (_, rest) -> match i with
       | Z -> ()
       | S i -> lookup_exists h rest i (); ())
@@ -187,7 +186,7 @@ let rec (lookup_context @ total) :
   fun rho env i p premise -> ghost_ (
     let refine_ premise = premise in lookup_def env i; context_of_def rho env;
     let ctx = context_of rho env in lookup_type_def ctx i;
-    match env with Empty -> () | Bind (_, rest) -> match i with
+    match env with Bind (_, rest) -> match i with
     | Z -> () | S i -> lookup_context rho rest i p (); ())
 
 let rec (generation_sound @ total) : (h : node Pref.heap) @ immutable -> (env : env) @ immutable ->

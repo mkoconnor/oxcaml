@@ -34,9 +34,9 @@ let rec (open_position @ total) : (names : A.names) @ immutable ->
   fun names choices p i premise -> ghost_ (
     A.position_def names p; arguments_def names choices;
     let args = arguments names choices in D.open_index_def args i;
-    match names with A.No_names -> () | A.Name (q, rest) ->
+    match names with A.Name (q, rest) ->
       if p === q then () else match A.position rest p with
-      | None -> () | Some j -> open_position rest choices p j (); ())
+      | Some j -> open_position rest choices p j (); ())
 
 let (open_parameter @ total) : (names : A.names) @ immutable ->
     (choices : (node Pref.t @ immutable total -> ty @ immutable total)) @ total ->
@@ -47,8 +47,7 @@ let (open_parameter @ total) : (names : A.names) @ immutable ->
     let z = D.Z in let t = Variable p in D.embed_def t;
     let mono = D.embed t in A.abstract_type_def names z mono; A.abstract_free_def names z p;
     let body = A.abstract_type names z mono in let args = arguments names choices in
-    D.open_type_def args body; match A.position names p with None -> ()
-    | Some i -> D.add_def z i; open_position names choices p i (); ())
+    D.open_type_def args body; match A.position names p with Some i -> D.add_def z i; open_position names choices p i (); ())
 
 let (open_boundary @ total) : (names : A.names) @ immutable ->
     (choices : (node Pref.t @ immutable total -> ty @ immutable total)) @ total ->
@@ -262,7 +261,7 @@ let rec (body_instance @ total) : (names : A.names) @ immutable ->
     match schema with
     | Boundary p -> let v = rho p in Hm_substitution_proofs.open_embed args v; ()
     | Parameter p -> let z = D.Z in A.abstract_free_def names z p;
-      (match A.position names p with None -> () | Some i ->
+      (match A.position names p with Some i ->
         D.add_def z i; open_position names choices p i (); ())
     | Constant _ | Word_constant _ -> ()
     | Indirect (_, child) | List_template (_, child) -> body_instance names rho choices child (); ()
@@ -294,7 +293,7 @@ let rec (body_wf @ total) : (names : A.names) @ immutable ->
     match schema with
     | Boundary p -> let t = rho p in T.embed_wf n t; ()
     | Parameter p -> let z = D.Z in A.abstract_free_def names z p;
-      (match A.position names p with None -> () | Some i ->
+      (match A.position names p with Some i ->
         D.add_def z i; Hm_abstraction_proofs.position_bound names p i (); ())
     | Constant _ | Word_constant _ -> ()
     | Indirect (_, child) | List_template (_, child) -> body_wf names rho child (); ()
@@ -328,7 +327,6 @@ let rec (lookup_context @ total) :
   fun rho schemas i schema premise -> ghost_ (
     context_def rho schemas; Hm_environment_spec.template_lookup_def schemas i;
     let g = context rho schemas in D.lookup_def g i; match schemas with
-    | Hm_environment_spec.No_templates -> ()
     | Hm_environment_spec.Template_binding (_, rest) -> match i with D.Z -> ()
       | D.S j -> lookup_context rho rest j schema (); ())
 

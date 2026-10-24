@@ -33,7 +33,7 @@ let (correct @ total) : (source_tag : B.u32) -> (source_payload : B.u32) -> (pc 
     let valued = match M.store tagged base 40 (S.I64 (V.payload value)) with
       | Some memory -> memory | None -> unreachable_ () in
     F.apply_def (F.Write (8, next, F.End)) valued base;
-    (match M.store valued base 8 (S.I64 next) with None -> () | Some memory -> F.apply_def F.End memory base);
+    (match M.store valued base 8 (S.I64 next) with Some memory -> F.apply_def F.End memory base);
     let s0 = state in
     let s1 = {X.memory = state.X.memory; machine = {E.locals = state.X.machine.E.locals; stack = S.Push (S.I32 base, state.X.machine.E.stack)}} in
     let s2 = {X.memory = state.X.memory; machine = {E.locals = state.X.machine.E.locals; stack = S.Push (S.I32 base, s1.X.machine.E.stack)}} in

@@ -57,11 +57,9 @@ let (correct @ total) : (plan : Plan.plan) @ immutable -> (pc : B.u32) -> (paylo
       Copy_prefix.bounded_def Plan.End base base stop;
       Range_prefix.bounded rest Plan.End 0 0 (H.length payload) count base base stop ();
       Copy_prefix.bounded_def second base base stop;
-      Copy_prefix.bounded_def plan base base stop
-    | _ -> ());
+      Copy_prefix.bounded_def plan base base stop);
     Copy_prefix.reflect plan source_local base_local state source base {X.memory = out.Memory.memory; machine = state.X.machine} ();
     Copy_prefix.region plan source_local base_local state source base out.Memory.memory base stop fuel ();
     (match X.run (Prefix.take fuel (Copy.emit plan source_local base_local)) state with
-    | X.Done current -> Bounds.same_length state.X.memory current.X.memory limit ()
-    | _ -> ());
+    | X.Done current -> Bounds.same_length state.X.memory current.X.memory limit ());
     out)

@@ -149,8 +149,7 @@ let write_release_read (a : t) (value : {v : int | 0 <= v})
     let t = P.write p value t in
     let h2 = ghost_ (P.own (borrow_ t)) in
     ghost_ (match P.Heap.at h p with
-      | Some x -> P.Heap.put_law (P.Heap.empty ()) p x value
-      | None -> ());
+      | Some x -> P.Heap.put_law (P.Heap.empty ()) p x value);
     ghost_ (owned_def a h2; good_def p h2; C.full_def value);
     let _ = A.compare_and_set a.atomic 1 0 release_post t
       (ghost_ (fun before inside outside ->

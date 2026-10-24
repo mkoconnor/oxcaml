@@ -28,8 +28,7 @@ let rec (decrease @ total) : (callers : M.callers) @ immutable -> (capacity : C.
     match callers, total with
     | M.Root, C.Succ rest -> budget_def callers capacity rest
     | M.Caller (_, tail), C.Succ rest ->
-      decrease tail capacity rest (); budget_def callers capacity rest
-    | _ -> ())
+      decrease tail capacity rest (); budget_def callers capacity rest)
 let (enter @ total) : (function_ : F.function_) @ immutable -> (tail : T.code) @ immutable ->
     (configuration : M.configuration) @ immutable -> (total : C.count) @ immutable ->
     {u : unit | budget configuration.M.callers configuration.M.capacity total} ->
@@ -48,7 +47,6 @@ let (enter @ total) : (function_ : F.function_) @ immutable -> (tail : T.code) @
       locals = machine.E.locals; stack = machine.E.stack; result = configuration.M.result} in
     budget_def (M.Caller (caller, configuration.M.callers)) remaining total;
     (match total with
-    | C.Zero -> budget_def configuration.M.callers configuration.M.capacity total
     | C.Succ rest -> ()))
 
 let (leave @ total) : (configuration : M.configuration) @ immutable -> (total : C.count) @ immutable ->

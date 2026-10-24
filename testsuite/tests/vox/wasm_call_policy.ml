@@ -25,7 +25,6 @@ let rec (branch @ total) : (policy : policy) @ immutable -> (depth : B.u32) -> (
     {u : unit | configuration policy after} @ ghost = fun policy depth stack state after premise -> ghost_ (
   labels_def policy stack; T.branch_def depth stack state;
   match stack with
-  | T.No_labels -> ()
   | T.Label (entry, rest) ->
     label_def policy entry;
     if depth <> 0 then branch policy (depth - 1) rest state after () else
@@ -49,7 +48,6 @@ let (step @ total) : (policy : policy) @ immutable -> (before : T.configuration)
   | T.Empty ->
     labels_def policy before.T.labels;
     (match before.T.labels with
-    | T.No_labels -> ()
     | T.Label (entry, rest) -> label_def policy entry; configuration_def policy after)
   | T.Block (body, tail) -> enter policy body tail None before after ()
   | T.Loop (body, tail) -> enter policy body tail (Some body) before after ()
@@ -57,15 +55,13 @@ let (step @ total) : (policy : policy) @ immutable -> (before : T.configuration)
     (match before.T.state.X.machine.E.stack with
     | S.Push (S.I32 condition, rest) ->
       let state = {before with T.state = T.stack before.T.state rest} in
-      enter policy (if condition <> 0 then yes else no) tail None state after ()
-    | _ -> ())
+      enter policy (if condition <> 0 then yes else no) tail None state after ())
   | T.Instruction (I.Br depth, _) -> branch policy depth before.T.labels before.T.state after ()
   | T.Instruction (I.Br_if depth, _) ->
     (match before.T.state.X.machine.E.stack with
     | S.Push (S.I32 condition, rest) ->
       if condition <> 0 then branch policy depth before.T.labels (T.stack before.T.state rest) after ()
-      else configuration_def policy after
-    | _ -> ())
+      else configuration_def policy after)
   | T.Instruction (_, _) -> configuration_def policy after)
 let (instance_step @ total) : (policy : policy) @ immutable -> (before : P.configuration) @ immutable -> (after : P.configuration) @ immutable ->
     {u : unit | configuration policy before.P.body && P.step before === P.Running after} ->

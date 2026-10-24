@@ -34,9 +34,6 @@ let bind_searched :
     let refine_ old = Pref.read p (borrow_ t) in let refine_ t = t in
     ghost_ (active_def h.Ghost.ghost p; at_level_def h.Ghost.ghost p);
     match old.level with
-    | Generic ->
-      let proof = ghost_ (let u = () in (refine_ u : {u : unit | false})) in
-      let refine_ proof = proof in assert false
     | Finite bound ->
       let t : {t : node Pref.token | Pref.own t === h.Ghost.ghost && bound >= 0 && active h.Ghost.ghost q} = refine_ t in
       let lower_heap_witness : node Pref.heap Ghost.t = {Ghost.ghost = ghost_ (h.Ghost.ghost)} in

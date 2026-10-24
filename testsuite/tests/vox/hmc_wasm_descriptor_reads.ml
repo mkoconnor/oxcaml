@@ -26,10 +26,8 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (address : B.u32) ->
     Cells.load_def memory address (Descriptor.slots ());
     L.load_def memory address (Wire.bytes_size (Descriptor.slots ()) D.Z);
     match L.drop memory address with
-    | None -> ()
     | Some bytes ->
       match L.take (Wire.bytes_size (Descriptor.slots ()) D.Z) bytes with
-      | None -> ()
       | Some payload ->
         match Wire.decode_cells (Descriptor.slots ()) payload with
         | Some (cells, B.End) ->
@@ -58,5 +56,4 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (address : B.u32) ->
           V.payload_def (V.Boolean descriptor.R.recursive); S.boolean_def descriptor.R.recursive;
           Wasm_memory_word_limbs.correct memory address 8 {Hmc_word64.lo = descriptor.R.start; hi = descriptor.R.captures} ();
           Wasm_memory_word_limbs.correct memory address 24 (V.payload (V.Boolean descriptor.R.recursive)) ();
-          Wasm_memory_word_limbs.high_offset_def 8
-        | _ -> ())
+          Wasm_memory_word_limbs.high_offset_def 8)

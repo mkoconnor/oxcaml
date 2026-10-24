@@ -28,8 +28,7 @@ let () =
     (match clause_at empty_formula 0 with
      | Some [] ->
        let empty = input_proof empty_formula 0 in
-       empty_proof_at empty_formula empty [false]
-     | Some (_ :: _) | None -> ());
+       empty_proof_at empty_formula empty [false]);
     ());
   (match original_result units 0, original_result units 1 with
    | Some positive, Some negative ->

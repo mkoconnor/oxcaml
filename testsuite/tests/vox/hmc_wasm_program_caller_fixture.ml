@@ -200,8 +200,7 @@ let fixture : (stack_base : B.u32) -> (program : Program.program) @ immutable ->
                           (Hmc_wasm_program_dispatch.loop (Hmc_wasm_program_registers.globals registers) memory (C.Succ C.Zero)) with
                         | Calls.Running actual ->
                           if actual <> Hmc_wasm_program_dispatch.loop (Hmc_wasm_program_registers.globals step.Hmc_wasm_program_source_caller.registers) expected (C.Succ C.Zero)
-                          then failwith "caller dispatcher execution"
-                        | _ -> failwith "caller dispatcher control")
+                          then failwith "caller dispatcher execution")
                         | _ -> failwith "caller dispatcher fragment");
                         let target = Assembly.function_ lowered Hmc_wasm_program_block.Return config in
                         let module_ = {Func.functions = Func.Function (target, Func.No_functions); signatures = Func.Signature (Func.Void, Func.No_signatures); table = Func.Element (Some 0, Func.No_elements)} in
@@ -217,12 +216,10 @@ let fixture : (stack_base : B.u32) -> (program : Program.program) @ immutable ->
                           (match Calls.run (Round.cost config result.New.fuel) module_ call with
                           | Calls.Running actual ->
                             if actual.Calls.current.P.body.T.state.X.memory <> after.X.memory || actual.Calls.callers <> Calls.Root || actual.Calls.capacity <> call.Calls.capacity
-                              || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 base) || WG.get actual.Calls.current.P.globals 2 <> Some (S.I32 0) then failwith "caller indirect result"
-                          | _ -> failwith "caller indirect execution");
+                              || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 base) || WG.get actual.Calls.current.P.globals 2 <> Some (S.I32 0) then failwith "caller indirect result");
                           {memory; expected; block = target.Func.code; globals = wasm_globals; depth = Q.depth (Q.Frame (saved, frames)); top = base})
                       | _ -> failwith "caller imported types"))
-                  | _ -> failwith "caller materialized frames"))
-              | _ -> failwith "caller frame extent"))))
+                  | _ -> failwith "caller materialized frames"))))))
       | _ -> failwith "caller frame headers")
     | _ -> failwith "caller source lookup")
   | _ -> failwith "caller source state"

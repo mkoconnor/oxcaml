@@ -31,7 +31,7 @@ let rec (run_member @ total) : (h : node Pref.heap) @ immutable -> (depth : int)
     let refine_ premise = premise in ran_def h depth pool env e after final_pool;
     match e with
     | RShared _ -> protected_at_def h h bound x; refine_ ()
-    | RVar (i, _, epoch, d) -> (match lookup env i with None -> refine_ () | Some _ ->
+    | RVar (i, _, epoch, d) -> (match lookup env i with Some _ ->
       copy_member h epoch depth d bound x (refine_ ()); refine_ ())
     | RBool p -> let desc : desc = Bool in let v = cell desc depth in allocated_def h depth p desc;
       allocation_member h p v bound x (refine_ ()); refine_ ()
@@ -46,7 +46,7 @@ let rec (run_member @ total) : (h : node Pref.heap) @ immutable -> (depth : int)
       protected_at_def h h1 bound x;
       run_member h1 depth pool1 env1 body middle body_pool bound x (refine_ ());
       protected_trans h h1 middle bound x (refine_ ()); protected_at_def h middle bound x;
-      (match result body with None -> refine_ () | Some b -> match out with None -> refine_ () | Some p ->
+      (match result body with None -> refine_ () | Some b -> match out with Some p ->
         let desc = Arrow (arg, b) in let w = cell desc depth in allocated_def middle depth p desc;
         allocation_member middle p w bound x (refine_ ());
         protected_trans h middle after bound x (refine_ ()); refine_ ())
@@ -58,7 +58,7 @@ let rec (run_member @ total) : (h : node Pref.heap) @ immutable -> (depth : int)
       run_member h depth pool env left h1 pool1 bound x (refine_ ()); protected_at_def h h1 bound x;
       run_member h1 depth pool1 env right h2 pool2 bound x (refine_ ());
       protected_trans h h1 h2 bound x (refine_ ()); protected_at_def h h2 bound x;
-      (match result left with None -> refine_ () | Some f -> match result right with None -> refine_ () | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let var : desc = Var in let v = cell var depth in let h3 = H.put h2 p v in
         let desc = Arrow (a, p) in let w = cell desc depth in let h4 = H.put h3 arrow w in
         allocated_def h2 depth p var; allocated_def h3 depth arrow desc;
@@ -79,7 +79,7 @@ let rec (run_member @ total) : (h : node Pref.heap) @ immutable -> (depth : int)
       protected_at_def h h3 bound x;
       run_member h3 depth pool3 env3 body middle body_pool bound x (refine_ ());
       protected_trans h h3 middle bound x (refine_ ());
-      (match result body with None -> refine_ () | Some b -> match finish with Aborted -> refine_ () | Unified (ok, d) ->
+      (match result body with None -> refine_ () | Some b -> match finish with Unified (ok, d) ->
         unify_protected middle b res ok after d bound x (refine_ ());
         protected_trans h middle after bound x (refine_ ()); refine_ ())
     | RLet (rhs, body, middle, child_pool) ->
@@ -91,6 +91,6 @@ let rec (run_member @ total) : (h : node Pref.heap) @ immutable -> (depth : int)
       close_protected middle depth child_pool bound x (refine_ ());
       protected_trans h middle closed bound x (refine_ ()); protected_at_def h closed bound x;
       let transferred = Nested_pool_spec.transfer closed child_pool pool in
-      (match result rhs with None -> refine_ () | Some p -> let env1 = Bind (p, env) in
+      (match result rhs with Some p -> let env1 = Bind (p, env) in
         run_member closed depth transferred env1 body after final_pool bound x (refine_ ());
         protected_trans h closed after bound x (refine_ ()); refine_ ()))

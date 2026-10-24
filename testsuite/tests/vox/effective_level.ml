@@ -108,7 +108,7 @@ let (closed_boundary @ total) : (h : node Pref.heap) @ immutable ->
     representatives_member h pool p;
     if terminal h p then (
       terminal_level h heads p (); at_level_def h p;
-      match H.at h p with None -> () | Some v -> G.close_level_def cut v.level; ())
+      match H.at h p with Some v -> G.close_level_def cut v.level; ())
     else ();
     ())
 
@@ -156,7 +156,7 @@ let (link_level @ total) : (h : node Pref.heap) @ immutable ->
     valid_head_def h heads q; level_def h heads p; level_def h heads q;
     let left = heads p in let right = heads q in
     resolves_def h p left.root left.path; terminal_def h p;
-    match left.path with Here -> () | Via (_, rest) ->
+    match left.path with Via (_, rest) ->
       unique h q left.root rest right.root right.path (); ())
 
 let[@def] (effective_active @ total) (h : node Pref.heap @ immutable)
@@ -180,7 +180,7 @@ let (ordered_scope @ total) : (h : node Pref.heap) @ immutable ->
     effective_scope_def h heads p;
     source_ok_def h p; observe_def h p; effective_ordered_def h heads p;
     effective_active_def h heads p; valid p;
-    match H.at h p with None -> () | Some v ->
+    match H.at h p with Some v ->
       match v.desc with
       | Link q -> valid q; link_level h heads p q ();
         effective_active_def h heads q; ()

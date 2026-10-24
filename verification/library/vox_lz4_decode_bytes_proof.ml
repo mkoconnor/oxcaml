@@ -103,7 +103,6 @@ let rec (matches @ total) :
     if remaining > 0 && heap_matches heap block used reversed then begin
       read_distance heap block used reversed distance;
       match S.at_distance reversed distance with
-      | None -> ()
       | Some byte ->
         append heap block used reversed byte;
         matches (H.put heap (M.location block used) (Some byte))

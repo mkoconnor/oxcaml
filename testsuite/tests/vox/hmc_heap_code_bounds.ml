@@ -15,7 +15,7 @@ let rec (weaken @ total) : (left : D.index) @ immutable -> (right : D.index) @ i
 let rec (lookup @ total) : (table : K.table) @ immutable -> (id : D.index) @ immutable -> (entry : K.entry) @ immutable ->
     {u : unit | K.lookup table id === Some entry} -> {u : unit | Cap.le id (K.size table)} @ ghost = fun table id entry premise -> ghost_ (
   K.lookup_def table id; K.size_def table;
-  match table with K.Empty -> () | K.Add (_, rest) ->
+  match table with K.Add (_, rest) ->
     if Hm_elaboration_check.index_equal id (K.size rest) then (Cap.reflexive id; weaken id id ())
     else (lookup rest id entry (); weaken id (K.size rest) ()))
 let rec (fits_smaller @ total) : (small : D.index) @ immutable -> (large : D.index) @ immutable -> (capacity : W.limb) ->
@@ -30,9 +30,9 @@ let (object_ @ total) : (table : K.table) @ immutable -> (capacity : W.limb) -> 
   match object_ with
   | M.Cons _ -> ()
   | M.Closure (id, captures) ->
-    (match M.decode_environment view captures with None -> () | Some env ->
+    (match M.decode_environment view captures with Some env ->
       H.value_def table (R.V.Closure (id, env)); H.valid_def table (R.V.Closure (id, env));
-      match K.lookup table id with None -> () | Some entry -> lookup table id entry (); fits_smaller id (K.size table) capacity ()))
+      match K.lookup table id with Some entry -> lookup table id entry (); fits_smaller id (K.size table) capacity ()))
 let rec (encodable @ total) : (table : K.table) @ immutable -> (capacity : W.limb) -> (heap : M.heap) @ immutable ->
     {u : unit | I.fits (K.size table) capacity && M.valid table heap} ->
     {u : unit | Image.encodable capacity heap} @ ghost = fun table capacity heap premise -> ghost_ (

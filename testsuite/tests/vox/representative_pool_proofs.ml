@@ -61,7 +61,7 @@ let (transferred_level @ total) : (h : node Pref.heap) @ immutable ->
     Level_unifier_spec.observe_def h x; Level_unifier_spec.observe_def after x;
     representatives_member h child x;
     Level_spec.at_level_def after x;
-    (match H.at h x with None -> () | Some v -> close_level_def cut v.level; ());
+    (match H.at h x with Some v -> close_level_def cut v.level; ());
     ())
 
 

@@ -32,8 +32,7 @@ let check (destination : Wasm_u32.u32) =
       ghost_ (E.append_correct code tail state);
       (match E.run (E.append code tail) state with
       | E.Done out -> if out.E.stack <> S.Push (S.I64 (word 42), state.E.stack) then failwith "continuation"
-      | _ -> failwith "continuation failed")
-    | _ -> failwith "lowering failed")
+      | _ -> failwith "continuation failed"))
   else failwith "invalid destination"
 let () =
   check 0; check 1; check 2;

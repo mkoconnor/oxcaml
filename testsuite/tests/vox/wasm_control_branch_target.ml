@@ -22,5 +22,4 @@ let rec (valid_of_running @ total) : (depth : B.u32) -> (labels : T.labels) @ im
     {u : unit | valid depth labels} @ ghost = fun depth labels state out premise -> ghost_ (
     T.branch_def depth labels state; valid_def depth labels;
     match labels with
-    | T.No_labels -> ()
     | T.Label (_, outer) -> if depth = 0 then () else valid_of_running (depth - 1) outer state out ())

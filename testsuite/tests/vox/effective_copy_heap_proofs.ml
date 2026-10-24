@@ -57,8 +57,7 @@ let rec (target_allocated @ total) : (saved : node Pref.heap) @ immutable ->
       let h = heap saved epoch depth rest in let w = session_mark rest old epoch y in put_frame h x w q;
       if p === x then (
         match old.desc with Link child ->
-          target_allocated saved heads epoch depth rest child y (); ()
-        | _ -> ())
+          target_allocated saved heads epoch depth rest child y (); ())
       else (effective_target_for_def saved heads rest p q;
         target_allocated saved heads epoch depth rest p q (); ()))
 
@@ -75,7 +74,6 @@ let rec (mapped_fresh @ total) : (saved : node Pref.heap) @ immutable ->
   fun saved heads witness epoch depth d p q premise -> ghost_ (
     effective_valid_def saved heads epoch depth d;
     mapping_def d p; match d with
-    | Start | Clean -> ()
     | Fresh (rest, x, _, _, _) ->
       if p === x then (history_grows saved heads epoch depth rest q (); ())
       else (mapped_fresh saved heads witness epoch depth rest p q (); ())
@@ -87,8 +85,7 @@ let rec (mapped_fresh @ total) : (saved : node Pref.heap) @ immutable ->
           effective_target_for_def saved heads rest child q;
           witness x; witness child; Level_unifier_spec.observe_def saved x;
           Effective_level.link_level saved heads x child ();
-          mapped_fresh saved heads witness epoch depth rest child q (); ()
-        | _ -> ())
+          mapped_fresh saved heads witness epoch depth rest child q (); ())
       else (mapped_fresh saved heads witness epoch depth rest p q (); ()))
 
 let (copy_link_decision @ total) : (saved : node Pref.heap) @ immutable ->
@@ -115,8 +112,7 @@ let rec (mapping_preserved @ total) : (saved : node Pref.heap) @ immutable ->
     {u : unit | mapping after p === Some q} @ ghost = fun saved heads epoch depth before after p q premise -> ghost_ (
   extends_def before after;
   effective_valid_def saved heads epoch depth after; mapping_def after p;
-  if before === after then () else match after with Start | Clean -> ()
-  | Fresh (rest, x, _, _, _) | Alias (rest, x, _, _) ->
+  if before === after then () else match after with Fresh (rest, x, _, _, _) | Alias (rest, x, _, _) ->
     mapping_preserved saved heads epoch depth before rest p q (); ())
 let (clean_memo_lookup @ total) : (saved : node Pref.heap) @ immutable ->
     (heads : Effective_level.heads) @ total ->
@@ -154,7 +150,6 @@ let rec (mapped_generic @ total) : (saved : node Pref.heap) @ immutable ->
   fun saved heads epoch depth d p q premise -> ghost_ (
     effective_valid_def saved heads epoch depth d;
     mapping_def d p; match d with
-    | Start | Clean -> ()
     | Fresh (rest, x, _, _, _) | Alias (rest, x, _, _) ->
       if p === x then ()
       else (mapped_generic saved heads epoch depth rest p q (); ()))
@@ -231,7 +226,6 @@ let rec (fresh_frame @ total) : (saved : node Pref.heap) @ immutable ->
     extends_def before after;
     effective_valid_def saved heads epoch depth after; heap_def saved epoch depth after;
     if before === after then () else match after with
-    | Start | Clean -> ()
     | Fresh (rest, p, q, old, desc) ->
       fresh_frame saved heads epoch depth before rest x ();
       let h = heap saved epoch depth rest in let v = cell desc depth in let h1 = H.put h q v in let w = session_mark rest old epoch q in put_frame h1 p w x; ()

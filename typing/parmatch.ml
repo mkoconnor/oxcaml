@@ -2174,8 +2174,12 @@ let do_check_partial ~pred loc casel pss = match pss with
     begin match casel with
     | [] -> ()
     | _  ->
-      if Warnings.is_active Warnings.All_clauses_guarded then
-        Location.prerr_warning loc Warnings.All_clauses_guarded
+      let emit () =
+        if Warnings.is_active Warnings.All_clauses_guarded then
+          Location.prerr_warning loc Warnings.All_clauses_guarded
+      in
+      let example = Format_doc.doc_printf "%a" Misc.Style.inline_code "_" in
+      if not (Verification.defer_partial_match loc ~example emit) then emit ()
     end ;
     Partial
 | ps::_  ->
@@ -2184,27 +2188,38 @@ let do_check_partial ~pred loc casel pss = match pss with
     match counter_examples () with
     | Seq.Nil -> Total
     | Seq.Cons (v, _rest) ->
-      if Warnings.is_active (Warnings.Partial_match Format_doc.Doc.empty) then
-        begin
-          let errmsg =
-            let doc = ref Format_doc.Doc.empty in
-            let fmt = Format_doc.formatter doc in
-            Format_doc.fprintf fmt "@[<v>%a"
-              (Misc.Style.as_inline_code Printpat.top_pretty) v;
-            if do_match (initial_only_guarded casel) [v] then
-              Format_doc.fprintf fmt
-                "@,(However, some guarded clause may match this value.)";
-            if contains_extension v then
-              Format_doc.fprintf fmt
-                "@,@[Matching over values of extensible variant types \
-                 (the *extension* above)@,\
-                 must include a wild card pattern@ in order to be exhaustive.@]"
-            ;
-            Format_doc.fprintf fmt "@]";
-            !doc
-          in
-          Location.prerr_warning loc (Warnings.Partial_match errmsg)
-        end;
+      let errmsg () =
+        let doc = ref Format_doc.Doc.empty in
+        let fmt = Format_doc.formatter doc in
+        Format_doc.fprintf fmt "@[<v>%a"
+          (Misc.Style.as_inline_code Printpat.top_pretty) v;
+        if do_match (initial_only_guarded casel) [v] then
+          Format_doc.fprintf fmt
+            "@,(However, some guarded clause may match this value.)";
+        if contains_extension v then
+          Format_doc.fprintf fmt
+            "@,@[Matching over values of extensible variant types \
+             (the *extension* above)@,\
+             must include a wild card pattern@ in order to be exhaustive.@]"
+        ;
+        Format_doc.fprintf fmt "@]";
+        !doc
+      in
+      let active () =
+        Warnings.is_active (Warnings.Partial_match Format_doc.Doc.empty)
+      in
+      (* With refinement types, the verifier may still prove the match
+         exhaustive, and must when it is in total code, whether or not the
+         warning is enabled. *)
+      if Language_extension.is_enabled Refinement_types || active () then begin
+        let errmsg = errmsg () in
+        let emit () =
+          if active () then
+            Location.prerr_warning loc (Warnings.Partial_match errmsg)
+        in
+        if not (Verification.defer_partial_match loc ~example:errmsg emit)
+        then emit ()
+      end;
       Partial
 
 (*****************)

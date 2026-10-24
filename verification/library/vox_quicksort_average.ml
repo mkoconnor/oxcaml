@@ -113,8 +113,7 @@ let (uniform_sorted @ total) (values : int list) (pivots : int list) :
   S.length_def before; S.length_def after;
   match before, after with
   | [], [] -> ()
-  | _ :: _, _ :: _ -> ()
-  | _ -> ())
+  | _ :: _, _ :: _ -> ())
 
 let (rank_bound @ total) (values : int list) (sorted : int list)
     (index : Bigint.t) :

@@ -21,8 +21,8 @@ let (load @ total) : (memory : B.bytes) @ immutable -> (address : W.limb) -> (co
     Memory.load_def memory address (Wire.Closure_schema D.Z); Memory.slots_def (Wire.Closure_schema D.Z);
     Wire.bytes_size_def (D.S D.Z) D.Z; Wire.bytes_size_def D.Z D.Z;
     L.load_def memory address (C.sixteen D.Z);
-    match L.drop memory address with None -> () | Some bytes ->
-      match L.take full bytes with None -> () | Some prefix ->
+    match L.drop memory address with Some bytes ->
+      match L.take full bytes with Some prefix ->
         Wire.decode_def (Wire.Closure_schema count) prefix;
         match C.decode prefix with
         | Some (C.Word word, rest) ->
@@ -31,7 +31,6 @@ let (load @ total) : (memory : B.bytes) @ immutable -> (address : W.limb) -> (co
           Cap.le_def D.Z (Wire.bytes_size count D.Z);
           Prefix.sixteen_le D.Z (Wire.bytes_size count D.Z) ();
           Prefix.take (C.sixteen D.Z) full bytes prefix ();
-          Wire.decode_def (Wire.Closure_schema D.Z) header; Wire.decode_cells_def D.Z B.End
-        | _ -> ())
+          Wire.decode_def (Wire.Closure_schema D.Z) header; Wire.decode_cells_def D.Z B.End)
 let[@def] (code @ total) (memory : B.bytes @ immutable) (address : W.limb) : W.limb option @ immutable =
   match Memory.load memory address (Wire.Closure_schema D.Z) with Some (Wire.Closure (code, _)) -> Some code | _ -> None

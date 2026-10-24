@@ -27,7 +27,6 @@ let rec (load @ total) : (context : V.context) @ immutable -> (plan : Registers.
     | Registers.Binding (global, local, rest) ->
       binding_def context global local;
       match V.global context.V.globals global with
-      | None -> ()
       | Some ty ->
         Step.global_get context global ty state (); Step.local_set context local ty state ();
         load context rest state ();
@@ -42,7 +41,6 @@ let rec (store @ total) : (context : V.context) @ immutable -> (plan : Registers
     | Registers.Binding (global, local, rest) ->
       binding_def context global local;
       match V.global context.V.globals global with
-      | None -> ()
       | Some ty ->
         Step.local_get context local ty state (); Step.global_set context global ty state ();
         store context rest state ();

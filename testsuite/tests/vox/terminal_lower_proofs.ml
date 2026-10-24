@@ -117,7 +117,7 @@ let rec (bounded_node @ total) : (h : node Pref.heap) @ immutable -> (heads : E.
     Lower_locality_spec.contains_def tree x; bound_root_def tree;
     let p = bound_root tree in if p === x then (
       (match tree with
-      | Tip _ -> (match H.at h x with None -> () | Some v -> Effective_lower_spec.effective_children_below_def h heads v.desc bound; ())
+      | Tip _ -> (match H.at h x with Some v -> Effective_lower_spec.effective_children_below_def h heads v.desc bound; ())
       | Through (_, child) ->
         Effective_lower_spec.effective_bounded_def h heads bound child;
         let desc = Link (bound_root child) in Effective_lower_spec.effective_children_below_def h heads desc bound;
@@ -127,8 +127,7 @@ let rec (bounded_node @ total) : (h : node Pref.heap) @ immutable -> (heads : E.
         Effective_lower_spec.effective_bounded_def h heads bound b;
         let desc = Arrow (bound_root a, bound_root b) in Effective_lower_spec.effective_children_below_def h heads desc bound; ());
       ())
-    else (match tree with Tip _ -> ()
-      | Through (_, child) -> bounded_node h heads bound child x (); ()
+    else (match tree with Through (_, child) -> bounded_node h heads bound child x (); ()
       | Fork (_, a, b) -> if Lower_locality_spec.contains a x then (bounded_node h heads bound a x (); ())
         else (bounded_node h heads bound b x (); ())))
 

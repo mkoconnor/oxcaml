@@ -219,7 +219,7 @@ let rec (lookup_scoped @ total) : (g : context) @ immutable ->
     {u : unit | lookup g i === Some s} ->
     {u : unit | present (depth g) i} @ ghost = fun g i s premise -> ghost_ (
     lookup_def g i; depth_def g;
-    let n = depth g in present_def n i; match g with Empty_context -> () | Binding (_, rest) ->
+    let n = depth g in present_def n i; match g with Binding (_, rest) ->
     match i with Z -> ()
     | S i -> let () = lookup_scoped rest i s () in ())
 
@@ -239,45 +239,38 @@ let rec (typing_scoped @ total) : (n : index) @ immutable ->
     let level = depth g in scoped_term_def level e;
     match d with
     | Variable _ -> (match e with Bound i -> (match lookup g i with
-      | None -> () | Some s -> let () = lookup_scoped g i s () in ())
-      | _ -> ())
+      | Some s -> let () = lookup_scoped g i s () in ()))
     | Constant | Word_constant | Empty_list _ -> ()
     | List_cons (a, head, tail) -> (match e with
-      | Cons (h, r) -> typing_scoped n g h a head (); typing_scoped n g r t tail (); ()
-      | _ -> ())
+      | Cons (h, r) -> typing_scoped n g h a head (); typing_scoped n g r t tail (); ())
     | List_case (a, scrutinee, empty, nonempty) -> (match e with
       | CaseList (s, l, r) -> typing_scoped n g s (List_type a) scrutinee ();
         typing_scoped n g l t empty ();
         let tail = Binding (Forall (Z, List_type a), g) in
         let both = Binding (Forall (Z, a), tail) in depth_def tail; depth_def both;
-        typing_scoped n both r t nonempty (); ()
-      | _ -> ())
+        typing_scoped n both r t nonempty (); ())
     | Conditional (condition, yes, no) -> (match e with
       | If (c, a, b) -> typing_scoped n g c Boolean condition ();
-        typing_scoped n g a t yes (); typing_scoped n g b t no (); ()
-      | _ -> ())
+        typing_scoped n g a t yes (); typing_scoped n g b t no (); ())
     | Word_primitive (left, right) -> (match e with
       | Primitive (_, a, b) -> typing_scoped n g a Word64 left ();
-        typing_scoped n g b Word64 right (); ()
-      | _ -> ())
+        typing_scoped n g b Word64 right (); ())
     | Abstraction (a, body) -> (match e, t with
       | Lambda e, Function (_, b) -> let next = Binding (Forall (Z, a), g) in
-        depth_def next; typing_scoped n next e b body (); ()
-      | _ -> ())
+        depth_def next; typing_scoped n next e b body (); ())
     | Application (a, left, right) -> (match e with Apply (f, x) ->
       let ft = Function (a, t) in typing_scoped n g f ft left ();
-      typing_scoped n g x a right (); () | _ -> ())
+      typing_scoped n g x a right (); ())
     | Recursion (a, b, body) -> (match e with Recursive e ->
       let self = Binding (Forall (Z, t), g) in
       let next = Binding (Forall (Z, a), self) in depth_def self; depth_def next;
-      typing_scoped n next e b body (); () | _ -> ())
+      typing_scoped n next e b body (); ())
     | Let_binding (s, rhs, body) -> (match e, s with
       | Let (r, b), Forall (k, a) -> let shifted = weaken_context k g in
         let total = add k n in weaken_depth k g;
         typing_scoped total shifted r a rhs ();
         let next = Binding (s, g) in depth_def next;
-        typing_scoped n next b t body (); ()
-      | _ -> ()))
+        typing_scoped n next b t body (); ()))
 
 let rec (present_added @ total) : (k : index) @ immutable ->
     (n : index) @ immutable -> (i : index) @ immutable ->

@@ -40,8 +40,7 @@ let rec (aligned_lookup @ total) : (g : D.context) @ immutable ->
     D.lookup_def g i; template_lookup_def ts i;
     match g with
     | D.Empty_context -> ()
-    | D.Binding (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (_, tail) -> match i with D.Z -> ()
+    | D.Binding (_, rest) -> match ts with Template_binding (_, tail) -> match i with D.Z -> ()
         | D.S i -> aligned_lookup rest tail i (); ())
 
 let (realize_empty @ total) :
@@ -100,8 +99,7 @@ let (realize_monomorphic @ total) :
       | T.No_values ->
         T.meaning_def xi mono args; eval_empty args xi a ();
         interpret_def rho rho bound;
-        let () = use rho () in ()
-      | T.Value _ -> ())
+        let () = use rho () in ())
     | D.S i -> let () = realize i sigma schema args () claim use in ())
 
 let (realize_weaken @ total) :
@@ -127,7 +125,6 @@ let (realize_weaken @ total) :
   fun g ts rho xi realize ambient zeta equal i sigma schema args premise claim use -> ghost_ (
     let k = T.values_length ambient in
     T.lookup_weaken k g i; match D.lookup g i with
-    | None -> ()
     | Some original ->
       D.weaken_scheme_def k original;
       D.arity_def sigma; D.arity_def original;
@@ -143,8 +140,7 @@ let rec (lookup_boundary @ total) : (ts : templates) @ immutable ->
     {u : unit | template_lookup ts i === Some s && boundary_member s p} ->
     {u : unit | environment_boundary ts p} @ ghost = fun ts i s p premise -> ghost_ (
     template_lookup_def ts i; environment_boundary_def ts p;
-    match ts with No_templates -> ()
-    | Template_binding (_, rest) -> match i with D.Z -> ()
+    match ts with Template_binding (_, rest) -> match i with D.Z -> ()
       | D.S i -> lookup_boundary rest i s p (); ())
 
 let (realize_transport @ total) :

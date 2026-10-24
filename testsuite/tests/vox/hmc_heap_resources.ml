@@ -38,11 +38,10 @@ let (available @ total) : (program : I.program) @ immutable -> (globals : X.glob
       match configuration.X.state with
       | Q.Running (a, frames) ->
         F.decode_def configuration.X.heap a;
-        (match Q.decode_frames configuration.X.heap frames with None -> () | Some source_frames ->
+        (match Q.decode_frames configuration.X.heap frames with Some source_frames ->
           P.extends_def configuration.X.heap configuration.X.heap;
           Q.frames_preserve program.I.origin.C.origin.O.table configuration.X.heap configuration.X.heap frames source_frames ();
-          if reason === X.Stack then N.present (S.depth source_frames) stack_limit () else ())
-      | _ -> ())
+          if reason === X.Stack then N.present (S.depth source_frames) stack_limit () else ()))
 let rec (sufficient @ total) : (program : I.program) @ immutable -> (globals : X.globals) @ immutable ->
     (heap_limit : W.limb) -> (stack_limit : D.index) @ immutable -> (fuel : D.index) @ immutable ->
     (configuration : X.configuration) @ immutable -> (abstract : S.state) @ immutable ->

@@ -229,9 +229,6 @@ let refine_ result = result in
       let d = ghost_ (Base old) in
         ghost_ (unified_def h.Ghost.ghost r s ok h.Ghost.ghost d);
         finish_roots (refine_ #{ok; state = t; derivation = d})
-      | Link _, _ | _, Link _ ->
-        let proof = ghost_ (let u = () in (refine_ u : {u : unit | false})) in
-        let refine_ proof = proof in assert false
 
 and unify_work : (goal : unify_goal) @ immutable -> (h : (node Pref.heap) Ghost.t) @ immutable  ->(scope : (((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h.Ghost.ghost x) || finite_scope h.Ghost.ghost x})) Ghost.t) @ total  ->(unmarked : (((x : node Pref.t) @ immutable -> {u : unit | match H.at h.Ghost.ghost x with None -> true | Some v -> not v.visited})) Ghost.t) @ total  ->(order : (((x : node Pref.t) @ immutable -> {u : unit | ordered h.Ghost.ghost x})) Ghost.t) @ total  ->(trees : (((x : node Pref.t) @ immutable ->
       {t : tree | tree_root t === x && (if H.mem h.Ghost.ghost x then finite h.Ghost.ghost t else observe h.Ghost.ghost x === None)} @ immutable)) Ghost.t) @ total  ->

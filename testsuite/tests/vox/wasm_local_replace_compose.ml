@@ -8,5 +8,4 @@ let rec (compose @ total) : (before : S.stack) @ immutable -> (middle : S.stack)
   fun before middle after index first last premise -> ghost_ (
     L.replaced_def before index first middle; L.replaced_def middle index last after; L.replaced_def before index last after;
     match before, middle, after with
-    | S.Push (_, a), S.Push (_, b), S.Push (_, c) -> if index = 0 then () else compose a b c (index - 1) first last ()
-    | _ -> ())
+    | S.Push (_, a), S.Push (_, b), S.Push (_, c) -> if index = 0 then () else compose a b c (index - 1) first last ())

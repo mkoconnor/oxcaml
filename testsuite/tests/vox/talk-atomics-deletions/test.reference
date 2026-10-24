@@ -63,12 +63,12 @@ verified_atomic.ml, weakened copy:
 5 < (caller : I.payload Ghost_pref.token) @ unique ghost ->
 5 > (caller : I.payload Ghost_pref.token) @ ghost ->
 ## stale_read.ml, real interface:
-File "stale_read.ml", line 159, characters 45-46:
-159 |     let v : {v : int | v = value} = P.read p t in
+File "stale_read.ml", line 158, characters 45-46:
+158 |     let v : {v : int | v = value} = P.read p t in
                                                    ^
 Error: This value is used here, but it has already been used as unique at:
-File "stale_read.ml", line 155, characters 56-57:
-155 |     let _ = A.compare_and_set a.atomic 1 0 release_post t
+File "stale_read.ml", line 154, characters 56-57:
+154 |     let _ = A.compare_and_set a.atomic 1 0 release_post t
                                                               ^
   
 exit 2

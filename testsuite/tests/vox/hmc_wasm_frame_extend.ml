@@ -23,8 +23,7 @@ let rec (environment @ total) : (context : D.context) @ immutable -> (cells : H.
     | D.Empty_context, _ -> ()
     | D.Binding (_, next), H.Cell (_, tail) ->
       (match Codec.decode_environment next tail with
-      | None -> () | Some (inner, _) -> environment next tail inner rest padding ())
-    | _ -> ())
+      | Some (inner, _) -> environment next tail inner rest padding ()))
 let rec (temporaries @ total) : (schema : G.temporaries) @ immutable -> (cells : H.cells) @ immutable ->
     (runtime : F.temporaries) @ immutable -> (rest : H.cells) @ immutable -> (padding : H.cells) @ immutable ->
     {u : unit | Codec.decode_temporaries schema cells === Some (runtime, rest)} ->
@@ -35,22 +34,19 @@ let rec (temporaries @ total) : (schema : G.temporaries) @ immutable -> (cells :
     | G.Empty_temporaries -> ()
     | G.Environment (context, next) ->
       (match Codec.decode_environment context cells with
-      | None -> ()
       | Some (env, tail) ->
         environment context cells env tail padding ();
         match Codec.decode_temporaries next tail with
-        | None -> () | Some (inner, _) -> temporaries next tail inner rest padding ())
+        | Some (inner, _) -> temporaries next tail inner rest padding ())
     | G.Value (context, _, next) ->
       (match cells with
-      | H.Empty -> ()
       | H.Cell (_, tail) ->
         Seg.append_def cells padding;
         match Codec.decode_environment context tail with
-        | None -> ()
         | Some (env, remaining) ->
           environment context tail env remaining padding ();
           match Codec.decode_temporaries next remaining with
-          | None -> () | Some (inner, _) -> temporaries next remaining inner rest padding ()))
+          | Some (inner, _) -> temporaries next remaining inner rest padding ()))
 let (decode @ total) : (signature : G.signature) @ immutable -> (activation : F.activation) @ immutable ->
     (cells : H.cells) @ immutable -> (padding : H.cells) @ immutable ->
     {u : unit | Codec.decode signature activation.F.pc cells === Some (activation, H.Empty)} ->
@@ -63,11 +59,9 @@ let (decode @ total) : (signature : G.signature) @ immutable -> (activation : F.
     | H.Cell (_, (H.Cell (_, body) as rest)) ->
       Seg.append_def rest padding;
       (match Codec.decode_environment signature.G.locals body with
-      | None -> ()
       | Some (env, remaining) ->
         environment signature.G.locals body env remaining padding ();
-        temporaries signature.G.temporaries remaining activation.F.temporaries H.Empty padding ())
-    | _ -> ())
+        temporaries signature.G.temporaries remaining activation.F.temporaries H.Empty padding ()))
 let rec (split_wire @ total) : (prefix : H.cells) @ immutable -> (suffix : H.cells) @ immutable ->
     (bytes : B.bytes) @ immutable -> (tail : B.bytes) @ immutable ->
     {u : unit | Wire.decode_cells (H.length (Seg.append prefix suffix)) bytes === Some (Seg.append prefix suffix, tail)} ->

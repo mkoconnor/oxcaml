@@ -2845,7 +2845,6 @@ let rec (find_latest @ total) :
   | [] ->
     ghost_ (variables_covered_def [] variables;
       match variables with
-      | [] -> ()
       | first :: _ -> trail_has_def (Bigint.of_int first) []);
     unreachable_ ()
   | literal :: rest ->
@@ -2861,8 +2860,7 @@ let rec (find_latest @ total) :
         match at bindings v with
         | Some (Some binding) ->
           preceding_level_def binding;
-          ordered_weaken bindings rest (preceding_level binding) level
-        | Some None | None -> ());
+          ordered_weaken bindings rest (preceding_level binding) level);
       let found = find_latest (ghost_ bindings) (ghost_ level) rest variables in
       ghost_ (earlier_variables_cons literal rest found variables);
       found)

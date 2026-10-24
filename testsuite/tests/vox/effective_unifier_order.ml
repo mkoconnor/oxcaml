@@ -93,8 +93,7 @@ let rec (ordered @ total) : (h : node Pref.heap) @ immutable ->
       (match old with
       | U.Bind_left _ -> active_def h p; redirect_order h p q a b va (refine_ vb) x (); ()
       | U.Bind_right _ -> active_def h q; redirect_order h q p a b va (refine_ vb) x (); ()
-      | U.Same | U.Constants | U.Occurs_left _ | U.Occurs_right _ | U.Clash -> rebase h a b va (refine_ vb) x (); ()
-      | _ -> ())
+      | U.Same | U.Constants | U.Occurs_left _ | U.Occurs_right _ | U.Clash -> rebase h a b va (refine_ vb) x (); ())
     | Swap rest -> ordered h q p ok after rest a b va vb order x (); ()
     | List_children (r, s, rest) | Resolve (r, s, _, _, rest) -> ordered h r s ok after rest a b va vb order x (); ()
     | Children (left, right, other_left, other_right, middle, left_ok, first, second) ->

@@ -144,9 +144,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
                   | None -> failwith "reached closure successor coverage"
                   | Some _ ->
                     ghost_ (Bounds.covers_def next_initial 8192);
-                    Hmc_heap_image.materialize table 1000 next_initial after.Machine.heap 8192 ())
-                | _ -> failwith "reached closure successor")
-              | _ -> failwith "reached closure unexpected exhaustion" in
+                    Hmc_heap_image.materialize table 1000 next_initial after.Machine.heap 8192 ())) in
             if expected <> result.Guarded.state.X.memory then failwith "reached closure independently encoded memory";
             {memory; expected; prefix = [I.I32_const base; I.Local_set 0; I.I32_const cursor; I.Local_set 1; I.I32_const limit; I.Local_set 2];
               code = T.flatten code C.Empty; cursor = (if enough then cursor + fragment.Write.bytes else cursor)}))

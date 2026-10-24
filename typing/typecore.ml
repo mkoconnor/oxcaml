@@ -1487,6 +1487,24 @@ let not_logical_pinpoint ~loc ~env ty : Mode.Hint.pinpoint =
   | Some reason -> loc, Mode.Hint.Not_logical_match reason
   | None -> loc, Mode.Hint.Expression
 
+(* With refinement types, a partial match in code that must be total does not
+   make that code partial: the verifier must instead prove the match
+   exhaustive from the refinements in scope. Elsewhere it is partial as usual.
+   The constraints of a lock walk that fails are undone. *)
+let mark_partial_match ~loc ~env partial =
+  match partial with
+  | Partial when Language_extension.is_enabled Refinement_types ->
+    let snapshot = Btype.snapshot () in
+    begin match
+      Env.walk_locks_for_partial_construct ~env (loc, Mode.Hint.Expression)
+    with
+    | () -> ()
+    | exception exn when Option.is_some (Location.error_of_exn exn) ->
+      Btype.backtrack snapshot;
+      Verification.require_exhaustive_match loc
+    end
+  | _ -> mark_partial_if_needed ~loc ~env partial
+
 let mark_partial_if_not_total_pattern_type ~loc ~env ty =
   if not (Ctype.can_pattern_match_total env ty) then
     Env.walk_locks_for_partial_construct ~env
@@ -9439,7 +9457,7 @@ and type_expect_
         type_cases Computation env arg_pat_mode expected_mode arg.exp_type
           sort ty_expected_explained ~check_if_total:true loc val_caselist
       in
-      mark_partial_if_needed ~loc ~env partial;
+      mark_partial_match ~loc ~env partial;
       let eff_cases =
         match eff_caselist with
         | [] -> []

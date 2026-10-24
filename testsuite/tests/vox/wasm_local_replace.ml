@@ -10,9 +10,8 @@ let rec (unique @ total) : (before : S.stack) @ immutable -> (index : B.u32) -> 
     {u : unit | after === replace before index value} @ ghost = fun before index value after premise -> ghost_ (
   L.replaced_def before index value after; replace_def before index value;
   match before, after with
-  | S.Push (_, rest), S.Push (_, tail) -> if index = 0 then () else unique rest (index - 1) value tail ()
-  | _ -> ())
+  | S.Push (_, rest), S.Push (_, tail) -> if index = 0 then () else unique rest (index - 1) value tail ())
 let (correct @ total) : (before : S.stack) @ immutable -> (index : B.u32) -> (value : S.value) @ immutable ->
     {u : unit | L.can_set before index value} ->
     {u : unit | L.set before index value === Some (replace before index value)} @ ghost = fun before index value premise -> ghost_ (
-  match L.set before index value with None -> () | Some after -> unique before index value after ())
+  match L.set before index value with Some after -> unique before index value after ())

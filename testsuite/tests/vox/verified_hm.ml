@@ -163,8 +163,7 @@ let (principal_evidence @ total) : (input : D.term) @ immutable ->
         {u : unit | target === M.substitute delta (F.readback s.tree)} ->
         {u : unit | claim}) @ total = fun delta _factor -> use delta () in
       Hm_effective_complete.closed_factor proof.execution proof.heap proof.pool
-        p s.tree target typing () claim accept
-    | Some _, None -> let _impossible : {u : unit | false} = () in ())
+        p s.tree target typing () claim accept)
 
 
 let (principal @ total) : (input : D.term) @ immutable ->

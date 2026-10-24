@@ -114,8 +114,7 @@ let rec collect (program : Program.program) globals configuration (base : B.u32)
             if returned.Calls.current.P.body.T.state.X.memory <> result.Hmc_wasm_global_invariant.memory
               || WG.get returned.Calls.current.P.globals 1 <> Some (S.I32 0)
               || returned.Calls.capacity <> call.Calls.capacity || returned.Calls.callers <> Calls.Root
-              then failwith "source block indirect return"
-          | _ -> failwith "source block indirect execution");
+              then failwith "source block indirect return");
           if not (Codec.shape next_signature result.Hmc_wasm_global_invariant.activation) then failwith "global successor shape" else
           let expected_cells = Codec.encode next_signature result.Hmc_wasm_global_invariant.activation padding () in
           ghost_ (Hmc_frame_decode_unique.frame next_signature next result.Hmc_wasm_global_invariant.cells expected_cells result.Hmc_wasm_global_invariant.activation padding ();

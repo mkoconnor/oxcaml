@@ -25,7 +25,6 @@ let (step @ total) : (instruction : I.t) @ immutable -> (before : X.state) @ imm
       match instruction, before.X.machine.E.stack with
       | (I.Local_set destination | I.Local_tee destination), S.Push (value, _) ->
         (match L.set before.X.machine.E.locals destination value with
-        | None -> ()
         | Some locals -> L.other_local before.X.machine.E.locals destination value locals local ())
       | _ -> ())
 let rec (correct @ total) : (code : C.t) @ immutable -> (before : X.state) @ immutable -> (after : X.state) @ immutable -> (local : B.u32) ->
@@ -34,7 +33,7 @@ let rec (correct @ total) : (code : C.t) @ immutable -> (before : X.state) @ imm
   fun code before after local premise -> ghost_ (
     preserves_def code local; X.run_def code before;
     match code with C.Empty -> () | C.Next (instruction, rest) ->
-      match X.step instruction before with X.Done middle -> step instruction before middle local (); correct rest middle after local () | _ -> ())
+      match X.step instruction before with X.Done middle -> step instruction before middle local (); correct rest middle after local ())
 let rec (append @ total) : (first : C.t) @ immutable -> (second : C.t) @ immutable -> (local : B.u32) ->
     {u : unit | preserves first local && preserves second local} ->
     {u : unit | preserves (E.append first second) local} @ ghost =

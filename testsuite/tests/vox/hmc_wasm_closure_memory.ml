@@ -54,7 +54,7 @@ let (correct @ total) : (captures : Heap.cells) @ immutable -> (count : Hmc_wasm
       Q.size_def layout fragment.Lower.bytes; Q.size_def (Q.Word (code, values)) (8 + 16 * count));
     let raw = Raw.read layout before fragment.Lower.bytes () in
     ghost_ (Cross.shape_def raw.Raw.words layout;
-      match raw.Raw.words with Q.Word (_, rest) -> Cross.shape_def rest (Q.Word (code, values)) | _ -> ());
+      match raw.Raw.words with Q.Word (_, rest) -> Cross.shape_def rest (Q.Word (code, values)));
     match raw.Raw.words with
     | Q.Word (old_tag, Q.Word (old_code, old)) ->
       ghost_ (Cross.shape_def (Q.Word (old_code, old)) (Q.Word (code, values)));

@@ -54,7 +54,7 @@ let rec (pool_member @ total) : (h : node Pref.heap) @ immutable -> (pool : pool
     (x : node Pref.t) @ immutable -> {u : unit | pool_scoped h pool && listed pool x} ->
     {u : unit | H.mem h x} @ ghost = fun h pool x premise -> ghost_ (
   pool_scoped_def h pool; listed_def pool x; match pool with
-  | Empty -> () | Entry (p, rest) -> if x === p then () else (pool_member h rest x (); ()))
+  | Entry (p, rest) -> if x === p then () else (pool_member h rest x (); ()))
 let rec (pool_from_members @ total) : (h : node Pref.heap) @ immutable ->
     (scope : ((x : node Pref.t) @ immutable -> {u : unit | not (H.mem h x) || source_ok h x})) @ total ->
     (pool : pool) @ immutable ->

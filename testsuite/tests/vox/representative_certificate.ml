@@ -20,7 +20,7 @@ let rec (head_valid @ total) : (h : node Pref.heap) @ immutable -> (d : certific
     (p : node Pref.t) @ immutable -> {u : unit | certificate_valid h d && listed d p && H.mem h p} ->
     {u : unit | resolves h p (head d p).root (head d p).path} @ ghost = fun h d p premise -> ghost_ (
       certificate_valid_def h d; listed_def d p; head_def d p;
-      match d with Empty -> () | Entry (x, _, rest) ->
+      match d with Entry (x, _, rest) ->
         if p === x then () else (head_valid h rest p (); ()))
 
 let (level_agrees @ total) : (h : node Pref.heap) @ immutable -> (d : certificate) @ immutable ->

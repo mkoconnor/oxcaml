@@ -92,7 +92,7 @@ let rec (with_copy_model @ total) : (saved : node Pref.heap) @ immutable ->
       let model0 : ((x : node Pref.t) @ immutable -> {u : unit | equation h tau x}) @ total = refine_ model0 in
       history_at saved epoch depth rest p ();
       wanted p; instance_at_def saved rho want p;
-      (match old.desc with Link child -> assigned0 child q; () | _ -> ());
+      (match old.desc with Link child -> assigned0 child q; ());
       let next : (x : node Pref.t) @ immutable -> {u : unit | equation (heap saved epoch depth d) tau x}
           @ total = fun x -> let () = mark_model rest h tau model0 p old epoch q x () in () in
       let assigned : ((a : node Pref.t) @ immutable -> (b : node Pref.t) @ immutable ->

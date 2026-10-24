@@ -199,6 +199,5 @@ let (correct @ total) : (lowered : Lower.program) @ immutable -> (locals : Emit.
       Stack.preserve_suffix program.I.origin.C.blocks lowered.Lower.width state.X.memory after.X.memory stack_base stack_top frames stop ();
       L.other_local after_body.X.machine.E.locals local (S.I32 (Status.zero ())) after.X.machine.E.locals keep ();
       (match activation.Source.temporaries with
-      | Source.Value (value, env, rest) -> Transition.tail program globals heap limit stack_capacity activation frames value env rest source.Loaded.entry.Dispatch.call.Enter.entry.Entry.entered ()
-      | _ -> ()));
+      | Source.Value (value, env, rest) -> Transition.tail program globals heap limit stack_capacity activation frames value env rest source.Loaded.entry.Dispatch.call.Enter.entry.Entry.entered ()));
     {source; state = after; fuel = Status.cost (Fuel.add source.Loaded.fuel cleanup)}

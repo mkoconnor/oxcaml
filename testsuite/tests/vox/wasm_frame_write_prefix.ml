@@ -65,14 +65,11 @@ let rec (prefix @ total) : (writes : W.writes) @ immutable -> (base_local : B.u3
               X.write_def M.W64 offset operands; X.compatible_def (S.I64 word) M.W64;
               M.width_def (S.I64 word);
               match M.store state.X.memory base offset (S.I64 word) with
-              | None -> ()
               | Some memory ->
                 let next = {X.memory; machine = state.X.machine} in
                 prefix rest base_local next base expected remaining ();
                 match X.run (Prefix.take remaining tail) next with
-                | X.Done after -> partial_def writes state.X.memory base locals after.X.memory
-                | _ -> ())
-          | _ -> ())
+                | X.Done after -> partial_def writes state.X.memory base locals after.X.memory))
 
 module P = Hmc_linear_preservation
 module Bytes = Hmc_linear_bytes
@@ -112,8 +109,7 @@ let rec (prefix_transitive @ total) : (count : B.u32) -> (a : B.bytes) @ immutab
     {u : unit | P.equal_prefix count a c} @ ghost = fun count a b c premise -> ghost_ (
       P.equal_prefix_def count a b; P.equal_prefix_def count b c; P.equal_prefix_def count a c;
       if count = 0 then () else match a, b, c with
-      | B.Byte (_, a), B.Byte (_, b), B.Byte (_, c) -> prefix_transitive (count - 1) a b c ()
-      | _ -> ())
+      | B.Byte (_, a), B.Byte (_, b), B.Byte (_, c) -> prefix_transitive (count - 1) a b c ())
 
 let (word_count @ total) : unit -> {u : unit | Index.represents (M.count M.W64) (Wasm_cell.eight ())} @ ghost =
   fun () -> ghost_ (
@@ -147,7 +143,7 @@ let rec (reflexive @ total) : (memory : B.bytes) @ immutable -> (count : B.u32) 
   fun memory count premise -> ghost_ (
     Bounds.covers_def memory count; Bytes.drop_def memory count; P.equal_prefix_def count memory memory;
     if count = 0 then () else match memory with
-    | B.End -> () | B.Byte (_, rest) -> Bounds.covers_def rest (count - 1); reflexive rest (count - 1) ())
+    | B.Byte (_, rest) -> Bounds.covers_def rest (count - 1); reflexive rest (count - 1) ())
 
 let rec (partial_region @ total) : (writes : W.writes) @ immutable ->
     (before : B.bytes) @ immutable -> (base : B.u32) -> (locals : S.stack) @ immutable ->
@@ -158,16 +154,13 @@ let rec (partial_region @ total) : (writes : W.writes) @ immutable ->
       && V.length current === V.length before} @ ghost = fun writes before base locals current low high premise -> ghost_ (
       partial_def writes before base locals current; bounded_def writes base low high;
       if current === before then reflexive before low () else match writes with
-      | W.End -> ()
       | W.Write (offset, source, rest) -> match L.get locals source with
         | Some (S.I64 word) -> (match M.store before base offset (S.I64 word) with
-          | None -> ()
           | Some next ->
             store_region before next base offset word low high ();
             Bounds.same_length before next low ();
             partial_region rest next base locals current low high ();
-            prefix_transitive low before next current ())
-        | _ -> ())
+            prefix_transitive low before next current ()))
 
 let rec (reflect @ total) : (writes : W.writes) @ immutable -> (base_local : B.u32) ->
     (state : X.state) @ immutable -> (base : B.u32) -> (after : X.state) @ immutable ->
@@ -191,16 +184,13 @@ let rec (reflect @ total) : (writes : W.writes) @ immutable -> (base_local : B.u
         X.run_def (C.Next (I.Local_get source, C.Next (I.I64_store (3, offset), tail))) addressed;
         X.step_def (I.Local_get source) addressed; E.step_def (I.Local_get source) addressed.X.machine;
         match L.get locals source with
-        | None -> ()
         | Some value ->
           let operands = {X.memory = state.X.memory; machine = {E.locals; stack = S.Push (value, addressed.X.machine.E.stack)}} in
           X.run_def (C.Next (I.I64_store (3, offset), tail)) operands;
           X.step_def (I.I64_store (3, offset)) operands; X.write_def M.W64 offset operands;
           X.compatible_def value M.W64; M.width_def value;
           match value with
-          | S.I32 _ -> ()
           | S.I64 word -> match M.store state.X.memory base offset value with
-            | None -> ()
             | Some memory -> reflect rest base_local {X.memory; machine = state.X.machine} base after ())
 
 let (region @ total) : (writes : W.writes) @ immutable -> (base_local : B.u32) ->
@@ -219,5 +209,4 @@ let (region @ total) : (writes : W.writes) @ immutable -> (base_local : B.u32) -
         reflect writes base_local state base after ();
         prefix writes base_local state base after.X.memory fuel ();
         match X.run (Prefix.take fuel (W.emit writes base_local)) state with
-        | X.Done current -> partial_region writes state.X.memory base state.X.machine.E.locals current.X.memory low high ()
-        | _ -> ())
+        | X.Done current -> partial_region writes state.X.memory base state.X.machine.E.locals current.X.memory low high ())

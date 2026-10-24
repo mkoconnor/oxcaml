@@ -25,8 +25,7 @@ let rec (run @ total) : (fuel : C.count) @ immutable -> (before : T.configuratio
     T.run_def fuel before; P.run_def fuel {P.body = before; globals};
     match fuel with C.Zero -> () | C.Succ rest ->
       match T.step before with
-      | T.Running next -> step before next globals (); run rest next after globals ()
-      | _ -> ())
+      | T.Running next -> step before next globals (); run rest next after globals ())
 let rec (compose @ total) : (first : C.count) @ immutable -> (second : C.count) @ immutable -> (configuration : P.configuration) @ immutable ->
     {u : unit | P.run (Fuel.add first second) configuration ===
       (match P.run first configuration with P.Running next -> P.run second next | terminal -> terminal)} @ ghost =

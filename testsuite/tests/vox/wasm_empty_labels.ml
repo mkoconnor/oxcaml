@@ -18,7 +18,6 @@ let rec (correct @ total) : (count : C.count) @ immutable -> (outer : T.labels) 
     match count with
     | C.Zero -> ()
     | C.Succ rest -> match inner with
-      | T.No_labels -> ()
       | T.Label (_, tail) ->
         T.step_def {T.code = T.Empty; labels = inner; state}; T.stack_def state S.Empty;
         correct rest outer tail state ())
@@ -30,5 +29,4 @@ let rec (extend @ total) : (count : C.count) @ immutable -> (outer : T.labels) @
   match count with
   | C.Zero -> related_def C.Zero outer outer
   | C.Succ rest -> match inner with
-    | T.No_labels -> ()
     | T.Label (_, tail) -> extend rest outer tail ())

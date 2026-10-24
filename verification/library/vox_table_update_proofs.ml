@@ -666,8 +666,7 @@ module Make (Key : Vox_table_map.Key)
     live_nonnegative after.slots;
     weight_def (empty_entry before);
     (match M.slot before index with
-     | Some entry -> weight_def entry
-     | _ -> ());
+     | Some entry -> weight_def entry);
     remove_arithmetic before.capacity before.size before.deleted
       (Invariant.reserve before.capacity) (Invariant.live_count after.slots);
     Invariant.shape_def after;

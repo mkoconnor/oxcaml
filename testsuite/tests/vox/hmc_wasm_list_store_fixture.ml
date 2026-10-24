@@ -45,8 +45,7 @@ let fixture (base : B.u32) closure =
     Write.correct (Finish.writes slots) 0 state base expected ());
   let stores = Write.emit (Finish.writes slots) 0 in
   (match X.run stores state with
-  | X.Done out -> if out.X.memory <> expected || out.X.machine <> state.X.machine then failwith "list store representation"
-  | _ -> failwith "list store execution");
+  | X.Done out -> if out.X.memory <> expected || out.X.machine <> state.X.machine then failwith "list store representation");
   let prefix = C.Next (I.I32_const base, C.Next (I.Local_set 0,
     C.Next (I.I64_const (V.tag head), C.Next (I.Local_set 1,
     C.Next (I.I64_const (V.payload head), C.Next (I.Local_set 2,

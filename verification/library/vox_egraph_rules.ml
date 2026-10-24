@@ -19,8 +19,7 @@ let rec (lookup_sorted @ total) :
   match vars, subst with
   | _ :: rest_vars, _ :: rest_subst ->
     if index > 0 then lookup_sorted rest_vars rest_subst (index - 1) ()
-    else ()
-  | _ -> ())
+    else ())
 
 let rec (instantiate_sorted @ total) :
     (vars : L.sort list) @ immutable -> (pat : pat) @ immutable ->

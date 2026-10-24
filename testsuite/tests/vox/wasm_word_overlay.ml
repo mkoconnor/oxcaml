@@ -17,8 +17,7 @@ let (limb @ total) : (before : B.bytes) @ immutable -> (payload : B.bytes) @ imm
       B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, _) as p3)) as p2)) as p1)),
       B.Byte (_, (B.Byte (_, (B.Byte (_, (B.Byte (_, _) as a3)) as a2)) as a1)) ->
         L.overlay_def payload before after; L.overlay_def p1 b1 a1;
-        L.overlay_def p2 b2 a2; L.overlay_def p3 b3 a3
-    | _ -> ())
+        L.overlay_def p2 b2 a2; L.overlay_def p3 b3 a3)
 let (word @ total) : (before : B.bytes) @ immutable -> (payload : B.bytes) @ immutable -> (after : B.bytes) @ immutable ->
     (old : W.t) @ immutable -> (value : W.t) @ immutable -> (tail : B.bytes) @ immutable ->
     {u : unit | Codec.decode before === Some (old, tail)
@@ -30,5 +29,4 @@ let (word @ total) : (before : B.bytes) @ immutable -> (payload : B.bytes) @ imm
     | Some (_, b), Some (_, p), Some (_, a) ->
       L.overlay_def B.End tail tail;
       limb b p a old.W.hi value.W.hi tail B.End tail ();
-      limb before payload after old.W.lo value.W.lo b p a ()
-    | _ -> ())
+      limb before payload after old.W.lo value.W.lo b p a ())

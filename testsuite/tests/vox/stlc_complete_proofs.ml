@@ -30,8 +30,7 @@ let rec (with_generation_model @ total) : (h : node Pref.heap) @ immutable ->
           @ total = fun x -> () in
       let cs = Nothing in satisfies_def rho cs;
       let next : ((x : node Pref.t) @ immutable -> {u : unit | equation after rho x}) @ total = refine_ model in
-      use rho next equal ()
-    | _ -> ())
+      use rho next equal ())
   | GBool p -> (match d with
     | Constant ->
       let v = Bool in allocatable_def h v; describes_def rho v target;
@@ -41,8 +40,7 @@ let rec (with_generation_model @ total) : (h : node Pref.heap) @ immutable ->
           {u : unit | tau p === target} -> {u : unit | claim}) @ total = fun tau next equal fit ->
         let refine_ fit = fit in let cs = Nothing in satisfies_def tau cs;
         use tau next equal () in
-      with_allocation_model h trees rho model p v target after () claim consume
-    | _ -> ())
+      with_allocation_model h trees rho model p v target after () claim consume)
   | GLam (arg, body, p, middle) -> (match d with
     | Abstraction (a, db) -> (match target with
       | TArrow (_, b) ->
@@ -89,9 +87,7 @@ let rec (with_generation_model @ total) : (h : node Pref.heap) @ immutable ->
           let refine_ u = with_generation_model h1 trees1 env1 body middle rho1 model1 b db
             () claim consume2 in refine_ u in
         let refine_ u = with_allocation_model h trees rho model arg v a h1
-          () claim consume1 in refine_ u
-      | _ -> ())
-    | _ -> ())
+          () claim consume1 in refine_ u))
   | GRec (arg, result, p, body) -> (match d with
     | Recursion (a, b, db) ->
       let h1 = H.put h arg Var in let h2 = H.put h1 result Var in
@@ -150,8 +146,7 @@ let rec (with_generation_model @ total) : (h : node Pref.heap) @ immutable ->
         let refine_ u = with_allocation_model h1 trees1 rho1 model1 result v b h2
           () claim consume2 in refine_ u in
       let refine_ u = with_allocation_model h trees rho model arg v a h1
-        () claim consume1 in refine_ u
-    | _ -> ())
+        () claim consume1 in refine_ u)
   | GApp (f, a, p, arrow, h1, h2) -> (match d with
     | Application (argty, df, da) ->
       let ft = TArrow (argty, target) in
@@ -217,5 +212,4 @@ let rec (with_generation_model @ total) : (h : node Pref.heap) @ immutable ->
         let refine_ u = with_generation_model h1 trees1 env a h2 rho1 model1 argty da
           () claim consume2 in refine_ u in
       let refine_ u = with_generation_model h trees env f h1 rho model ft df
-        () claim consume1 in refine_ u
-    | _ -> ()))
+        () claim consume1 in refine_ u))

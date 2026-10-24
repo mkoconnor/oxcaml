@@ -15,8 +15,7 @@ let rec (drop @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ i
   if boundary = 0 then () else match before, after with
   | B.Byte (_, left), B.Byte (_, right) ->
     Bounds.covers_def left (boundary - 1); Bounds.covers_def right (boundary - 1);
-    drop left right (boundary - 1) (address - 1) ()
-  | _ -> ())
+    drop left right (boundary - 1) (address - 1) ())
 let (load @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ immutable ->
     (boundary : W.limb) -> (address : W.limb) -> (count : D.index) @ immutable ->
     {u : unit | Bounds.covers before boundary && Bounds.covers after boundary && boundary <= address

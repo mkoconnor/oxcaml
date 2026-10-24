@@ -106,13 +106,7 @@ let (evaluate @ total) : (p : C.program) @ immutable ->
         W.valid_def table v;
         W.environment_def v;
         W.length_def v
-      | Halt -> ())
-    | Done v -> W.source_def v;
-      W.target_def v;
-      W.valid_def table v;
-      W.environment_def v;
-      W.length_def v
-    | Stuck -> ()));
+      | Halt -> ())));
   out
 
 let (return_value @ total) : (p : C.program) @ immutable ->

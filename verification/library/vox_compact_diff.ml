@@ -74,7 +74,6 @@ let rec (invert_correct @ total) (edits : 'a diff)
        let tail = S.drop k old in
        S.cut old k;
        (match patch rest tail with
-        | None -> ()
         | Some next ->
           relates_def rest tail next;
           invert_correct rest tail next;
@@ -84,14 +83,12 @@ let rec (invert_correct @ total) (edits : 'a diff)
           S.length_def next)
      | Delete _ :: rest ->
        (match old with
-        | [] -> ()
         | _ :: tail ->
           relates_def rest tail fresh;
           invert_correct rest tail fresh;
           relates_def (inverse rest) fresh tail)
      | Insert _ :: rest ->
        (match patch rest old with
-        | None -> ()
         | Some next ->
           relates_def rest old next;
           invert_correct rest old next;

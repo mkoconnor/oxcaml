@@ -24,8 +24,7 @@ let (success @ total) : (program : I.program) @ immutable -> (globals : Machine.
     Pop.transition_def activation next allocation.A.reference;
     Machine.step_def program globals limit stack_limit {Machine.heap; state = Q.Running (activation, frames)};
     match activation.F.temporaries with
-    | F.Value (_, env, rest) -> Machine.allocation_result_def activation frames next env rest (A.Allocated allocation)
-    | _ -> ())
+    | F.Value (_, env, rest) -> Machine.allocation_result_def activation frames next env rest (A.Allocated allocation))
 let (exhausted @ total) : (program : I.program) @ immutable -> (globals : Machine.globals) @ immutable ->
     (heap : Heap.heap) @ immutable -> (limit : W.limb) -> (stack_limit : D.index) @ immutable ->
     (activation : F.activation) @ immutable -> (frames : Q.frames) @ immutable ->
@@ -38,5 +37,4 @@ let (exhausted @ total) : (program : I.program) @ immutable -> (globals : Machin
   fun program globals heap limit stack_limit activation frames next head premise -> ghost_ (
     Machine.step_def program globals limit stack_limit {Machine.heap; state = Q.Running (activation, frames)};
     match activation.F.temporaries with
-    | F.Value (_, env, rest) -> Machine.allocation_result_def activation frames next env rest A.Exhausted
-    | _ -> ())
+    | F.Value (_, env, rest) -> Machine.allocation_result_def activation frames next env rest A.Exhausted)

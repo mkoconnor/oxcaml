@@ -61,7 +61,6 @@ let fixture (base : B.u32) env saved rest =
             let result = Hmc_wasm_call_save_memory.correct fragment tail 9 current accumulator remaining (3 + env_count) count state base destination 1024 0 1 () in
             if result.Hmc_wasm_call_save_memory.memory <> expected then failwith "save decoded memory")
         | _ -> failwith "save size encoding")
-      | _ -> failwith "save operand shape"
     in
     (match C.apply fragment.F.copies memory base destination with
     | None -> failwith "save copy"

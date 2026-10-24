@@ -126,15 +126,13 @@ let (step_preserves @ total) : (state : S.state) @ immutable ->
     | D.Truth, D.Constant | D.False, D.Constant | D.Word _, D.Word_constant
     | D.Nil, D.Empty_list _ ->
       (match S.step state with
-      | S.Running (S.Return v, _) -> V.valid_def V.Leaf (V.Value (v, t))
-      | _ -> ());
+      | S.Running (S.Return v, _) -> V.valid_def V.Leaf (V.Value (v, t)));
       Active (t, Value V.Leaf, kp)
     | D.Lambda _, D.Abstraction (_, body)
     | D.Recursive _, D.Recursion (_, _, body) ->
       let vp = V.Capture (g, body, ep) in
       (match S.step state with
-      | S.Running (S.Return v, _) -> V.valid_def vp (V.Value (v, t))
-      | _ -> ());
+      | S.Running (S.Return v, _) -> V.valid_def vp (V.Value (v, t)));
       Active (t, Value vp, kp)
     | D.Apply (_, _), D.Application (a, left, right) ->
       Active (D.Function (a, t), Term (g, left, ep), Function_argument (a, t, g, right, ep, kp))

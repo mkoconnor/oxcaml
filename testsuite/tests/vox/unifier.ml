@@ -230,9 +230,6 @@ let rec unify :
         let d = ghost_ Clash in
         ghost_ (unified_def h r s ok h d);
         #{ok; state = t; derivation = d}
-      | Link _, _ | _, Link _ ->
-        let proof = ghost_ (let u = () in (u : {u : unit | false})) in
-        let refine_ proof = proof in assert false
     in result in
   let refine_ result = result in
   let ok = result.#ok in

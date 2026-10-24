@@ -44,5 +44,4 @@ let (layout @ total) : (recursive : bool) -> (pc : W.limb) -> (pc_local : B.u32)
       Match.matches_def (Write.Write (8, Write.Constant (Header.number pc), rest)) 8 (Q.Word (Header.number pc, Words.words body)) locals;
       Write.read_def (Write.Pointer_local pc_local) locals;
       Match.matches_def (writes recursive pc_local closure_local argument_tag argument_payload) 0 (Words.words all) locals;
-      Match.matches_def (Write.Write (8, Write.Pointer_local pc_local, rest)) 8 (Q.Word (Header.number pc, Words.words body)) locals
-    | _ -> ())
+      Match.matches_def (Write.Write (8, Write.Pointer_local pc_local, rest)) 8 (Q.Word (Header.number pc, Words.words body)) locals)

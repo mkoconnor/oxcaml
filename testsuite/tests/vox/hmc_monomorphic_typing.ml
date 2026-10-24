@@ -78,14 +78,14 @@ let rec (preservation @ total) : (table : M.table) @ immutable -> (catalog : T.c
       | C.Local i, D.Variable _ -> local_lookup locals (T.context catalog) i ()
       | C.Global (i, j, id), D.Variable args ->
         M.lookup_present table id ();
-        (match M.lookup table id with None -> () | Some entry ->
+        (match M.lookup table id with Some entry ->
           let origin = entry.M.body.Hmc_specialized_body.origin in
           I.valid_def origin;
           R.global_lookup locals (T.context catalog) i j ();
           selected_lookup catalog j {T.definition = origin.I.definition; earlier = origin.I.earlier} ())
       | C.Lambda body, D.Abstraction (a, db) -> (match ty with D.Function (_, b) ->
         let next = D.Binding (D.Forall (D.Z, a), locals) in
-        R.context_def next (T.context catalog); preservation table catalog next body b db () | _ -> ())
+        R.context_def next (T.context catalog); preservation table catalog next body b db ())
       | C.Recursive body, D.Recursion (a, b, db) ->
         let self = D.Binding (D.Forall (D.Z, D.Function (a, b)), locals) in
         let next = D.Binding (D.Forall (D.Z, a), self) in

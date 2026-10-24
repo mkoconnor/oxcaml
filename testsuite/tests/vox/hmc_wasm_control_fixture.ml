@@ -74,7 +74,6 @@ let fixture (base : B.u32) branch condition (yes_pc : W.limb) (no_pc : W.limb) =
     | _ -> failwith "control execution");
     {R.memory; base; first = word 37; second = word 99; code;
       expected = [8, word pc; 24, word 64; 32, V.tag accumulator; 40, V.payload accumulator; 56, word 10; 72, word 20]}
-  | _ -> failwith "compiler frame encoding"
 let fixtures () =
   let zero = index 0 in let high = index 13 in
   if Hmc_wasm_simple_lower.lower (G.Jump high) 12 <> None

@@ -132,7 +132,6 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
               let full = Heap.Cell (V.Word (Header.number old_pc), source_cells) in
               ghost_ (Heap.length_def full; Hmc_u32_index.represents_def (Heap.length full) (source_count + 1));
               match Hmc_wasm_reservation.reserve (Heap.length full) (source_count + 1) 256 8192 () with
-              | None -> failwith "source frame extent"
               | Some source_stop ->
               let memory = Hmc_memory_cells.store original_memory 8192 256 source_stop full () in
               if not (above heap source_stop) then failwith "source frame overlaps heap" else (

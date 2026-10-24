@@ -67,7 +67,6 @@ let (introduce @ total) :
     Q.in_classes_def graph root (Q.classes graph pat bindings);
     Q.classes_def graph pat bindings;
     (match Q.class_id graph id with
-     | None -> ()
      | Some label ->
        collect_contains graph pat (first graph pat bindings) (second graph pat bindings)
          (third graph pat bindings) graph.count id label node ());

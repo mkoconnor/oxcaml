@@ -75,7 +75,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
       Hm_reconstruction_variable.shared heap heads valid depth env schemas rho scope context instances index p rep ();
       Instances.satisfied_def rho scope context (D.Bound index) (A.Variable_use p)
     | Run.RVar (index, p, epoch, history, certificate), A.Variable_use _ ->
-      (match Env.lookup env index with None -> () | Some original ->
+      (match Env.lookup env index with Some original ->
         Run.copy_heap_def heap epoch depth history; Hm_execution_spec.copy_heap_def heap epoch depth history;
         let copy_model : ((q : Ty.node Pref.t) @ immutable ->
           {u : unit | U.node_equation (Hm_execution_spec.copy_heap heap epoch depth history) rho q}) @ total = fun q -> model q in
@@ -121,8 +121,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
             let r = generic x in if protected x then Fresh.generic_allocate middle p node x r (); r in
           future protected next_closed next_generic q in
         run heap heads trees depth pool facts env schemas body middle body_pool final final_trees rho values
-          middle_model middle_owned middle_future middle_preserve scope context support instances middle_fresh child ()
-      | _ -> ())
+          middle_model middle_owned middle_future middle_preserve scope context support instances middle_fresh child ())
     | Run.RLam (argument, body, middle, body_pool, out), A.Abstraction (_, _, child) ->
       (match Run.result body, out with
       | Some result, Some p ->
@@ -206,8 +205,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
             (Scope.interpret scope (Ty.interpret rho choices selected)) d} @ immutable) @ total = fun index selected choices premise ->
           Hm_reconstruction_environment.extend rho scope context schemas instances schema scheme (fun choices -> head choices) index selected choices () in
         run start child_heads child_trees depth child_pool child_facts child_env child_schemas body middle body_pool
-          final final_trees rho values middle_model middle_owned middle_future middle_preserve scope inner child_support child_instances middle_fresh child ()
-      | _ -> ())
+          final final_trees rho values middle_model middle_owned middle_future middle_preserve scope inner child_support child_instances middle_fresh child ())
     | Run.RApp (left, right, h1, pool1, h2, pool2, p, arrow, ok, derivation), A.Application (_, l, r) ->
       (match Run.result left, Run.result right with
       | Some f, Some a ->
@@ -303,8 +301,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
         run heap heads trees depth pool facts env schemas left h1 pool1 final final_trees rho values model1 owned1
           future1 preserve1 scope context support instances fresh1 l ();
         run h1 heads1 trees1 depth pool1 facts1 env schemas right h2 pool2 final final_trees rho values model2 owned2
-          future2 preserve2 scope context support instances fresh2 r ()
-      | _ -> ())
+          future2 preserve2 scope context support instances fresh2 r ())
     | Run.RCons (left, right, h1, pool1, h2, pool2, p, ok, derivation), A.List_constructor (_, l, r) ->
       (match Run.result left, Run.result right with
       | Some f, Some a ->
@@ -394,8 +391,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
         run heap heads trees depth pool facts env schemas left h1 pool1 final final_trees rho values model1 owned1
           future1 preserve1 scope context support instances fresh1 l ();
         run h1 heads1 trees1 depth pool1 facts1 env schemas right h2 pool2 final final_trees rho values model2 owned2
-          future2 preserve2 scope context support instances fresh2 r ()
-      | _ -> ())
+          future2 preserve2 scope context support instances fresh2 r ())
     | Run.RRec (argument, result, self, body, middle, body_pool, finish), A.Recursion (_, _, _, child) ->
       (match Run.result body, finish with
       | Some body_root, Run.Unified (ok, derivation) ->
@@ -519,8 +515,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
           Hm_reconstruction_environment.extend rho scope outer self_schemas self_instances argument_schema argument_scheme
             (fun choices -> head_argument choices) index selected choices () in
         run h3 heads3 trees3 depth pool3 facts3 env3 schemas3 body middle body_pool final final_trees rho values middle_model middle_owned
-          middle_future middle_preserve scope inner child_support child_instances middle_fresh child ()
-      | _ -> ())
+          middle_future middle_preserve scope inner child_support child_instances middle_fresh child ())
     | Run.RLet (rhs, body, middle, child_pool), A.Let_binding (rtrace, btrace) ->
       (match Run.result rhs with
       | Some original ->
@@ -661,9 +656,7 @@ let rec (run @ total) : (heap : Ty.node Pref.heap) @ immutable -> (heads : E.hea
         run heap heads trees child_depth empty child_facts env schemas rhs middle child_pool final final_trees rho values middle_model middle_owned
           middle_future middle_preserve extended rhs_context rhs_support rhs_instances rhs_fresh rtrace ();
         run start middle_heads start_trees depth transferred start_facts body_env body_schemas body after final_pool final final_trees rho values model owned
-          future preserve scope body_context body_support body_instances fresh btrace ()
-      | None -> ())
-    | _ -> ())
+          future preserve scope body_context body_support body_instances fresh btrace ()))
 
 let (closed @ total) : (execution : Run.execution) @ immutable ->
     (heap : Ty.node Pref.heap) @ immutable -> (pool : Pool.pool) @ immutable ->

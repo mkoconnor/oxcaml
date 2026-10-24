@@ -33,7 +33,6 @@ let fixture (base : B.u32) =
   ghost_ (Wasm_locals.get_def locals 0; Copy.correct plan 0 state base after ());
   let code = Copy.emit plan 0 in
   (match X.run code state with X.Done result ->
-    if result.X.memory <> after || result.X.machine <> state.X.machine then failwith "cell-copy representation"
-  | _ -> failwith "cell-copy execution");
+    if result.X.memory <> after || result.X.machine <> state.X.machine then failwith "cell-copy representation");
   {R.memory; base; first = word 37; second = word 99; code; expected = [0, word 0; 8, word 1; 16, word 0; 24, word 1]}
 let fixtures () = [fixture 0; fixture 7]

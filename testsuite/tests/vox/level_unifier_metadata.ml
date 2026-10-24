@@ -116,7 +116,7 @@ let (redirect_ordered @ total) : (h : node Pref.heap) @ immutable -> (p : node P
     {u : unit | ordered (H.put h p (redirect h p q)) x} @ ghost = fun h p q x premise -> ghost_ (
   active_def h p; at_level_def h p; redirect_def h p q;
   let after = H.put h p (redirect h p q) in ordered_def h x; ordered_def after x;
-  (match H.at h p with None -> () | Some v -> match v.level with Generic -> () | Finite n ->
+  (match H.at h p with Some v -> match v.level with Finite n ->
     redirect_below h p q q n (); let desc = Link q in children_below_def after desc n; ());
   (match H.at h x with None -> () | Some v -> match v.level with Generic -> () | Finite n ->
     redirect_children h p q v.desc n (); ()); ())

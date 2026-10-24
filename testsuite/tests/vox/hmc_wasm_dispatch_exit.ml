@@ -28,8 +28,7 @@ let rec (correct @ total) : (source : Source.table) @ immutable -> (target : Tab
         Select.label_def outer; T.branch_def (depth + 1) (Select.label outer) state)
       else (
         correct rest tail locals (S.add32 depth 1) pc fragment (Select.label outer) selection_state state ();
-        Select.label_def outer; T.branch_def (S.add32 depth 1) (Select.label outer) state)
-    | _ -> ())
+        Select.label_def outer; T.branch_def (S.add32 depth 1) (Select.label outer) state))
 let (valid @ total) : (source : Source.table) @ immutable -> (target : Table.table) @ immutable ->
     (locals : Block.locals) @ immutable -> (depth : B.u32) -> (pc : W.limb) -> (fragment : Block.fragment) @ immutable ->
     (outer : T.labels) @ immutable -> (state : X.state) @ immutable ->

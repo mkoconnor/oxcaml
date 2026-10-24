@@ -24,7 +24,6 @@ let rec (mapped_instance @ total) : (saved : node Pref.heap) @ immutable ->
   fun saved epoch depth d final rho model p q want images premise -> ghost_ (
     valid_def saved epoch depth d; mapping_def d p;
     match d with
-    | Start | Clean -> ()
     | Fresh (rest, x, y, old, desc) ->
       if p === x then (
         history_at saved epoch depth rest p ();
@@ -64,8 +63,7 @@ let rec (mapped_instance @ total) : (saved : node Pref.heap) @ immutable ->
         extends_def rest d; extends_def rest rest; extension_trans rest d final ();
         match old.desc with
         | Link child -> target_preserved saved epoch depth rest final child q ();
-          target_image saved final rho child q (); images child; ()
-        | _ -> ())
+          target_image saved final rho child q (); images child; ())
       else (
         extends_def rest d; extends_def rest rest; extension_trans rest d final ();
         let () = mapped_instance saved epoch depth rest final rho model p q want images () in ()))

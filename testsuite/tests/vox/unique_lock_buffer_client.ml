@@ -30,7 +30,7 @@ let take : (a : L.t) ->
     let h = ghost_ (P.own (borrow_ r.state)) in
     ghost_ (L.owned_def a h);
     let old = ghost_ (match H.at h (L.location a) with
-      | Some v -> v | None -> None) in
+      | Some v -> v) in
     let result = L.take a r.state in
     ghost_ (H.put_law (H.empty ()) (L.location a) old None);
     result

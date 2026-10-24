@@ -42,5 +42,4 @@ let rec (same_length @ total) : (before : B.bytes) @ immutable -> (after : B.byt
   C.length_def before; C.length_def after; covers_def before limit; covers_def after limit;
   L.drop_def before limit; L.drop_def after limit;
   if limit = 0 then () else match before, after with
-  | B.Byte (_, rest), B.Byte (_, tail) -> covers_def rest (limit - 1); same_length rest tail (limit - 1) (); covers_def tail (limit - 1)
-  | _ -> ())
+  | B.Byte (_, rest), B.Byte (_, tail) -> covers_def rest (limit - 1); same_length rest tail (limit - 1) (); covers_def tail (limit - 1))

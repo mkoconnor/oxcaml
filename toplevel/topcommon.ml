@@ -254,14 +254,21 @@ let preprocess_phrase ppf phr =
 
 let typecheck_phrase ppf oldenv oldsig sstr =
   Typecore.reset_delayed_checks ();
-  let (str, sg, sn, shape, newenv) =
-    Typemod.type_toplevel_phrase oldenv oldsig sstr
+  let str, sg', newenv, shape =
+    try
+      let (str, sg, sn, shape, newenv) =
+        Typemod.type_toplevel_phrase oldenv oldsig sstr
+      in
+      if !Clflags.dump_typedtree then Printtyped.implementation ppf str;
+      let sg' = Typemod.Signature_names.simplify newenv sn sg in
+      let modes = Includemod.modes_toplevel in
+      Includemod.check_implementation oldenv ~modes sg sg';
+      Typecore.force_delayed_checks ();
+      str, sg', newenv, shape
+    with exn ->
+      Verification.flush_partial_matches ();
+      raise exn
   in
-  if !Clflags.dump_typedtree then Printtyped.implementation ppf str;
-  let sg' = Typemod.Signature_names.simplify newenv sn sg in
-  let modes = Includemod.modes_toplevel in
-  Includemod.check_implementation oldenv ~modes sg sg';
-  Typecore.force_delayed_checks ();
   Verification.run str;
   let shape = Shape_reduce.local_reduce Env.empty shape in
   if !Clflags.dump_shape then Shape.print ppf shape;

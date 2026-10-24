@@ -133,7 +133,6 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
               | None -> failwith "descriptor lookup"
               | Some descriptor ->
               (match Hmc_closure_ir.lookup table id with
-              | None -> failwith "capture entry lookup"
               | Some entry ->
               if count > 64 then failwith "capture fixture count" else
               let minimum : Hmc_wasm_relayout.count = (if entry.Hmc_closure_ir.recursive then 4 else 3) + count in
@@ -142,10 +141,8 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
               | None -> failwith "capture plan build"
               | Some fragment ->
               match Some lowered.Lower.calls with
-              | None -> failwith "call plan table"
               | Some plans ->
               (match Hmc_cfg_program.lookup program.Program.origin.Hmc_cfg_program.functions id with
-              | None -> failwith "callee lookup"
               | Some function_ ->
               (match Hmc_u32_index.encode 1000 function_.Hmc_cfg_program.start with
               | None -> failwith "callee PC encoding"
@@ -164,7 +161,6 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
               let full = Heap.Cell (V.Word (Header.number old_pc), source_cells) in
               ghost_ (Heap.length_def full; Hmc_u32_index.represents_def (Heap.length full) (source_count + 1));
               match Hmc_wasm_reservation.reserve (Heap.length full) (source_count + 1) 256 8192 () with
-              | None -> failwith "source frame extent"
               | Some source_stop ->
               let memory = Hmc_memory_cells.store original_memory 8192 256 source_stop full () in
               if not (above heap source_stop) then failwith "source frame overlaps heap" else (
@@ -263,8 +259,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
                   (match Calls.run (Round.cost config completed.New.fuel) module_ call with
                   | Calls.Running actual ->
                     if actual.Calls.current.P.body.T.state.X.memory <> expected || actual.Calls.callers <> Calls.Root || actual.Calls.capacity <> call.Calls.capacity
-                      || WG.get actual.Calls.current.P.globals 0 <> Some (S.I32 0) || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 8192) then failwith "tail indirect result"
-                  | _ -> failwith "tail indirect execution");
+                      || WG.get actual.Calls.current.P.globals 0 <> Some (S.I32 0) || WG.get actual.Calls.current.P.globals 1 <> Some (S.I32 8192) then failwith "tail indirect result");
                   (match Hmc_wasm_program_table.lookup lowered.Lower.blocks old_pc, Hmc_u32_index.encode 1000 (G.size program.Program.origin.Hmc_cfg_program.blocks) with
                   | Some (Block.Tail_call selected_count), Some block_count ->
                     if selected_count <> env_count || old_pc >= block_count then failwith "tail dispatcher selection" else

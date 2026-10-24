@@ -45,5 +45,4 @@ let (normal @ total) : (program : I.program) @ immutable -> (base : W.limb) -> (
     ghost_ (R.correct_def program base heap_limit stack_limit input fuel out; R.exhausted_def out; R.returned_def out word;
       match out with R.Execution (globals, Runs.Finished configuration) ->
         H.valid_def program globals heap_limit configuration (U.advance program fuel (U.initial program input));
-        R.word_agreement configuration.X.heap configuration.X.state word
-      | _ -> ()); out
+        R.word_agreement configuration.X.heap configuration.X.state word); out

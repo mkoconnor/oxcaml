@@ -22,12 +22,10 @@ let rec (concat @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @
     if base = 0 then () else (
       P.equal_prefix_def total before after;
       match before, after with
-      | B.Byte (_, b), B.Byte (_, a) -> concat b a (base - 1) count (total - 1) left right ()
-      | _ -> ()))
+      | B.Byte (_, b), B.Byte (_, a) -> concat b a (base - 1) count (total - 1) left right ()))
 let rec (shared @ total) : (source : B.bytes) @ immutable -> (left : B.bytes) @ immutable -> (right : B.bytes) @ immutable ->
     (base : B.u32) -> {u : unit | P.equal_prefix base source left && P.equal_prefix base source right} ->
     {u : unit | P.equal_prefix base left right} @ ghost = fun source left right base premise -> ghost_ (
     P.equal_prefix_def base source left; P.equal_prefix_def base source right; P.equal_prefix_def base left right;
     if base = 0 then () else match source, left, right with
-    | B.Byte (_, s), B.Byte (_, a), B.Byte (_, b) -> shared s a b (base - 1) ()
-    | _ -> ())
+    | B.Byte (_, s), B.Byte (_, a), B.Byte (_, b) -> shared s a b (base - 1) ())

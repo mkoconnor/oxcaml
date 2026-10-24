@@ -16,9 +16,7 @@ let rec (get @ total) : (reads : Read.reads) @ immutable -> (memory : B.bytes) @
     match reads with
     | Read.End -> ()
     | Read.Read (offset, destination, rest) -> (match M.load memory base offset M.W64 with
-      | None -> ()
       | Some value -> (match L.set before destination value with
-        | None -> ()
         | Some next ->
           get rest memory base next after local ();
           if local <> destination then L.other_local before destination value next local () else ())))
@@ -30,8 +28,7 @@ let rec (can_set @ total) : (before : S.stack) @ immutable -> (after : S.stack) 
     match before, after with
     | S.Push (old, rest), S.Push (new_, tail) ->
       if index = 0 then (S.same_type_def old new_; S.same_type_def old value; S.same_type_def new_ value)
-      else (L.can_set_def rest (index - 1) value; L.can_set_def tail (index - 1) value; can_set rest tail (index - 1) value ())
-    | _ -> ())
+      else (L.can_set_def rest (index - 1) value; L.can_set_def tail (index - 1) value; can_set rest tail (index - 1) value ()))
 let[@def] rec (ready @ total) (reads : Read.reads @ immutable) (memory : B.bytes @ immutable) (base : B.u32) (locals : S.stack @ immutable) =
   match reads with
   | Read.End -> true
@@ -45,7 +42,7 @@ let rec (preserve @ total) : (reads : Read.reads) @ immutable -> (memory : B.byt
     match reads with
     | Read.End -> ()
     | Read.Read (offset, destination, rest) -> (match M.load memory base offset M.W64 with
-      | None -> () | Some value -> can_set before after destination value (); preserve rest memory base before after ()))
+      | Some value -> can_set before after destination value (); preserve rest memory base before after ()))
 let rec (project @ total) : (reads : Read.reads) @ immutable -> (memory : B.bytes) @ immutable -> (base : B.u32) ->
     (locals : S.stack) @ immutable -> {u : unit | ready reads memory base locals} ->
     {out : S.stack | Read.project reads memory base locals === Some out} @ immutable =

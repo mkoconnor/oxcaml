@@ -21,8 +21,7 @@ let rec (prefix @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @
     P.equal_prefix_def address before after; L.drop_def before address; L.drop_def after address;
     L.updated_def before address payload after;
     if address = 0 then () else match before, after with
-    | B.Byte (_, b), B.Byte (_, a) -> prefix b a (address - 1) payload old_suffix new_suffix ()
-    | _ -> ())
+    | B.Byte (_, b), B.Byte (_, a) -> prefix b a (address - 1) payload old_suffix new_suffix ())
 let (correct @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ immutable ->
     (base : B.u32) -> (offset : B.u32) -> (address : B.u32) ->
     (old_suffix : B.bytes) @ immutable -> (new_suffix : B.bytes) @ immutable ->
@@ -41,5 +40,4 @@ let (correct @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ im
     M.can_store_def before base offset (S.I64 value); M.address_def base offset M.W64; M.size_def M.W64;
     L.fits_at_def before address payload;
     match M.store before base offset (S.I64 value) with
-    | None -> ()
     | Some actual -> Wasm_memory_unique.updated before address payload actual after ())

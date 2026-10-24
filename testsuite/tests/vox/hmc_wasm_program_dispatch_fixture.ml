@@ -95,8 +95,7 @@ let fixture : (program : Program.program) @ immutable -> (globals : Machine.glob
             | Calls.Finished actual ->
               if actual.GE.execution.X.memory <> memory || actual.GE.execution.X.machine.E.stack <> S.Push (S.I32 1, S.Empty)
                 || WG.get actual.GE.globals 6 <> Some (S.I64 (V.tag value))
-                || WG.get actual.GE.globals 7 <> Some (S.I64 (V.payload value)) then failwith "dispatcher root result"
-            | _ -> failwith "dispatcher root execution");
+                || WG.get actual.GE.globals 7 <> Some (S.I64 (V.payload value)) then failwith "dispatcher root result");
             ghost_ (Assembly.main_correct lowered (G.size program.Program.origin.Hmc_cfg_program.blocks) count config (Runtime.dispatcher ()) ());
             (match Calls.start module_ count memory wasm_globals (C.Succ C.Zero) with
             | Calls.Running start ->

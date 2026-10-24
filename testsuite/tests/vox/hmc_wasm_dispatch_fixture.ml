@@ -41,8 +41,7 @@ let fixture (base : B.u32) (pc : W.limb) =
       Dispatch.selected_code table pc 0 T.No_labels state;
       Table.lookup_correct Hmc_heap_machine.Empty_globals source table 3 12 logical_pc pc ());
     (match T.run (Dispatch.cost table pc 0) {T.code; labels = T.No_labels; state} with
-    | T.Running selected -> if selected <> Dispatch.selection table pc 0 T.No_labels state then failwith "selection mismatch"
-    | _ -> failwith "selection did not reach block");
+    | T.Running selected -> if selected <> Dispatch.selection table pc 0 T.No_labels state then failwith "selection mismatch");
     if not (Wasm_nesting.structured code) then failwith "dispatcher structure" else
     if pc = 3 then (
       (match Table.lookup table pc with

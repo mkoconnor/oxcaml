@@ -44,8 +44,7 @@ let () =
     F.decode_cells_def heap tail; F.decode_cells_def heap M.Empty);
   let encoded = F.encode heap signature a abstract tail values () in
   (match F.decode_cells heap encoded with
-  | Some cells -> if Codec.decode signature D.Z cells <> Some (abstract, values) then failwith "heap frame roundtrip"
-  | None -> failwith "heap frame dangling cell");
+  | Some cells -> if Codec.decode signature D.Z cells <> Some (abstract, values) then failwith "heap frame roundtrip");
   let expected = M.Cell (C.Nil, M.Cell (C.Boolean false, M.Cell (C.Boolean true,
     M.Cell (C.Nil, M.Cell (C.Boolean true, tail))))) in
   if encoded <> expected then failwith "heap frame field order";

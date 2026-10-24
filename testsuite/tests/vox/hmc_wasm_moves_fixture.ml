@@ -34,8 +34,7 @@ let move (base : B.u32) writes expected_first expected_second =
         (match X.run code state with
         | X.Done after ->
           if after.X.memory <> expected_memory base 7 (word 42) expected_first expected_second
-            || after.X.machine.E.stack <> state.X.machine.E.stack then failwith "source environment move"
-        | _ -> failwith "move execution");
+            || after.X.machine.E.stack <> state.X.machine.E.stack then failwith "source environment move");
         {memory = source.F.memory; base; first = word 0; second = word 0; code;
           expected = [56, expected_first; 72, expected_second]})
   else failwith "move base alias"
@@ -55,8 +54,7 @@ let update (base : B.u32) =
     (match X.run code state with
     | X.Done after ->
       if after.X.memory <> expected_memory base 11 second (word 10) (word 20)
-        || after.X.machine <> state.X.machine then failwith "source PC/accumulator update"
-    | _ -> failwith "update execution");
+        || after.X.machine <> state.X.machine then failwith "source PC/accumulator update");
     {memory = source.F.memory; base; first; second; code;
       expected = [8, first; 24, word 64; 40, second; 56, word 10; 72, word 20]}
 let fixtures () =

@@ -25,7 +25,7 @@ let rec (weaken @ total) : (bound : D.index) @ immutable -> (frames : S.frames) 
 let (pop @ total) : (bound : D.index) @ immutable -> (saved : S.activation) @ immutable -> (rest : S.frames) @ immutable ->
     {u : unit | bounded bound (S.Frame (saved, rest))} -> {u : unit | bounded bound rest} @ ghost =
   fun bound saved rest premise -> ghost_ (
-    bounded_def bound (S.Frame (saved, rest)); match bound with D.Z -> () | D.S n -> weaken n rest ())
+    bounded_def bound (S.Frame (saved, rest)); match bound with D.S n -> weaken n rest ())
 let[@def] (stack_bound @ total) (bound : D.index @ immutable) (state : S.state @ immutable) = match state with
   | S.Running (_, frames) -> bounded bound frames | _ -> true
 let (step @ total) : (p : I.program) @ immutable -> (bound : D.index) @ immutable -> (state : S.state) @ immutable ->

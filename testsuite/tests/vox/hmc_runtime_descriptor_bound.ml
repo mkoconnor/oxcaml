@@ -9,7 +9,6 @@ let rec (correct @ total) : (table : R.table) @ immutable -> (memory : B.bytes) 
   fun table memory base count code descriptor premise -> ghost_ (
     T.related_def table memory base count; R.lookup_def table code;
     match table with
-    | R.Empty -> ()
     | R.Add (_, rest) ->
       T.size rest memory base (count - 1) ();
       if I.represents (R.size rest) code then I.unique (R.size rest) code (count - 1) ()

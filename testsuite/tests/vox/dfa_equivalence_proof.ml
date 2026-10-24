@@ -4212,8 +4212,8 @@ end = struct
       let packet = { result_value = Equivalent; result_proof = { ghost = decision } } in
       packet
     | (p, q) :: rest_pairs ->
-      let word = ghost_ (match pending with [] -> [] | (_, _, word) :: _ -> word) in
-      let rest = ghost_ (match pending with [] -> [] | _ :: rest -> rest) in
+      let word = ghost_ (match pending with (_, _, word) :: _ -> word) in
+      let rest = ghost_ (match pending with _ :: rest -> rest) in
       let trace = ghost_ (Pair_trace.make rest) in
       let popped = { before with pending_pairs = rest_pairs;
         pending_trace = { ghost = trace } } in
@@ -4255,10 +4255,6 @@ end = struct
           ghost_ (missing_letter_budget letters);
           ghost_ (missing_letter_sound letters zero missing_budget);
           match missing_letter letters zero missing_budget with
-          | None -> let decision = ghost_ (Limit) in
-            ghost_ (decision_kind_def decision);
-            let packet = { result_value = Comparison_limit; result_proof = { ghost = decision } } in
-            packet
           | Some outsider ->
             let new_processed = ghost_ ((p, q) :: processed) in
             ghost_ (accounted_pop seen processed p q word rest);
@@ -4391,10 +4387,6 @@ end = struct
       ghost_ (push_pair_def count pair empty_word empty_pending empty_seen zero);
       let pushed = push_search_pair count pair empty_word start in
       match pushed with
-      | None -> let decision = ghost_ Limit in
-        ghost_ (decision_kind_def decision);
-        let packet = { result_value = Comparison_limit; result_proof = { ghost = decision } } in
-        packet
       | Some before ->
         let pending = ghost_ (Pair_trace.entries before.pending_trace.ghost) in
         let seen = before.seen_pairs in
@@ -4603,9 +4595,9 @@ end = struct
       let result = Some before in result
     | state :: rest_states ->
       let word = ghost_ (
-        match pending with [] -> [] | (_, word) :: _ -> word) in
+        match pending with (_, word) :: _ -> word) in
       let rest = ghost_ (
-        match pending with [] -> [] | _ :: rest -> rest) in
+        match pending with _ :: rest -> rest) in
       let rest_trace = ghost_ (Access_trace.make rest) in
       let popped = { before with pending_states = rest_states;
         pending_access = { ghost = rest_trace } } in
@@ -4625,7 +4617,6 @@ end = struct
         ghost_ (missing_letter_budget letters);
         ghost_ (missing_letter_sound letters zero missing_budget);
         match missing_letter letters zero missing_budget with
-        | None -> let result = None in result
         | Some outsider ->
           let new_processed = ghost_ ((state, word) :: processed) in
           ghost_ (reach_accounted_pop seen processed state word rest);
@@ -4742,7 +4733,6 @@ end = struct
     ghost_ (push_state_capacity source limit initial empty_word empty_entries empty_entries zero);
     let pushed = push_search_state limit initial empty_word start in
     match pushed with
-    | None -> let result = None in result
     | Some before ->
       let seen = ghost_ (Access_trace.entries before.seen_access.ghost) in
       ghost_ (state_search_view_def before);
@@ -7462,10 +7452,6 @@ end = struct
     let separation = cover_rows source class_ids
       class_ids [] pair_limit distinguish in
     (match separation with
-     | None ->
-       let certificate : reduction_certificate = [], [], [] in
-       (certificate : {certificate : reduction_certificate |
-         check_reduction source reduced certificate})
      | Some separation ->
        quotient_all_separated_reduced source entries previous
          partition reduced separation;
@@ -7493,7 +7479,6 @@ end = struct
     else begin
       let search_result = reachable_states_initial source limit in
       match search_result with
-      | None -> let result = None in result
       | Some search ->
         let entries = ghost_ (Access_trace.entries search.seen_access.ghost) in
         ghost_ (state_search_valid_def search);

@@ -56,8 +56,7 @@ let (stores @ total) : (fragment : Lower.fragment) @ immutable -> (base_local : 
       | None ->
         Parallel.region fragment.Lower.copies base_local state base copied low high fuel ();
         (match X.run (Prefix.take fuel copies) state with
-        | X.Done current -> partial_def fragment state.X.memory base current.X.memory
-        | _ -> ())
+        | X.Done current -> partial_def fragment state.X.memory base current.X.memory)
       | Some rest ->
         Copy.complete_region fragment.Lower.copies state.X.memory base base copied.X.memory low high ();
         Bounds.same_length state.X.memory copied.X.memory low ();
@@ -67,9 +66,7 @@ let (stores @ total) : (fragment : Lower.fragment) @ immutable -> (base_local : 
           Copy.partial_def fragment.Lower.copies state.X.memory base base copied.X.memory;
           Lower.finish_def copied.X.memory base fragment.Lower.pc;
           partial_def fragment state.X.memory base current.X.memory;
-          Region.prefix_transitive low state.X.memory copied.X.memory current.X.memory ()
-        | _ -> ()))
-    | _ -> ())
+          Region.prefix_transitive low state.X.memory copied.X.memory current.X.memory ())))
 
 let (accesses @ total) : (fragment : Lower.fragment) @ immutable -> (base_local : B.u32) ->
     (state : X.state) @ immutable -> (base : B.u32) -> (after : X.state) @ immutable ->
@@ -91,8 +88,7 @@ let (accesses @ total) : (fragment : Lower.fragment) @ immutable -> (base_local 
       Copy.accesses fragment.Lower.copies base_local base_local state base base copied.X.memory bounds ();
       Write_prefix.accesses 8 base_local (Header.number fragment.Lower.pc) copied base after.X.memory bounds ();
       Access.append copies code state copied bounds ();
-      Access.prefix fuel (Lower.emit fragment base_local) state bounds ()
-    | _ -> ())
+      Access.prefix fuel (Lower.emit fragment base_local) state bounds ())
 
 let (correct @ total) : (signature : Hmc_cfg_ir.signature) @ immutable -> (instruction : Hmc_cfg_ir.instruction) @ immutable ->
     (capacity : Lower.count) -> (max_pc : B.u32) -> (fragment : Lower.fragment) @ immutable -> (base_local : B.u32) ->

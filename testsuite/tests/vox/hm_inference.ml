@@ -46,7 +46,7 @@ let (principal @ total) : (out : result) @ immutable ->
     let accept : ((delta : (Copy_spec.node Pref.t @ immutable total -> Copy_spec.ty @ immutable total)) @ total ->
       {u : unit | match out.ty with None -> false | Some ty -> target === Level_mgu_spec.substitute delta ty} ->
       {u : unit | claim}) @ total = fun delta _factor ->
-        (match out.ty with None -> () | Some ty -> substitution_agrees delta ty);
+        (match out.ty with Some ty -> substitution_agrees delta ty);
         use delta () in
     V.principal_evidence out.input out.ty out.evidence target typing premise claim accept)
 

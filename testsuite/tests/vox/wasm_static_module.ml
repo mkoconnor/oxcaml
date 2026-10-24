@@ -55,13 +55,11 @@ let (structure_from_encoding @ total) : (image : Binary.image) @ immutable ->
     {u : unit | structure_valid image} @ ghost = fun image premise -> ghost_ (
   Binary.encodable_def image;
   match Binary.encode_payloads image with
-  | None -> ()
   | Some _ ->
     Binary.payloads_encodable_def image;
     Wasm_binary_execution.materialized_def image;
     Wasm_function_sections.encodable_def image.Binary.module_.F.signatures image.Binary.module_.F.functions;
     (match Wasm_function_sections.split image.Binary.module_.F.signatures image.Binary.module_.F.functions with
-    | None -> ()
     | Some _ -> structure_valid_def image))
 let (binary_valid @ total) : (image : Binary.image) @ immutable -> (bytes : B.bytes) @ immutable ->
     {u : unit | Binary.encodable image && Wasm_binary_execution.materialized image && exports_valid image

@@ -16,7 +16,6 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (fra
   fun memory base frame pc cells tail premise -> ghost_ (
     Wire.decode_cells_def (D.S (Heap.length cells)) frame;
     match V.decode frame with
-    | None -> ()
     | Some (_, rest) ->
       Wasm_cell.cell memory base frame (V.Word (Header.number pc)) rest ();
       Wasm_cell.payload_def memory base; V.payload_def (V.Word (Header.number pc)); Hmc_wasm_pc_update.offset_def ())

@@ -35,9 +35,7 @@ let rec (unified_leaf_origin @ total) : (saved : node Pref.heap) @ immutable ->
       unified_def mid p q ok after rest;
       (match rest with Base old -> Level_unifier_spec.unified_def mid p q ok after old;
         (match old with Level_unifier_spec.Bind_left _ ->
-          let o = Terminal_lower_origin.lower_bind_leaf_origin saved h cut prior p q bound edits tree x () in o
-        | _ -> let o = Origin (x, Stop) in o)
-      | _ -> let o = Origin (x, Stop) in o)
+          let o = Terminal_lower_origin.lower_bind_leaf_origin saved h cut prior p q bound edits tree x () in o))
     | Base old -> let o = Leaf_provenance_proofs.unified_leaf_origin saved h cut prior p q ok after old x () in o
     | List_children (r, s, rest) | Resolve (r, s, _, _, rest) -> let o = unified_leaf_origin saved h cut prior r s ok after rest x () in o
     | Children (a, b, c, e, middle, left_ok, left, right) ->

@@ -32,7 +32,7 @@ let rec (substitute_body @ total) : (names : A.names) @ immutable ->
     match schema with
     | Boundary p -> equal p; E.boundary_member_def schema p; let t = rho p in embed_substitute delta t; ()
     | Parameter p -> let z = D.Z in A.abstract_free_def names z p;
-      (match A.position names p with None -> () | Some i ->
+      (match A.position names p with Some i ->
         D.add_def z i; let parameter = D.Parameter i in S.substitute_type_def delta parameter; ())
     | Constant _ | Word_constant _ -> ()
     | Indirect (_, child) | List_template (_, child) ->

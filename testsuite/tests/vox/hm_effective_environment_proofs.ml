@@ -66,8 +66,7 @@ let rec (environment_raise @ total) : (h : node Pref.heap) @ immutable ->
     effective_env_def h heads lo env ts;
     effective_env_def h heads hi env ts; match env with
     | Empty -> ()
-    | Bind (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (s, tail) -> boundary_raise h heads lo hi s ();
+    | Bind (_, rest) -> match ts with Template_binding (s, tail) -> boundary_raise h heads lo hi s ();
         environment_raise h heads lo hi rest tail (); ())
 
 let rec (boundary_below @ total) : (h : node Pref.heap) @ immutable -> (heads : E.heads) @ total -> (depth : int) ->
@@ -88,8 +87,6 @@ let rec (environment_boundary_owned @ total) : (h : node Pref.heap) @ immutable 
     {u : unit | effective_env h heads depth env ts && environment_boundary ts p} ->
     {u : unit | H.mem h p} @ ghost = fun h heads depth env ts p premise -> ghost_ (
     effective_env_def h heads depth env ts; environment_boundary_def ts p;
-    match env with Empty -> ()
-    | Bind (_, rest) -> match ts with No_templates -> ()
-      | Template_binding (s, tail) -> if boundary_member s p then
+    match env with Bind (_, rest) -> match ts with Template_binding (s, tail) -> if boundary_member s p then
         (boundary_below h heads depth s p (); E.effective_below_def h heads p depth; ())
         else (environment_boundary_owned h heads depth rest tail p (); ()))

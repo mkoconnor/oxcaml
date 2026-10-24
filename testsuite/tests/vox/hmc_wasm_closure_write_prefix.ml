@@ -64,8 +64,7 @@ let (stores @ total) : (fragment : Lower.fragment) @ immutable -> (frame_local :
     | None ->
       Copy_prefix.region fragment.Lower.copies frame_local heap_local state source target copied low high fuel ();
       (match X.run (Prefix.take fuel copies) state with
-      | X.Done current -> partial_def fragment state.X.memory source target current.X.memory
-      | _ -> ())
+      | X.Done current -> partial_def fragment state.X.memory source target current.X.memory)
     | Some rest ->
       Copy_prefix.complete_region fragment.Lower.copies state.X.memory source target copied low high ();
       Bounds.same_length state.X.memory copied low ();
@@ -80,15 +79,13 @@ let (stores @ total) : (fragment : Lower.fragment) @ immutable -> (frame_local :
         | X.Done current ->
           Copy_prefix.partial_def fragment.Lower.copies state.X.memory source target copied;
           partial_def fragment state.X.memory source target current.X.memory;
-          Region.prefix_transitive low state.X.memory copied current.X.memory ()
-        | _ -> ())
+          Region.prefix_transitive low state.X.memory copied current.X.memory ())
       | Some remaining ->
         Write_prefix.region 8 heap_local (Header.number fragment.Lower.code) tagged_state target after low high remaining ();
         (match X.run (Prefix.take remaining code) tagged_state with
         | X.Done current ->
           partial_def fragment state.X.memory source target current.X.memory;
-          Region.prefix_transitive low state.X.memory tagged current.X.memory ()
-        | _ -> ()))
+          Region.prefix_transitive low state.X.memory tagged current.X.memory ()))
 
 let (correct @ total) : (fragment : Lower.fragment) @ immutable -> (frame_local : B.u32) -> (heap_local : B.u32) ->
     (state : X.state) @ immutable -> (source : B.u32) -> (target : B.u32) -> (after : X.state) @ immutable ->
@@ -119,9 +116,7 @@ let (correct @ total) : (fragment : Lower.fragment) @ immutable -> (frame_local 
       | X.Done tagged ->
         Write_prefix.reflect 0 heap_local (Tag.tag ()) copied target tagged ();
         Write_prefix.reflect 8 heap_local (Header.number fragment.Lower.code) tagged target after ();
-        stores fragment frame_local heap_local state source target copied.X.memory tagged.X.memory after.X.memory low high fuel ()
-      | _ -> ())
-    | _ -> ())
+        stores fragment frame_local heap_local state source target copied.X.memory tagged.X.memory after.X.memory low high fuel ()))
 
 let (accesses @ total) : (fragment : Lower.fragment) @ immutable -> (frame_local : B.u32) -> (heap_local : B.u32) ->
     (state : X.state) @ immutable -> (source : B.u32) -> (target : B.u32) -> (after : X.state) @ immutable ->
@@ -151,6 +146,4 @@ let (accesses @ total) : (fragment : Lower.fragment) @ immutable -> (frame_local
         Write_prefix.accesses 8 heap_local (Header.number fragment.Lower.code) tagged target after.X.memory bounds ();
         Access.append tag code copied tagged bounds ();
         Access.append copies (E.append tag code) state copied bounds ();
-        Access.prefix fuel (Lower.emit fragment frame_local heap_local) state bounds ()
-      | _ -> ())
-    | _ -> ())
+        Access.prefix fuel (Lower.emit fragment frame_local heap_local) state bounds ()))

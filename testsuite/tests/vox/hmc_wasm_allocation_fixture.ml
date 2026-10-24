@@ -20,14 +20,12 @@ let fixture (cursor : B.u32) (limit : B.u32) (bytes : B.u32) =
   let guard = Guard.emit bytes 0 1 in
   (match X.run guard state with
   | X.Done after -> if after.X.memory <> state.X.memory || after.X.machine.E.locals <> locals
-      || after.X.machine.E.stack <> S.Push (S.I32 (S.boolean accepted), S.Empty) then failwith "allocation guard result"
-  | _ -> failwith "allocation guard trap");
+      || after.X.machine.E.stack <> S.Push (S.I32 (S.boolean accepted), S.Empty) then failwith "allocation guard result");
   let advance = if accepted then (
     let updated = Advance.correct bytes 0 cursor limit state () in
     let code = Advance.emit bytes 0 in
     match X.run code state with
-    | X.Done after -> if after.X.memory <> state.X.memory || after.X.machine.E.locals <> updated || after.X.machine.E.stack <> S.Empty then failwith "allocation advance state" else Some code
-    | _ -> failwith "allocation advance trap") else None in
+    | X.Done after -> if after.X.memory <> state.X.memory || after.X.machine.E.locals <> updated || after.X.machine.E.stack <> S.Empty then failwith "allocation advance state" else Some code) else None in
   let success = Wasm_control_lift.embed (Advance.emit bytes 0) T.Empty in
   let exhausted = T.Empty in
   let tail = T.Instruction (I.Local_get 0, T.Empty) in

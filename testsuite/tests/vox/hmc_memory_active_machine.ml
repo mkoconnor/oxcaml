@@ -84,7 +84,7 @@ let (step @ total) : (program : I.program) @ immutable -> (globals : X.globals) 
           let memory = Saved.store blocks code_capacity next.Inner.memory memory_limit active active_end a () in
           ghost_ (Image.preserve program.I.origin.C.origin.P.table next.Inner.memory memory next_model.X.heap active ();
             Bounds.same_length next.Inner.memory memory heap_limit (); Bounds.same_length next.Inner.memory memory stack_limit ();
-            match next_model.X.state with Q.Running (_, frames) -> Stack.preserve blocks width next.Inner.memory memory base next.Inner.top frames active () | _ -> ());
+            match next_model.X.state with Q.Running (_, frames) -> Stack.preserve blocks width next.Inner.memory memory base next.Inner.top frames active ());
           memory, Running
         in
         let out = {memory; frontier = next.Inner.frontier; top = next.Inner.top; status} in

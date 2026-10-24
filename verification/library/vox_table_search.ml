@@ -175,8 +175,7 @@ module Make (Key : Vox_table_map.Key) = struct
         match M.slot view.model index with
         | Some (Some (key, stored)) ->
           I.Map.lookup_at view.model.slots (Bigint.of_int index) key stored
-            query
-        | _ -> ());
+            query);
       Some value
     end
 

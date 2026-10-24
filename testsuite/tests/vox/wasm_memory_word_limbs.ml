@@ -24,24 +24,23 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (off
     L.load_def memory (base + offset) (V.four D.Z);
     L.load_def memory (base + offset + 4) (V.four D.Z);
     match L.drop memory (base + offset) with
-    | None -> ()
     | Some b0 ->
       L.take_def (D.S (D.S (D.S (D.S (D.S (D.S (D.S (D.S (D.Z))))))))) b0;
-      (match b0 with B.End -> () | B.Byte (a0, b1) ->
+      (match b0 with B.Byte (a0, b1) ->
       L.take_def (D.S (D.S (D.S (D.S (D.S (D.S (D.S (D.Z)))))))) b1;
-      (match b1 with B.End -> () | B.Byte (a1, b2) ->
+      (match b1 with B.Byte (a1, b2) ->
       L.take_def (D.S (D.S (D.S (D.S (D.S (D.S (D.Z))))))) b2;
-      (match b2 with B.End -> () | B.Byte (a2, b3) ->
+      (match b2 with B.Byte (a2, b3) ->
       L.take_def (D.S (D.S (D.S (D.S (D.S (D.Z)))))) b3;
-      (match b3 with B.End -> () | B.Byte (a3, b4) ->
+      (match b3 with B.Byte (a3, b4) ->
       L.take_def (D.S (D.S (D.S (D.S (D.Z))))) b4;
-      (match b4 with B.End -> () | B.Byte (a4, b5) ->
+      (match b4 with B.Byte (a4, b5) ->
       L.take_def (D.S (D.S (D.S (D.Z)))) b5;
-      (match b5 with B.End -> () | B.Byte (a5, b6) ->
+      (match b5 with B.Byte (a5, b6) ->
       L.take_def (D.S (D.S (D.Z))) b6;
-      (match b6 with B.End -> () | B.Byte (a6, b7) ->
+      (match b6 with B.Byte (a6, b7) ->
       L.take_def (D.S (D.Z)) b7;
-      (match b7 with B.End -> () | B.Byte (a7, b8) ->
+      (match b7 with B.Byte (a7, b8) ->
       L.take_def D.Z b8;
       let payload = B.Byte (a0, B.Byte (a1, B.Byte (a2, B.Byte (a3, B.Byte (a4, B.Byte (a5, B.Byte (a6, B.Byte (a7, B.End)))))))) in
       let high = B.Byte (a4, B.Byte (a5, B.Byte (a6, B.Byte (a7, B.End)))) in

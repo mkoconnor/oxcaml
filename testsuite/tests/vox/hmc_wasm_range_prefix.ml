@@ -20,8 +20,7 @@ let rec (bounded @ total) : (plan : Plan.plan) @ immutable -> (tail : Plan.plan)
     | D.S rest_length -> match plan with
       | Plan.Copy (_, _, (Plan.Copy (_, _, rest) as second)) ->
         bounded rest tail (source + 1) (destination + 1) rest_length (count - 1) base low high ();
-        Copy.bounded_def plan base low high; Copy.bounded_def second base low high
-      | _ -> ())
+        Copy.bounded_def plan base low high; Copy.bounded_def second base low high)
 
 let rec (access_bounds @ total) : (plan : Plan.plan) @ immutable -> (tail : Plan.plan) @ immutable ->
     (source : int) -> (destination : int) -> (length : D.index) @ immutable -> (count : B.u32) ->
@@ -40,5 +39,4 @@ let rec (access_bounds @ total) : (plan : Plan.plan) @ immutable -> (tail : Plan
     | D.S rest_length -> match plan with
       | Plan.Copy (_, _, (Plan.Copy (_, _, rest) as second)) ->
         access_bounds rest tail (source + 1) (destination + 1) rest_length (count - 1) source_base target_base bounds ();
-        Copy.access_bounds_def plan source_base target_base bounds; Copy.access_bounds_def second source_base target_base bounds
-      | _ -> ())
+        Copy.access_bounds_def plan source_base target_base bounds; Copy.access_bounds_def second source_base target_base bounds)

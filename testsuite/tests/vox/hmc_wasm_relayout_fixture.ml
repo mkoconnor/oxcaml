@@ -77,8 +77,7 @@ let fixture (base : B.u32) kind =
   if after <> expected then failwith "source/target relayout mismatch";
   let code = Lower.emit fragment 0 in
   (match X.run code state with
-  | X.Done result -> if result.X.memory <> expected || result.X.machine <> state.X.machine then failwith "relayout execution"
-  | _ -> failwith "relayout trap");
+  | X.Done result -> if result.X.memory <> expected || result.X.machine <> state.X.machine then failwith "relayout execution");
   {R.memory; base; first = word 37; second = word 99; code; expected = (8, word 11) :: fields 16 after_cells}))
   | _ -> failwith "source transition"
 let fixtures () =

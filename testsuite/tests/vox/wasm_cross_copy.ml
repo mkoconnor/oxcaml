@@ -32,7 +32,6 @@ let rec (correct @ total) : (plan : plan) @ immutable -> (source_local : B.u32) 
     | Plan.End -> X.run_def C.Empty state
     | Plan.Copy (source, destination, rest) -> (match M.load state.X.memory source_base source M.W64 with
       | Some (S.I64 word) -> (match apply rest state.X.memory source_base target_base with
-        | None -> ()
         | Some memory ->
           let addressed = {X.memory = state.X.memory; machine = {E.locals = state.X.machine.E.locals;
             stack = S.Push (S.I32 target_base, state.X.machine.E.stack)}} in
@@ -55,6 +54,4 @@ let rec (correct @ total) : (plan : plan) @ immutable -> (source_local : B.u32) 
           X.run_def write restored; X.step_def (I.I64_store (3, destination)) restored;
           M.width_def (S.I64 word); X.compatible_def (S.I64 word) M.W64; X.write_def M.W64 destination restored;
           (match M.store memory target_base destination (S.I64 word) with
-          | None -> ()
-          | Some stored -> X.run_def C.Empty {X.memory = stored; machine = state.X.machine}))
-      | _ -> ()))
+          | Some stored -> X.run_def C.Empty {X.memory = stored; machine = state.X.machine}))))

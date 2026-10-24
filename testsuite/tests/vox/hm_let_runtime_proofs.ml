@@ -70,7 +70,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable -> (depth : i
     match e with
     | RShared _ -> facts x; ()
     | RVar (i, _, epoch, d) -> (match Hm_environment_spec.lookup env i with
-      None -> () | Some _ -> copy_runtime h depth pool facts epoch d x (); ())
+      Some _ -> copy_runtime h depth pool facts epoch d x (); ())
     | RBool p -> facts x; let desc : desc = Bool in allocated_def h depth p desc;
       allocate_runtime h depth pool p desc x (); ()
     | RLam (arg, body, middle, body_pool, out) ->
@@ -80,8 +80,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable -> (depth : i
       let start_facts : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at start depth next_pool y}) @ total = fun y ->
         facts y; allocate_runtime h depth pool arg var y () in
       run_invariant start depth next_pool start_facts next_env body middle body_pool x ();
-      (match result body with None -> () | Some b -> match out with None -> ()
-        | Some p -> let desc = Arrow (arg, b) in allocated_def middle depth p desc;
+      (match result body with None -> () | Some b -> match out with Some p -> let desc = Arrow (arg, b) in allocated_def middle depth p desc;
           allocate_runtime middle depth body_pool p desc x (); ())
     | RApp_left (left, _) -> run_invariant h depth pool facts env left after final_pool x (); ()
     | RApp_right (left, right, middle, left_pool) ->
@@ -93,7 +92,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable -> (depth : i
         run_invariant h depth pool facts env left h1 pool1 y () in
       let facts2 : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at h2 depth pool2 y}) @ total = fun y ->
         run_invariant h1 depth pool1 facts1 env right h2 pool2 y () in
-      (match result left with None -> () | Some f -> match result right with None -> () | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let var : desc = Var in let h3 = H.put h2 p (cell var depth) in let pool3 = Entry (p, pool2) in
         let desc = Arrow (a, p) in let h4 = H.put h3 arrow (cell desc depth) in let pool4 = Entry (arrow, pool3) in
         allocated_def h2 depth p var; allocated_def h3 depth arrow desc;
@@ -116,7 +115,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable -> (depth : i
       let next_env = Hm_environment_spec.Bind (arg, Hm_environment_spec.Bind (self, env)) in
       (match result body with None ->
         run_invariant h3 depth pool3 facts3 next_env body middle body_pool x (); ()
-      | Some b -> match finish with Aborted -> () | Unified (ok, d) ->
+      | Some b -> match finish with Unified (ok, d) ->
       let middle_facts : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at middle depth body_pool y}) @ total = fun y ->
         run_invariant h3 depth pool3 facts3 next_env body middle body_pool y (); () in
       unify_runtime middle depth body_pool middle_facts b res ok after d x (); ())
@@ -137,7 +136,7 @@ let rec (run_invariant @ total) : (h : node Pref.heap) @ immutable -> (depth : i
       let transferred = Nested_pool_spec.transfer closed child_pool pool in
       let closed_facts : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at closed depth transferred y}) @ total = fun y ->
         close_runtime h depth pool facts env rhs middle child_pool middle_facts y (); () in
-      (match result rhs with None -> () | Some p -> let next_env = Hm_environment_spec.Bind (p, env) in
+      (match result rhs with Some p -> let next_env = Hm_environment_spec.Bind (p, env) in
         run_invariant closed depth transferred closed_facts next_env body after final_pool x (); ()))
 
 
@@ -167,14 +166,12 @@ let rec (run_result_active @ total) : (h : node Pref.heap) @ immutable -> (depth
     let refine_ premise = premise in ran_def h depth pool env e after final_pool;  result_def e;
     match e with
     | RShared _ -> ()
-    | RVar (i, q, epoch, d) -> (match Hm_environment_spec.lookup env i with None -> ()
-      | Some original -> copy_target_active h depth pool facts epoch d original q (); ())
+    | RVar (i, q, epoch, d) -> (match Hm_environment_spec.lookup env i with Some original -> copy_target_active h depth pool facts epoch d original q (); ())
     | RBool q -> let desc : desc = Bool in fresh_active h depth q desc (); ()
-    | RLam (arg, body, middle, _, out) -> (match result body with None -> () | Some b ->
-      match out with None -> () | Some q -> let desc = Arrow (arg, b) in fresh_active middle depth q desc (); ())
-    | RApp_left _ | RApp_right _ | RLet_left _ -> ()
+    | RLam (arg, body, middle, _, out) -> (match result body with Some b ->
+      match out with Some q -> let desc = Arrow (arg, b) in fresh_active middle depth q desc (); ())
     | RApp (left, right, _, _, h2, _, q, arrow, ok, d) ->
-      (match result left with None -> () | Some f -> match result right with None -> () | Some a ->
+      (match result left with Some f -> match result right with Some a ->
         let var : desc = Var in let v = cell var depth in let h3 = H.put h2 q v in
         fresh_active h2 depth q var ();
         let desc = Arrow (a, q) in let w = cell desc depth in let h4 = H.put h3 arrow w in
@@ -191,8 +188,7 @@ let rec (run_result_active @ total) : (h : node Pref.heap) @ immutable -> (depth
       Hm_protected_proofs.run_member h3 depth next_pool next_env body middle body_pool depth self ();
       protected_at_def h3 middle depth self; below_def middle self depth;
       active_def middle self; at_level_def middle self;
-      (match result body with None -> () | Some b -> match finish with Aborted -> ()
-        | Unified (ok, d) -> Optimized_metadata.unified_active middle b res ok after d self (); ())
+      (match result body with Some b -> match finish with Unified (ok, d) -> Optimized_metadata.unified_active middle b res ok after d self (); ())
     | RLet (rhs, body, middle, child_pool) ->
       let child_depth = depth + 1 in let empty : pool = Generalize_spec.Empty in
       ran_def h child_depth empty env rhs middle child_pool;
@@ -204,7 +200,7 @@ let rec (run_result_active @ total) : (h : node Pref.heap) @ immutable -> (depth
       let transferred = Nested_pool_spec.transfer closed child_pool pool in
       let closed_facts : ((y : node Pref.t) @ immutable -> {u : unit | runtime_at closed depth transferred y}) @ total = fun y ->
         close_runtime h depth pool facts env rhs middle child_pool middle_facts y (); () in
-      (match result rhs with None -> () | Some q -> let next_env = Hm_environment_spec.Bind (q, env) in
+      (match result rhs with Some q -> let next_env = Hm_environment_spec.Bind (q, env) in
         run_result_active closed depth transferred closed_facts next_env body after final_pool p (); ()))
 
 let (run_result_below @ total) : (h : node Pref.heap) @ immutable -> (depth : int) ->

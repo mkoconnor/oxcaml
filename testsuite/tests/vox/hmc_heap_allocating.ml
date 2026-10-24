@@ -36,7 +36,7 @@ let (step @ total) : (program : I.program) @ immutable -> (globals : X.globals) 
     Q.decode_def heap configuration.X.state; F.decode_def heap a; F.decode_temporaries_def heap a.F.temporaries;
     U.step_def program abstract;
     (match op with G.Load (atom, _, _, _) ->
-      (match M.decode_environment (M.view heap) a.F.env with None -> () | Some env -> S.load_def program.I.origin.C.origin.O.globals env atom)
+      (match M.decode_environment (M.view heap) a.F.env with Some env -> S.load_def program.I.origin.C.origin.O.globals env atom)
     | _ -> ());
     L.allocate program.I.origin.C.origin.O.table heap heap_limit object_ ();
     let allocation = X.allocate heap heap_limit object_ in
@@ -48,15 +48,13 @@ let (step @ total) : (program : I.program) @ immutable -> (globals : X.globals) 
       | Some source_a, Some source_frames ->
         F.preserve program.I.origin.C.origin.O.table allocated.A.heap heap a source_a ();
         Q.frames_preserve program.I.origin.C.origin.O.table allocated.A.heap heap frames source_frames ();
-        F.decode_def allocated.A.heap a; F.decode_temporaries_def allocated.A.heap a.F.temporaries
-      | _ -> ());
+        F.decode_def allocated.A.heap a; F.decode_temporaries_def allocated.A.heap a.F.temporaries);
       M.decode_object_def (M.view heap) object_;
       (match object_ with M.Cons (head, tail) -> M.decode_def heap head; M.decode_def heap tail | _ -> ()));
     (match op with
     | G.Load (_, _, _, next) -> X.allocation_result_def a frames next a.F.env a.F.temporaries allocation
-    | G.Cons next -> (match a.F.temporaries with F.Value (_, env, rest) -> X.allocation_result_def a frames next env rest allocation | _ -> ())
-    | _ -> ());
+    | G.Cons next -> (match a.F.temporaries with F.Value (_, env, rest) -> X.allocation_result_def a frames next env rest allocation));
     match X.step program globals heap_limit stack_limit configuration with
     | X.Exhausted _ -> ()
     | X.Advanced next -> Q.decode_def next.X.heap next.X.state;
-      match next.X.state with Q.Running (b, _) -> F.decode_def next.X.heap b | _ -> ())
+      match next.X.state with Q.Running (b, _) -> F.decode_def next.X.heap b)

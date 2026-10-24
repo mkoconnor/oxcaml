@@ -30,7 +30,7 @@ Line 4, characters 50-52:
 4 |   P.advance_preserves D.Z S.Stuck D.Boolean proof ());;
                                                       ^^
 Error: Refinement could not be proved (counterexample)
-File "hmc_source_safety.ml", line 227, characters 46-66:
+File "hmc_source_safety.ml", line 225, characters 46-66:
   The refinement is stated here.
 |}]
 

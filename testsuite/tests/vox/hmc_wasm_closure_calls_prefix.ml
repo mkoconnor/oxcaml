@@ -58,5 +58,4 @@ let (correct @ total) : (table : K.table) @ immutable -> (heap : Heap.heap) @ im
   fun table heap captures count fragment state frame_base heap_base limit frame_local heap_local fuel module_ configuration tail premise -> ghost_ (
     Closure.correct table heap captures count fragment state frame_base heap_base limit frame_local heap_local fuel ();
     match X.run (Prefix.take fuel (Lower.emit fragment frame_local heap_local)) state with
-    | X.Done current -> Calls.correct fuel (Lower.emit fragment frame_local heap_local) tail module_ configuration current ()
-    | _ -> ())
+    | X.Done current -> Calls.correct fuel (Lower.emit fragment frame_local heap_local) tail module_ configuration current ())

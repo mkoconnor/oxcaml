@@ -154,20 +154,18 @@ let rec (substitution_typed @ total) :
     substitute_context_wf n rho g ();
     match d with
     | Variable args -> (match e with Bound i -> (match lookup g i with
-      | None -> ()
       | Some s ->
         substitute_lookup rho g i; substitute_arguments_wf n rho args ();
         substitute_scheme_def rho s; let changed_s = substitute_scheme rho s in
         arity_def s; arity_def changed_s;
         open_scheme_def s args; let changed_args = substitute_arguments rho args in
         open_scheme_def changed_s changed_args;
-        (match s with Forall (_, body) -> substitute_open rho args body; ()); ())
-      | _ -> ())
+        (match s with Forall (_, body) -> substitute_open rho args body; ()); ()))
     | Constant | Word_constant -> ()
     | Empty_list a -> substitute_wf n rho a (); ()
     | List_cons (a, head, tail) -> (match e with Cons (h, r) ->
       substitution_typed rho n g h a head ();
-      substitution_typed rho n g r t tail (); () | _ -> ())
+      substitution_typed rho n g r t tail (); ())
     | List_case (a, scrutinee, empty, nonempty) -> (match e with CaseList (s, l, r) ->
       substitute_wf n rho a ();
       let list = List_type a in substitute_type_def rho list;
@@ -178,41 +176,37 @@ let rec (substitution_typed @ total) :
       let tail = Binding (ts, g) in let both = Binding (hs, tail) in
       substitute_scheme_def rho hs; substitute_scheme_def rho ts;
       substitute_context_def rho tail; substitute_context_def rho both;
-      substitution_typed rho n both r t nonempty (); () | _ -> ())
+      substitution_typed rho n both r t nonempty (); ())
     | Conditional (condition, yes, no) -> (match e with If (c, a, b) ->
       let bool = Boolean in substitute_type_def rho bool;
       substitution_typed rho n g c bool condition ();
       substitution_typed rho n g a t yes ();
-      substitution_typed rho n g b t no (); () | _ -> ())
+      substitution_typed rho n g b t no (); ())
     | Word_primitive (left, right) -> (match e with Primitive (op, a, b) ->
       let word = Word64 in substitute_type_def rho word;
       operation_type_def op; (match op with Add | Subtract -> () | Equal_word | Unsigned_less -> ());
       substitution_typed rho n g a word left ();
-      substitution_typed rho n g b word right (); () | _ -> ())
+      substitution_typed rho n g b word right (); ())
     | Abstraction (a, body) -> (match e, t with
       | Lambda e, Function (_, b) ->
         let z = Z in let arg_scheme = Forall (z, a) in
         let next = Binding (arg_scheme, g) in
         substitute_scheme_def rho arg_scheme; substitute_context_def rho next;
-        substitution_typed rho n next e b body (); ()
-      | _ -> ())
+        substitution_typed rho n next e b body (); ())
     | Application (a, left, right) -> (match e with Apply (f, x) ->
         let ft = Function (a, t) in substitute_type_def rho ft;
         substitution_typed rho n g f ft left ();
-        substitution_typed rho n g x a right (); ()
-      | _ -> ())
+        substitution_typed rho n g x a right (); ())
     | Recursion (a, b, body) -> (match e with Recursive e ->
         let z = Z in let arg_scheme = Forall (z, a) in let self_scheme = Forall (z, t) in
         let self = Binding (self_scheme, g) in let next = Binding (arg_scheme, self) in
         substitute_scheme_def rho arg_scheme; substitute_scheme_def rho self_scheme;
         substitute_context_def rho self; substitute_context_def rho next;
-        substitution_typed rho n next e b body (); ()
-      | _ -> ())
+        substitution_typed rho n next e b body (); ())
     | Let_binding (s, rhs, body) -> (match e, s with Let (r, b), Forall (k, a) ->
         substitute_scheme_def rho s; substitute_scheme_wf n rho s ();
         substitute_weaken_context rho k g;
         let shifted = weaken_context k g in let total = add k n in
         substitution_typed rho total shifted r a rhs ();
         let next = Binding (s, g) in substitute_context_def rho next;
-        substitution_typed rho n next b t body (); ()
-      | _ -> ()))
+        substitution_typed rho n next b t body (); ()))

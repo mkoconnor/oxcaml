@@ -26,5 +26,4 @@ let rec (correct @ total) : (code : C.t) @ immutable -> (tail : T.code) @ immuta
     | C.Next (instruction, rest) ->
       ordinary_def instruction; T.step_def configuration;
       (match X.step instruction before with
-      | X.Done next -> correct rest tail labels next after ()
-      | _ -> ()))
+      | X.Done next -> correct rest tail labels next after ()))

@@ -23,7 +23,7 @@ let (ready @ total) : (locals : S.stack) @ immutable -> (local : B.u32) -> (valu
     {u : unit | limb_slot locals local} -> {u : unit | L.can_set locals local (S.I32 value)} @ ghost =
   fun locals local value premise -> ghost_ (
     limb_slot_def locals local; L.can_set_def locals local (S.I32 value);
-    match L.get locals local with Some old -> S.same_type_def old (S.I32 value) | _ -> ())
+    match L.get locals local with Some old -> S.same_type_def old (S.I32 value))
 let (correct @ total) : (descriptor : R.descriptor) @ immutable -> (state : X.state) @ immutable -> (address : B.u32) ->
     (base_local : B.u32) -> (slots : slots) @ immutable ->
     {u : unit | address <= 4294967263 && Descriptor.load state.X.memory address === Some descriptor

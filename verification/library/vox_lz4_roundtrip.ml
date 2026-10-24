@@ -333,8 +333,6 @@ let rec (literal_heap_substitute @ total) :
                      (Some observed_byte) in
         literal_heap_substitute next block (used + 1) wire (cursor + 1)
           source (first + 1) (remaining - 1);
-        ()
-      | _ ->
         ())
 [@@decreases remaining]
 

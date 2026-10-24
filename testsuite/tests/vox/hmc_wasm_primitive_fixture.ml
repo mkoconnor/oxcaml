@@ -45,8 +45,7 @@ let fixture (base : B.u32) operation left right =
   let code : {code : Wasm_code.t | X.run code state === X.Done {X.memory = after; machine = state.X.machine}} @ immutable =
     Hmc_wasm_primitive_write.emit operation 56 0 in
   (match X.run code state with
-  | X.Done actual -> if actual.X.memory <> after || actual.X.machine <> state.X.machine then failwith "primitive frame update"
-  | _ -> failwith "primitive execution");
+  | X.Done actual -> if actual.X.memory <> after || actual.X.machine <> state.X.machine then failwith "primitive frame update");
   {R.memory; base; first = Header.number 37; second = Header.number 99; code; expected = Hmc_wasm_range_fixture.fields 0 after_full}
 let fixtures () =
   let max = word 4294967295 4294967295 in

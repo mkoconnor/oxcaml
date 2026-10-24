@@ -37,7 +37,7 @@ let rec (tail_of_exit @ total) : (blocks : G.table) @ immutable -> (exit : T.exi
   | T.Return _ -> unique blocks (W.resume k) (opcode k) G.Return ()
   | T.Restore (_, next) ->
     unique blocks (W.resume k) (opcode k) (G.Restore (T.entry next)) ();
-    (match k with W.Scope (_, _, rest) -> tail_of_exit blocks next rest () | _ -> ()))
+    (match k with W.Scope (_, _, rest) -> tail_of_exit blocks next rest ()))
 
 let rec (retarget @ total) : (blocks : G.table) @ immutable -> (k : W.continuation) @ immutable ->
     (env : R.V.value) @ immutable -> (current : R.V.value) @ immutable -> (label : D.index) @ immutable ->

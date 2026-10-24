@@ -15,13 +15,13 @@ let rec (before_store @ total) : (before : B.bytes) @ immutable -> (address : W.
     {u : unit | equal_prefix address before after} @ ghost = fun before address payload after premise -> ghost_ (
   L.updated_def before address payload after; equal_prefix_def address before after;
   if address = 0 then () else match before, after with
-  | B.Byte (_, rest), B.Byte (_, tail) -> before_store rest (address - 1) payload tail () | _ -> ())
+  | B.Byte (_, rest), B.Byte (_, tail) -> before_store rest (address - 1) payload tail ())
 let rec (shrink @ total) : (large : W.limb) -> (small : W.limb) -> (left : B.bytes) @ immutable -> (right : B.bytes) @ immutable ->
     {u : unit | equal_prefix large left right && small <= large} ->
     {u : unit | equal_prefix small left right} @ ghost = fun large small left right premise -> ghost_ (
   equal_prefix_def large left right; equal_prefix_def small left right;
   if small = 0 then () else match left, right with
-  | B.Byte (_, rest), B.Byte (_, tail) -> shrink (large - 1) (small - 1) rest tail () | _ -> ())
+  | B.Byte (_, rest), B.Byte (_, tail) -> shrink (large - 1) (small - 1) rest tail ())
 let rec (seek @ total) : (left : B.bytes) @ immutable -> (right : B.bytes) @ immutable -> (boundary : W.limb) -> (address : W.limb) ->
     {u : unit | equal_prefix boundary left right && address <= boundary} ->
     {u : unit | match L.drop left address, L.drop right address with
@@ -31,8 +31,7 @@ let rec (seek @ total) : (left : B.bytes) @ immutable -> (right : B.bytes) @ imm
     equal_prefix_def boundary left right;
     if address = 0 then () else match left, right with
     | B.Byte (_, rest), B.Byte (_, tail) ->
-      Bounds.distance_def (address - 1) (boundary - 1); seek rest tail (boundary - 1) (address - 1) ()
-    | _ -> ())
+      Bounds.distance_def (address - 1) (boundary - 1); seek rest tail (boundary - 1) (address - 1) ())
 let rec (take @ total) : (count : D.index) @ immutable -> (width : W.limb) -> (left : B.bytes) @ immutable -> (right : B.bytes) @ immutable ->
     {u : unit | I.represents count width && equal_prefix width left right} ->
     {u : unit | L.take count left === L.take count right} @ ghost = fun count width left right premise -> ghost_ (
@@ -48,8 +47,7 @@ let (load @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ immut
     seek before after boundary address ();
     L.load_def before address count; L.load_def after address count;
     match L.drop before address, L.drop after address with
-    | Some left, Some right -> shrink (boundary - address) (stop - address) left right (); take count (stop - address) left right ()
-    | _ -> ())
+    | Some left, Some right -> shrink (boundary - address) (stop - address) left right (); take count (stop - address) left right ())
 let (disjoint_before @ total) : (before : B.bytes) @ immutable -> (after : B.bytes) @ immutable -> (written : W.limb) ->
     (payload : B.bytes) @ immutable -> (address : W.limb) -> (stop : W.limb) -> (count : D.index) @ immutable ->
     {u : unit | L.updated before written payload after && Bounds.range count address stop && stop <= written} ->
@@ -74,5 +72,4 @@ let rec (after_store @ total) : (before : B.bytes) @ immutable -> (after : B.byt
     match before, after with
     | B.Byte (_, left), B.Byte (_, right) ->
       Bounds.range_def (Hmc_tagged_cell.length payload) (address - 1) (stop - 1);
-      after_store left right (address - 1) (stop - 1) payload ()
-    | _ -> ()))
+      after_store left right (address - 1) (stop - 1) payload ()))

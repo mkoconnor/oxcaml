@@ -41,7 +41,6 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (byt
   fun memory base bytes count pc cells tail signature activation padding index number source_tag source_payload value premise -> ghost_ (
     Codec.decode_def signature activation.Frame.pc (Heap.Cell (activation.Frame.current, Heap.Cell (activation.Frame.accumulator, cells)));
     (match Codec.decode_environment signature.G.locals cells with
-    | None -> ()
     | Some (_, remaining) -> Find.environment signature.G.locals cells activation.Frame.env remaining index value ());
     let env_bytes = Words.header count bytes pc activation.Frame.current activation.Frame.accumulator cells tail () in
     let layout = Header.layout (Hmc_wasm_header_update.number pc) (V.tag activation.Frame.current) (V.payload activation.Frame.current)
@@ -53,7 +52,6 @@ let (correct @ total) : (memory : B.bytes) @ immutable -> (base : B.u32) -> (byt
     Wasm_cell.shift bytes 48 (source_tag - 48) source_tag env_bytes ();
     Wasm_cell.shift memory base source_tag (base + source_tag) bytes ();
     match V.decode suffix with
-    | None -> ()
     | Some (_, after) ->
       Wasm_cell.cell memory (base + source_tag) suffix value after ();
       Wasm_cell.tag_def memory (base + source_tag); Wasm_cell.payload_def memory (base + source_tag);

@@ -77,7 +77,7 @@ let (initialize @ total) : (program : I.program) @ immutable -> (base : W.limb) 
         L.invoke program allocated.A.heap allocated.A.reference (V.Word input) (R.V.Closure (id, R.V.Empty)) (R.V.Word input) ();
         L.abstract_invoke_def program (R.V.Closure (id, R.V.Empty)) (R.V.Word input);
         C.valid_def program.I.origin;
-        (match K.lookup table id with None -> () | Some entry ->
+        (match K.lookup table id with Some entry ->
           let _ = C.lookup_origin program.I.origin.C.blocks table program.I.origin.C.functions id entry () in ());
         U.initial_def program input; S.initial_def program.I.origin input);
       match X.invoke program allocated.A.heap allocated.A.reference (V.Word input) with

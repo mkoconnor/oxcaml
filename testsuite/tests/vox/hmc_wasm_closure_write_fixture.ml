@@ -66,8 +66,7 @@ let fixture (base : B.u32) count =
             if after <> expected then failwith "closure encoding mismatch";
             let code = Lower.emit fragment 0 1 in
             (match X.run code state with
-            | X.Done out -> if out.X.memory <> expected || out.X.machine <> state.X.machine then failwith "closure write execution"
-            | _ -> failwith "closure write trap");
+            | X.Done out -> if out.X.memory <> expected || out.X.machine <> state.X.machine then failwith "closure write execution");
             {memory; expected; prefix = [I.I32_const base; I.Local_set 0; I.I32_const target; I.Local_set 1; I.I32_const 91];
               code = E.append code (C.Next (I.Plain I.Drop, C.Empty)); cursor = target}))))
     | _ -> failwith "closure memory coverage")

@@ -96,8 +96,7 @@ type structured =
     match choose with
     | Names.A n when f n v ->
         (match pair with (a, b) as p -> ignore p; Names.equal a b)
-    | Names.A _ -> false
-    | Names.B -> true }
+    | Names.A _ -> false }
 
 let () =
   let module Names = struct

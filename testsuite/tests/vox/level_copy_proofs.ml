@@ -20,10 +20,9 @@ let rec (target_active_at @ total) : (saved : node Pref.heap) @ immutable ->
   let after = heap saved epoch depth final in 
   copy_depth saved epoch depth d (refine_ ()); order p; ordered_def saved p; history_at saved epoch depth final p (refine_ ());
   active_def after q; at_level_def after q;
-  match H.at saved p with None -> refine_ () | Some v ->
+  match H.at saved p with Some v ->
   match v.level with Finite _ -> refine_ () | Generic ->
-    match d with Start | Clean -> refine_ ()
-    | Fresh (rest, x, _, old, desc) ->
+    match d with Fresh (rest, x, _, old, desc) ->
       if p === x then (
         history_at saved epoch depth rest p (refine_ ()); ready_def saved rest old.desc desc;
         copied_fresh saved epoch depth d final p q (refine_ ()); refine_ ())
@@ -34,7 +33,7 @@ let rec (target_active_at @ total) : (saved : node Pref.heap) @ immutable ->
     | Alias (rest, x, _, old) ->
       extends_def rest d; extends_def rest rest; extension_trans rest d final (refine_ ());
       if p === x then (match old.desc with Link child ->
-        target_active_at saved order epoch depth rest final child q (refine_ ()); refine_ () | _ -> refine_ ())
+        target_active_at saved order epoch depth rest final child q (refine_ ()); refine_ ())
       else (target_for_def saved rest p q;
         target_active_at saved order epoch depth rest final p q (refine_ ()); refine_ ()))
 
@@ -51,7 +50,7 @@ let rec (copy_finite_scope @ total) : (saved : node Pref.heap) @ immutable ->
     scope x;
     if H.mem saved x then (
       source_ok_def saved x; history_at saved epoch depth d x (refine_ ()); order x; ordered_def saved x;
-      match H.at saved x with None -> refine_ () | Some v -> match v.level with Generic -> refine_ () | Finite n ->
+      match H.at saved x with Some v -> match v.level with Generic -> refine_ () | Finite n ->
         children_below_def saved v.desc n;
         let available : ((y : node Pref.t) @ immutable -> {u : unit | not (below saved y n) || active after y}) @ total = fun y ->
           below_def saved y n; active_def after y; at_level_def saved y; at_level_def after y;

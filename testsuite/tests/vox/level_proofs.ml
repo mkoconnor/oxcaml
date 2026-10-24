@@ -49,7 +49,7 @@ let (frame_below @ total) : (h : node Pref.heap) @ immutable -> (after : node Pr
     {u : unit | below after x bound} @ ghost = fun h after x bound premise -> ghost_ (
   lower_frame_def h after x; below_def h x bound; below_def after x bound;
   at_level_def h x; at_level_def after x;
-  (match H.at h x, H.at after x with Some a, Some b -> decreases_def a.level b.level; () | _ -> ());
+  (match H.at h x, H.at after x with Some a, Some b -> decreases_def a.level b.level; ());
   ())
 let (frame_scope @ total) : (h : node Pref.heap) @ immutable -> (after : node Pref.heap) @ immutable ->
     (frame : ((x : node Pref.t) @ immutable -> {u : unit | lower_frame h after x})) @ total ->

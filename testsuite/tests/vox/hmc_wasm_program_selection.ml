@@ -17,7 +17,6 @@ let rec (bound @ total) : (blocks : G.table) @ immutable -> (id : D.index) @ imm
     {u : unit | pc < count} @ ghost = fun blocks id block pc count premise -> ghost_ (
     G.lookup_def blocks id; G.size_def blocks; Index.represents_def (G.size blocks) count;
     match blocks with
-    | G.Empty -> ()
     | G.Add (_, rest) ->
       if Hm_elaboration_check.index_equal id (G.size rest) then Index.unique id pc (count - 1) ()
       else bound rest id block pc (count - 1) ())
@@ -67,8 +66,7 @@ let (reachable_label @ total) : (program : I.program) @ immutable -> (globals : 
     match Frame.decode configuration.Machine.heap activation, State.decode_frames configuration.Machine.heap frames with
     | Some source, Some rest ->
       Shape.state_def program.I.origin.Hmc_cfg_program.origin.Hmc_closure_program.table program.I.origin.Hmc_cfg_program.blocks abstract;
-      Shape.at_label_def program.I.origin.Hmc_cfg_program.origin.Hmc_closure_program.table program.I.origin.Hmc_cfg_program.blocks source
-    | _ -> ())
+      Shape.at_label_def program.I.origin.Hmc_cfg_program.origin.Hmc_closure_program.table program.I.origin.Hmc_cfg_program.blocks source)
 let (frame_shape @ total) : (program : I.program) @ immutable -> (globals : Machine.globals) @ immutable ->
     (limit : B.u32) -> (configuration : Machine.configuration) @ immutable -> (abstract : Semantics.state) @ immutable ->
     (activation : Frame.activation) @ immutable -> (frames : State.frames) @ immutable -> (block : G.block) @ immutable ->
@@ -86,8 +84,7 @@ let (frame_shape @ total) : (program : I.program) @ immutable -> (globals : Mach
       Shape.state_def table program.I.origin.Hmc_cfg_program.blocks abstract;
       Shape.at_label_def table program.I.origin.Hmc_cfg_program.blocks source;
       Hmc_frame_codec.shaped table block.G.signature source ();
-      Hmc_pointer_frame_shape.shape configuration.Machine.heap block.G.signature activation source ()
-    | _ -> ())
+      Hmc_pointer_frame_shape.shape configuration.Machine.heap block.G.signature activation source ())
 type reachable = {block : G.block; selected : result}
 let (select_reachable @ total) : (program : I.program) @ immutable -> (globals : Machine.globals) @ immutable ->
     (lowered : Lower.program) @ immutable -> (max_pc : B.u32) -> (count : B.u32) ->

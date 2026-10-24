@@ -42,7 +42,6 @@ let rec (unique_root @ total) : (h : node Pref.heap) @ immutable ->
     terminal_def h p; match a with
     | Here -> ()
     | Via (q, rest) -> (match b with
-      | Here -> ()
       | Via (_, tail) -> unique_root h q r s rest tail (); ()))
 
 let rec (shortcut_resolution @ total) : (h : node Pref.heap) @ immutable ->

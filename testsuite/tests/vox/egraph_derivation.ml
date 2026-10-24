@@ -80,12 +80,10 @@ let (zero_holds @ total) :
   R.instantiate_def (R.Int_lit 0) subst;
   R.lookup_expr_def subst 0;
   match subst with
-  | [] -> ()
   | expr :: _ ->
     LP.typed_eval expr env;
     match L.eval expr env with
-    | L.Int_value value -> LP.add_zero_right expr env value ()
-    | L.Bool_value _ -> ())
+    | L.Int_value value -> LP.add_zero_right expr env value ())
 
 let () =
   let env = {L.int_input = 17; bool_input = false} in

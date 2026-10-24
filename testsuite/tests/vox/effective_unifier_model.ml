@@ -170,7 +170,6 @@ let rec (failure_refutes @ total) :
       else (
         failure_refutes h rho model a c middle left ();
         ())
-    | Post_link _ -> ()
     | Pre_compress (middle, edits, rest) ->
       let next : ((y : node Pref.t) @ immutable -> {u : unit | node_equation middle rho y}) @ total = fun y ->
         let () = Effective_compression_proofs.forward h middle edits rho model y () in () in

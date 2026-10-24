@@ -29,7 +29,7 @@ let rec (selection_owner @ total) : (catalog : T.catalog) @ immutable ->
   fun catalog index selected premise -> ghost_ (
     T.selection_def catalog index; owner_def catalog (T.rank selected.T.earlier);
     T.valid_def catalog;
-    match catalog with T.Empty -> () | T.Declare (_, earlier) ->
+    match catalog with T.Declare (_, earlier) ->
       match index with D.Z ->
         let _ = Hm_elaboration_check.index_equal (T.rank earlier) (T.rank earlier) in ()
       | D.S index ->
@@ -72,7 +72,7 @@ let rec (owner_below @ total) : (catalog : T.catalog) @ immutable ->
     {u : unit | D.present (T.rank catalog) rank && suffix catalog selected.T.earlier} @ ghost =
   fun catalog rank selected premise -> ghost_ (
     owner_def catalog rank; T.rank_def catalog; suffix_def catalog selected.T.earlier;
-    match catalog with T.Empty -> () | T.Declare (_, earlier) ->
+    match catalog with T.Declare (_, earlier) ->
       if Hm_elaboration_check.index_equal rank (T.rank earlier) then (
         T.rank_self rank; suffix_def earlier earlier)
       else (owner_below earlier rank selected (); T.rank_weaken (T.rank earlier) rank ()))
@@ -85,7 +85,6 @@ let rec (owner_lift @ total) : (whole : T.catalog) @ immutable ->
   fun whole part rank selected premise -> ghost_ (
     suffix_def whole part;
     if whole === part then () else match whole with
-    | T.Empty -> ()
     | T.Declare (_, earlier) ->
       owner_lift earlier part rank selected ();
       owner_below earlier rank selected (); irreflexive (T.rank earlier);
@@ -157,8 +156,7 @@ let rec (expansion @ total) : (catalog : T.catalog) @ immutable -> (tree : E.t) 
             {T.definition = origin.I.definition; earlier = origin.I.earlier} ();
           records catalog origin.I.earlier D.Empty_context origin.I.definition.T.source
             body.B.derivation (E.erase dependencies) ();
-          expansion catalog dependencies ()
-        | _ -> ())
+          expansion catalog dependencies ())
       | E.Child a -> expansion catalog a ()
       | E.Pair (a, b) -> expansion catalog a (); expansion catalog b ()
       | E.Triple (a, b, c) -> expansion catalog a (); expansion catalog b (); expansion catalog c ())

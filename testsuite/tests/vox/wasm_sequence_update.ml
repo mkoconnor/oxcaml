@@ -21,8 +21,7 @@ let (correct @ total) : (prefix : Q.words) @ immutable -> (rest : Q.words) @ imm
     match Codec.decode left, Codec.decode right with
     | Some (a, b), Some (c, d) ->
       W.equal_def old a; W.equal_def value c; Q.unique rest b d tail ();
-      Wasm_word_update.correct before after 0 offset offset left right old value b ()
-    | _ -> ())
+      Wasm_word_update.correct before after 0 offset offset left right old value b ())
 let (at @ total) : (prefix : Q.words) @ immutable -> (rest : Q.words) @ immutable ->
     (before : B.bytes) @ immutable -> (after : B.bytes) @ immutable ->
     (before_frame : B.bytes) @ immutable -> (after_frame : B.bytes) @ immutable -> (tail : B.bytes) @ immutable ->
@@ -43,5 +42,4 @@ let (at @ total) : (prefix : Q.words) @ immutable -> (rest : Q.words) @ immutabl
     match Codec.decode left, Codec.decode right with
     | Some (a, b), Some (c, d) ->
       W.equal_def old a; W.equal_def value c; Q.unique rest b d tail ();
-      Wasm_word_update.correct before after base offset address left right old value b ()
-    | _ -> ())
+      Wasm_word_update.correct before after base offset address left right old value b ())
